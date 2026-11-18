@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// 家族スケジュール用のセキュリティルール
+// Firebase コンソール → Firestore Database → ルール に貼り付けて「公開」してください。
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ★ ここを管理者（あなた）の Gmail アドレスに書き換えてください
+    function ownerEmail() {
+      return 'YOUR_EMAIL@gmail.com';
+    }
+
+    function signedIn() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true;
+    }
+
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function isOwner() {
+      return signedIn() && myEmail() == ownerEmail().lower();
+    }
+
+    // 管理者、または「アクセスできる人」に登録された人だけが家族として扱われる
+    function isFamily() {
+      return isOwner()
+        || (signedIn() && exists(/databases/$(database)/documents/allowed/$(myEmail())));
+    }
+
+    function validMember(d) {
+      return d.keys().hasOnly(['name', 'color', 'order'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 30
+        && d.color is string && d.color.matches('^#[0-9a-fA-F]{6}$')
+        && d.order is number;
+    }
+
+    function validEvent(d) {
+      return d.keys().hasOnly(['title', 'date', 'start', 'end', 'allDay', 'memberIds', 'note'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 100
+        && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.start is string && d.start.matches('^([0-9]{2}:[0-9]{2})?$')
+        && d.end is string && d.end.matches('^([0-9]{2}:[0-9]{2})?$')
+        && d.allDay is bool
+        && d.memberIds is list && d.memberIds.size() >= 1 && d.memberIds.size() <= 50
+        && d.note is string && d.note.size() <= 1000;
+    }
+
+    // アプリが「管理者かどうか」を確認するためだけに使う（書き込み不可）
+    match /adminCheck/{id} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+
+    // アクセスできる人（ドキュメントID = 小文字のメールアドレス）
+    match /allowed/{email} {
+      allow read: if isFamily();
+      allow create, update: if isOwner()
+        && email == email.lower()
+        && request.resource.data.keys().hasOnly(['addedAt']);
+      allow delete: if isOwner();
+    }
+
+    // 家族メンバー
+    match /members/{id} {
+      allow read, delete: if isFamily();
+      allow create, update: if isFamily() && validMember(request.resource.data);
+    }
+
+    // 予定
+    match /events/{id} {
+      allow read, delete: if isFamily();
+      allow create, update: if isFamily() && validEvent(request.resource.data);
+    }
+
+    // それ以外はすべて禁止
+  }
+}
