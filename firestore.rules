@@ -38,14 +38,16 @@ service cloud.firestore {
     }
 
     function validEvent(d) {
-      return d.keys().hasOnly(['title', 'date', 'start', 'end', 'allDay', 'memberIds', 'note'])
+      return d.keys().hasOnly(['title', 'date', 'start', 'end', 'allDay', 'memberIds', 'dropoffBy', 'pickupBy', 'note'])
         && d.title is string && d.title.size() > 0 && d.title.size() <= 100
         && d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && d.start is string && d.start.matches('^([0-9]{2}:[0-9]{2})?$')
         && d.end is string && d.end.matches('^([0-9]{2}:[0-9]{2})?$')
         && d.allDay is bool
         && d.memberIds is list && d.memberIds.size() >= 1 && d.memberIds.size() <= 50
-        && d.note is string && d.note.size() <= 1000;
+        && d.note is string && d.note.size() <= 1000
+        && (!('dropoffBy' in d) || (d.dropoffBy is string && d.dropoffBy.size() <= 64))
+        && (!('pickupBy' in d) || (d.pickupBy is string && d.pickupBy.size() <= 64));
     }
 
     // アプリが「管理者かどうか」を確認するためだけに使う（書き込み不可）

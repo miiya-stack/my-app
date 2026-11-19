@@ -233,6 +233,18 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .when .d { color: var(--ink); }
 .what { overflow-wrap: anywhere; }
 .with { display: block; font-size: 12px; color: var(--muted); }
+.ride { display: block; font-size: 12px; color: var(--muted); }
+.duty {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  vertical-align: 1px;
+}
 
 /* ---------- 月のカレンダー ---------- */
 .cal-nav, .day-nav {
@@ -440,6 +452,9 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .vev .ttl { font-size: 13px; line-height: 1.3; font-weight: 600; }
 .vev .w { font-size: 10px; color: var(--muted); }
 .vev.short { padding-top: 1px; }
+.vev.duty::before { background: transparent; border: 1px dashed var(--c); border-left: 3px solid var(--c); }
+.vev.duty .ttl { font-weight: 400; font-size: 11px; }
+.vev.duty b { font-weight: 700; }
 .vev.short .ttl { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .now {
   position: absolute;
@@ -548,6 +563,66 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 
 .form-error { margin: 0; color: var(--danger); font-size: 14px; }
 .dlg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
+
+/* ---------- 送迎・声で入力 ---------- */
+.sel select {
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+}
+.sel select:focus { outline: none; border-color: var(--ink); }
+
+.dlg-head { display: flex; align-items: center; gap: 8px; }
+.mic-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 4px 12px 4px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 99px;
+  background: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+}
+.mic-btn svg, .icon-mic svg { width: 20px; height: 20px; fill: currentColor; }
+.mic-btn.on {
+  border-color: var(--danger);
+  color: var(--danger);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--danger) 18%, transparent); } }
+@media (prefers-reduced-motion: reduce) { .mic-btn.on { animation: none; } }
+.voice-box {
+  margin: -4px 0 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--line-strong);
+  background: var(--bg);
+  font-size: 13px;
+}
+.voice-box p { margin: 0; }
+.voice-state { color: var(--muted); }
+.voice-text { color: var(--ink); overflow-wrap: anywhere; }
+.icon-mic {
+  margin-left: auto;
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+}
+.icon-mic + .add-btn { margin-left: 0; }
 
 /* ---------- お知らせ ---------- */
 .toast {

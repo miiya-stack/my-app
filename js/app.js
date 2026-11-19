@@ -1,5 +1,6 @@
 import { firebaseConfig } from "./firebase-config.js";
 import { createLocalStore } from "./store-local.js";
+import { listen, parseSpeech, voiceSupported } from "./voice.js";
 
 /* ---------- 便利な関数 ---------- */
 // 落ち着いた色（家族ごとの目印に使う）
@@ -100,6 +101,7 @@ function stopAll() {
 function showChrome(on) {
   $("#tabs").hidden = !on;
   $("#addBtn").hidden = !on;
+  $("#micBtn").hidden = !on;
 }
 
 /* ---------- 起動 ---------- */
@@ -238,11 +240,32 @@ function withText(e, exceptId) {
   return others.length ? `<span class="with">${others.map((m) => esc(m.name)).join("・")}と</span>` : "";
 }
 
+// 送迎の担当（「送り：父／迎え：母」）
+function rideText(e) {
+  const d = memberById(e.dropoffBy);
+  const p = memberById(e.pickupBy);
+  if (d && p && d.id === p.id) return `送迎：${esc(d.name)}`;
+  return [d && `送り：${esc(d.name)}`, p && `迎え：${esc(p.name)}`].filter(Boolean).join("／");
+}
+
+// この人が送迎を担当する予定か（担当の種類を返す）
+function dutyOf(e, memberId) {
+  const roles = [];
+  if (e.dropoffBy === memberId) roles.push("送り");
+  if (e.pickupBy === memberId) roles.push("迎え");
+  return roles.length === 2 ? "送迎" : roles[0] || "";
+}
+
 function line(e, { showDate = false, exceptId = null } = {}) {
   const time = timeLabel(e);
+  const duty = exceptId && !e.memberIds.includes(exceptId) ? dutyOf(e, exceptId) : "";
+  const ride = rideText(e);
+  const what = duty
+    ? `<span class="duty">${duty}</span>${e.memberIds.map(memberById).filter(Boolean).map((m) => esc(m.name)).join("・")}の${esc(e.title)}`
+    : `${esc(e.title)}${withText(e, exceptId)}${ride ? `<span class="ride">${ride}</span>` : ""}`;
   return `<li><button class="line" type="button" data-ev="${esc(e.id)}">
       <span class="when">${showDate ? `<span class="d">${fmtShort(e.date)}</span>` : ""}${time ? `<span class="t">${time}</span>` : ""}</span>
-      <span class="what">${esc(e.title)}${withText(e, exceptId)}</span>
+      <span class="what">${what}</span>
     </button></li>`;
 }
 
@@ -261,7 +284,7 @@ function renderHome() {
   const end = addDays(t, UPCOMING_DAYS);
   const people = state.members
     .map((m) => {
-      const mine = state.events.filter((e) => e.memberIds.includes(m.id));
+      const mine = state.events.filter((e) => e.memberIds.includes(m.id) || dutyOf(e, m.id));
       const today = sortEvents(mine.filter((e) => e.date === t));
       const next = sortEvents(mine.filter((e) => e.date > t && e.date <= end));
       return `<section class="person" style="--c:${m.color}">
@@ -373,8 +396,9 @@ function renderDay() {
   evs.filter(isTimed).forEach((e) => {
     const s = toMin(e.start);
     const en = e.end && e.end > e.start ? toMin(e.end) : s + 60;
-    h0 = Math.min(h0, Math.floor(s / 60));
-    h1 = Math.max(h1, Math.ceil(en / 60));
+    const pad = e.dropoffBy || e.pickupBy ? 30 : 0; // 送迎の枠の分も含める
+    h0 = Math.min(h0, Math.floor(Math.max(s - pad, 0) / 60));
+    h1 = Math.max(h1, Math.ceil(Math.min(en + pad, 24 * 60) / 60));
   });
   h1 = Math.min(h1, 24);
   const px = (min) => ((min - h0 * 60) * HOUR_PX) / 60;
@@ -404,10 +428,31 @@ function renderDay() {
 
   const cols = state.members
     .map((m) => {
-      const blocks = layoutColumn(evs.filter((e) => isTimed(e) && e.memberIds.includes(m.id)))
+      // 送迎の担当：送りは開始時刻、迎えは終了時刻に30分の枠で表示
+      const duties = [];
+      evs
+        .filter((e) => isTimed(e) && !e.memberIds.includes(m.id))
+        .forEach((e) => {
+          const who = e.memberIds.map(memberById).filter(Boolean).map((x) => x.name).join("・");
+          const s0 = toMin(e.start);
+          if (e.dropoffBy === m.id) duties.push({ e, kind: "送り", who, at: Math.max(s0 - 30, 0) });
+          if (e.pickupBy === m.id) {
+            const at = e.end && e.end > e.start ? toMin(e.end) : s0 + 60;
+            duties.push({ e, kind: "迎え", who, at: Math.min(at, 23 * 60 + 30) });
+          }
+        });
+      const items = [
+        ...evs.filter((e) => isTimed(e) && e.memberIds.includes(m.id)),
+        ...duties.map((d) => ({ ...d.e, start: fromMin(d.at), end: fromMin(d.at + 30), duty: d })),
+      ];
+      const blocks = layoutColumn(items)
         .map(({ e, s, en, lane, lanes }) => {
           const top = px(s);
           const h = Math.max(px(en) - top, 24);
+          if (e.duty)
+            return `<button type="button" class="vev duty short" data-ev="${esc(e.id)}"
+              style="top:${top}px;height:${h}px;left:calc(${lane} / ${lanes} * 100%);width:calc(100% / ${lanes})">
+              <span class="ttl"><b>${e.duty.kind}</b> ${esc(e.duty.who)}</span></button>`;
           const others = e.memberIds.filter((id) => id !== m.id).map(memberById).filter(Boolean);
           return `<button type="button" class="vev${h < 44 ? " short" : ""}" data-ev="${esc(e.id)}"
               style="top:${top}px;height:${h}px;left:calc(${lane} / ${lanes} * 100%);width:calc(100% / ${lanes})">
@@ -570,9 +615,15 @@ function openEventDialog(e = null, date = todayStr(), memberId = null, preset = 
     end: "",
     allDay: false,
     memberIds: memberId ? [memberId] : [],
+    dropoffBy: "",
+    pickupBy: "",
     note: "",
     ...preset,
   };
+  const rideSelect = (name, value) =>
+    `<select name="${name}"><option value="">なし</option>${state.members
+      .map((m) => `<option value="${esc(m.id)}" ${value === m.id ? "selected" : ""}>${esc(m.name)}</option>`)
+      .join("")}</select>`;
   const checks = state.members
     .map(
       (m) => `<label class="pick" style="--c:${m.color}">
@@ -582,7 +633,17 @@ function openEventDialog(e = null, date = todayStr(), memberId = null, preset = 
     .join("");
 
   const form = openDialog(
-    `<h2>${e ? "予定を直す" : "予定を書く"}</h2>
+    `<div class="dlg-head">
+      <h2>${e ? "予定を直す" : "予定を書く"}</h2>
+      <button type="button" class="mic-btn" data-mic aria-label="声で入力">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-3.1A7 7 0 0 0 19 11h-2Z"/></svg>
+        <span>声で入力</span>
+      </button>
+    </div>
+    <div class="voice-box" hidden>
+      <p class="voice-state"></p>
+      <p class="voice-text"></p>
+    </div>
     <label class="field">何をする？<input name="title" maxlength="100" value="${esc(ev.title)}" placeholder="例：歯医者、塾、飲み会"></label>
     <label class="field">日付<input type="date" name="date" value="${esc(ev.date)}"></label>
     <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? "checked" : ""}> 一日中</label>
@@ -591,6 +652,10 @@ function openEventDialog(e = null, date = todayStr(), memberId = null, preset = 
       <label class="field">おわり<input type="time" name="end" value="${esc(ev.end)}"></label>
     </div>
     <fieldset class="field"><legend>だれの予定？</legend><div class="picks">${checks}</div></fieldset>
+    <div class="times rides">
+      <label class="field">送り<span class="sel">${rideSelect("dropoffBy", ev.dropoffBy || "")}</span></label>
+      <label class="field">迎え<span class="sel">${rideSelect("pickupBy", ev.pickupBy || "")}</span></label>
+    </div>
     <label class="field">メモ<textarea name="note" maxlength="1000" rows="2">${esc(ev.note)}</textarea></label>
     <p class="form-error" hidden></p>
     <div class="dlg-actions">
@@ -609,13 +674,25 @@ function openEventDialog(e = null, date = todayStr(), memberId = null, preset = 
       if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date.value)) return formError(f, "日付を選んでください");
       if (!memberIds.length) return formError(f, "だれの予定か選んでください");
       if (start && end && end < start) return formError(f, "おわりの時刻が、はじまりより前になっています");
-      const data = { title, date: f.date.value, start, end, allDay, memberIds, note: f.note.value.trim() };
+      const data = {
+        title,
+        date: f.date.value,
+        start,
+        end,
+        allDay,
+        memberIds,
+        dropoffBy: f.dropoffBy.value,
+        pickupBy: f.pickupBy.value,
+        note: f.note.value.trim(),
+      };
       await state.store.saveEvent(e ? { id: e.id, ...data } : data);
       toast(e ? "予定を直しました" : "予定を書きました");
     },
   );
 
   form.allDay.addEventListener("change", () => ($(".times", form).hidden = form.allDay.checked));
+  setupVoice(form);
+  if (preset.voice) $("[data-mic]", form).click();
   const del = $("[data-del]", form);
   if (del)
     del.addEventListener("click", async () => {
@@ -628,6 +705,82 @@ function openEventDialog(e = null, date = todayStr(), memberId = null, preset = 
         fail(err);
       }
     });
+}
+
+// 予定の入力画面の「声で入力」
+function setupVoice(form) {
+  const btn = $("[data-mic]", form);
+  const box = $(".voice-box", form);
+  const stateEl = $(".voice-state", form);
+  const textEl = $(".voice-text", form);
+  let session = null;
+
+  const show = (st, text = "") => {
+    box.hidden = false;
+    stateEl.textContent = st;
+    textEl.textContent = text;
+  };
+
+  btn.addEventListener("click", async () => {
+    if (session) return session.stop();
+    if (!voiceSupported()) {
+      show(
+        "このブラウザは声の入力に対応していません",
+        "スマホのキーボードにあるマイクのボタンを使うと、各欄に声で入力できます。",
+      );
+      return;
+    }
+    show("聞いています…　話し終わると自動で止まります", "例：「明日の4時から5時、ゆいの水泳、送りは母、迎えは父」");
+    btn.classList.add("on");
+    try {
+      session = listen({ onText: (t) => (textEl.textContent = `「${t}」`) });
+      const text = await session.done;
+      if (!text) return show("聞き取れませんでした。もう一度マイクを押してください");
+      const r = parseSpeech(text, state.members);
+      applyVoice(form, r);
+      const filled = [
+        r.title && "内容",
+        r.date && "日付",
+        (r.start || r.allDay) && "時刻",
+        r.memberIds && "だれ",
+        (r.dropoffBy || r.pickupBy) && "送迎",
+      ].filter(Boolean);
+      show(
+        filled.length ? `${filled.join("・")}を入れました。違うところは直してください` : "うまく振り分けられませんでした。内容の欄に入れました",
+        `「${text}」`,
+      );
+      if (!filled.length) form.title.value = text;
+    } catch (err) {
+      const msg =
+        err === "not-allowed" || err === "service-not-allowed"
+          ? "マイクの使用が許可されていません。ブラウザの設定でマイクを許可してください"
+          : err === "no-speech"
+            ? "声が聞こえませんでした。もう一度マイクを押してください"
+            : "声の入力でエラーが起きました（" + err + "）";
+      show(msg);
+    } finally {
+      session = null;
+      btn.classList.remove("on");
+    }
+  });
+
+  // ダイアログを閉じたら聞き取りも止める
+  dlg.addEventListener("close", () => session && session.stop(), { once: true });
+}
+
+function applyVoice(form, r) {
+  if (r.title) form.title.value = r.title;
+  if (r.date) form.date.value = r.date;
+  if (r.allDay !== undefined) {
+    form.allDay.checked = r.allDay;
+    $(".times", form).hidden = r.allDay;
+  }
+  if (r.start) form.start.value = r.start;
+  if (r.end) form.end.value = r.end;
+  else if (r.start && (!form.end.value || form.end.value <= r.start)) form.end.value = "";
+  if (r.memberIds) form.querySelectorAll("input[name=member]").forEach((i) => (i.checked = r.memberIds.includes(i.value)));
+  if (r.dropoffBy) form.dropoffBy.value = r.dropoffBy;
+  if (r.pickupBy) form.pickupBy.value = r.pickupBy;
 }
 
 function openMemberDialog(m = null) {
@@ -689,6 +842,8 @@ document.addEventListener("click", async (ev) => {
     window.scrollTo(0, 0);
     return;
   }
+  if (t.closest("#micBtn"))
+    return openEventDialog(null, state.tab === "calendar" && state.day ? state.day : todayStr(), null, { voice: true });
   if (t.closest("#addBtn")) return openEventDialog(null, state.tab === "calendar" && state.day ? state.day : todayStr());
 
   const evBtn = t.closest("[data-ev]");
