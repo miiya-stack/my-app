@@ -1,5 +1,5 @@
 // デモモード用：この端末（ブラウザ）の中だけにデータを保存する
-const KEY = "family-schedule-demo-v1";
+const KEY = "family-schedule-demo-v2";
 
 const pad = (n) => String(n).padStart(2, "0");
 const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -12,9 +12,9 @@ const newId = () => Math.random().toString(36).slice(2, 10) + Date.now().toStrin
 
 function sample() {
   const members = [
-    { id: "m1", name: "パパ", color: "#0090ff", order: 1 },
-    { id: "m2", name: "ママ", color: "#e5484d", order: 2 },
-    { id: "m3", name: "ゆい", color: "#30a46c", order: 3 },
+    { id: "m1", name: "父", color: "#4f6d87", order: 1 },
+    { id: "m2", name: "母", color: "#a3624f", order: 2 },
+    { id: "m3", name: "ゆい", color: "#6f7f4d", order: 3 },
   ];
   const ev = (o, title, start, end, memberIds, extra = {}) => ({
     id: newId(), title, date: dayOffset(o), start, end, allDay: false, memberIds, note: "", ...extra,

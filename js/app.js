@@ -2,7 +2,8 @@ import { firebaseConfig } from "./firebase-config.js";
 import { createLocalStore } from "./store-local.js";
 
 /* ---------- 便利な関数 ---------- */
-const COLORS = ["#e5484d", "#f76b15", "#e2a300", "#30a46c", "#12a594", "#0090ff", "#6e56cf", "#d6409f", "#8d8d8d"];
+// 落ち着いた色（家族ごとの目印に使う）
+const COLORS = ["#a3624f", "#4f6d87", "#6f7f4d", "#86668f", "#a8843d", "#4d837b", "#8f5b6c", "#6b6862"];
 const WD = ["日", "月", "火", "水", "木", "金", "土"];
 const UPCOMING_DAYS = 7;
 
@@ -21,25 +22,19 @@ const addDays = (s, n) => {
   return ymd(d);
 };
 const todayStr = () => ymd(new Date());
+const dow = (s) => parse(s).getDay();
 const fmtDate = (s) => {
   const d = parse(s);
   return `${d.getMonth() + 1}月${d.getDate()}日(${WD[d.getDay()]})`;
 };
 const fmtShort = (s) => {
   const d = parse(s);
-  return `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${WD[d.getDay()]}`;
 };
-const monthEnd = (ym) => {
-  const [y, m] = ym.split("-").map(Number);
-  return ymd(new Date(y, m, 0));
-};
-const shiftMonth = (ym, n) => {
-  const [y, m] = ym.split("-").map(Number);
-  const d = new Date(y, m - 1 + n, 1);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-};
+// 週の始まり（月曜日）
+const weekStartOf = (s) => addDays(s, -((dow(s) + 6) % 7));
 const isConfigured = (c) => c && typeof c.apiKey === "string" && c.apiKey && !c.apiKey.startsWith("YOUR_");
-const timeLabel = (e) => (e.allDay ? "終日" : e.start ? e.start + (e.end ? `〜${e.end}` : "") : "時間未定");
+const timeLabel = (e) => (e.allDay ? "終日" : e.start ? e.start + (e.end ? `–${e.end}` : "") : "");
 const sortEvents = (list) =>
   [...list].sort(
     (a, b) =>
@@ -57,9 +52,7 @@ const state = {
   events: [],
   allowed: [],
   tab: "home",
-  month: todayStr().slice(0, 7),
-  selected: todayStr(),
-  hidden: new Set(),
+  week: weekStartOf(todayStr()),
   range: null,
   unsub: {},
 };
@@ -93,7 +86,7 @@ function stopAll() {
 
 function showChrome(on) {
   $("#tabs").hidden = !on;
-  $("#fab").hidden = !on;
+  $("#addBtn").hidden = !on;
 }
 
 /* ---------- 起動 ---------- */
@@ -145,12 +138,11 @@ function startApp() {
   render();
 }
 
-// 表示中の月と「今日から7日間」がカバーできる範囲の予定だけを読み込む
+// 表示中の週と「今日から7日間」がカバーできる範囲の予定だけを読み込む
 function ensureEventRange() {
   const t = todayStr();
-  const mStart = `${state.month}-01`;
-  const from = [addDays(mStart, -7), t].sort()[0];
-  const to = [addDays(monthEnd(state.month), 7), addDays(t, UPCOMING_DAYS + 1)].sort()[1];
+  const from = [state.week, t].sort()[0];
+  const to = [addDays(state.week, 6), addDays(t, UPCOMING_DAYS)].sort()[1];
   const key = `${from}_${to}`;
   if (state.range === key) return;
   state.range = key;
@@ -167,176 +159,172 @@ function ensureEventRange() {
 }
 
 /* ---------- ログイン前の画面 ---------- */
+function notice(inner) {
+  setMain(`<section class="notice">${inner}</section>`);
+}
+
 function renderSetup() {
   showChrome(false);
-  setMain(`
-    <section class="card center">
-      <h2>Firebase がまだ設定されていません</h2>
-      <p>家族と予定を共有するには、README の手順で Firebase を設定してください。</p>
-      <p>設定する前に、この端末だけで動く<strong>デモ</strong>を試せます。</p>
-      <a class="btn primary" href="?demo">デモで試す</a>
-    </section>`);
+  notice(`
+    <h2>Firebase がまだ設定されていません</h2>
+    <p>家族と予定を共有するには、README の手順で Firebase を設定してください。</p>
+    <p>設定する前に、この端末だけで動くデモを試せます。</p>
+    <a class="btn primary" href="?demo">デモで試す</a>`);
 }
 
 function renderLogin() {
   showChrome(false);
-  setMain(`
-    <section class="card center">
-      <h2>ようこそ</h2>
-      <p>家族の予定を共有するアプリです。<br>Google アカウントでログインしてください。</p>
-      <button class="btn primary" data-act="signIn">Google でログイン</button>
-    </section>`);
+  notice(`
+    <h2>ようこそ</h2>
+    <p>家族の予定を共有する予定表です。<br>Google アカウントでログインしてください。</p>
+    <button class="btn primary" data-act="signIn">Google でログイン</button>`);
 }
 
 function renderNotAllowed() {
   showChrome(false);
-  setMain(`
-    <section class="card center">
-      <h2>まだ利用が許可されていません</h2>
-      <p><strong>${esc(state.user.email)}</strong> でログインしています。</p>
-      <p>管理者に、このメールアドレスを「アクセスできる人」に追加してもらってください。追加されたら再読み込みすると使えます。</p>
-      <div class="btn-row">
-        <button class="btn primary" data-act="reload">再読み込み</button>
-        <button class="btn" data-act="signOut">別のアカウントでログイン</button>
-      </div>
-    </section>`);
+  notice(`
+    <h2>まだ利用が許可されていません</h2>
+    <p><strong>${esc(state.user.email)}</strong> でログインしています。</p>
+    <p>管理者に、このメールアドレスを「アクセスできる人」に追加してもらってください。追加されたら再読み込みすると使えます。</p>
+    <div class="btn-row">
+      <button class="btn primary" data-act="reload">再読み込み</button>
+      <button class="btn" data-act="signOut">別のアカウントでログイン</button>
+    </div>`);
 }
 
 function renderMessage(title, body, withSignOut = false) {
   showChrome(false);
-  setMain(`
-    <section class="card center">
-      <h2>${esc(title)}</h2>
-      <p>${esc(body)}</p>
-      <div class="btn-row">
-        <button class="btn primary" data-act="reload">再読み込み</button>
-        ${withSignOut ? '<button class="btn" data-act="signOut">ログアウト</button>' : ""}
-      </div>
-    </section>`);
+  notice(`
+    <h2>${esc(title)}</h2>
+    <p>${esc(body)}</p>
+    <div class="btn-row">
+      <button class="btn primary" data-act="reload">再読み込み</button>
+      ${withSignOut ? '<button class="btn" data-act="signOut">ログアウト</button>' : ""}
+    </div>`);
 }
 
 /* ---------- メイン画面 ---------- */
 function render() {
   if (!state.user) return;
   ensureEventRange();
-  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === state.tab));
-  $("#fab").hidden = state.tab === "settings";
+  document
+    .querySelectorAll("#tabs button")
+    .forEach((b) => b.setAttribute("aria-current", b.dataset.tab === state.tab ? "page" : "false"));
   if (state.tab === "home") renderHome();
-  else if (state.tab === "calendar") renderCalendar();
+  else if (state.tab === "week") renderWeek();
   else renderSettings();
 }
 
 const memberById = (id) => state.members.find((m) => m.id === id);
-const eventColor = (e) => (e.memberIds.map(memberById).find(Boolean) || { color: "#8d8d8d" }).color;
 
-function memberDots(e, exceptId) {
-  const others = e.memberIds.filter((id) => id !== exceptId).map(memberById).filter(Boolean);
-  if (!others.length) return "";
-  return `<span class="with">${others
-    .map((m) => `<span class="dot" style="--c:${m.color}" title="${esc(m.name)}"></span>${esc(m.name)}`)
-    .join(" ")}</span>`;
+function withText(e, exceptId) {
+  const others = e.memberIds
+    .filter((id) => id !== exceptId)
+    .map(memberById)
+    .filter(Boolean);
+  return others.length ? `<span class="with">${others.map((m) => esc(m.name)).join("・")}と</span>` : "";
 }
 
-function eventItem(e, { showDate = false, exceptId = null } = {}) {
-  return `<li><button class="ev" type="button" data-ev="${esc(e.id)}" style="--c:${eventColor(e)}">
-      <span class="ev-time">${showDate ? `<b>${fmtShort(e.date)}</b>` : ""}${timeLabel(e)}</span>
-      <span class="ev-title">${esc(e.title)}</span>
-      ${memberDots(e, exceptId)}
+function line(e, { showDate = false, exceptId = null } = {}) {
+  const time = timeLabel(e);
+  return `<li><button class="line" type="button" data-ev="${esc(e.id)}">
+      <span class="when">${showDate ? `<span class="d">${fmtShort(e.date)}</span>` : ""}${time ? `<span class="t">${time}</span>` : ""}</span>
+      <span class="what">${esc(e.title)}${withText(e, exceptId)}</span>
     </button></li>`;
 }
 
 function emptyMembers() {
-  return `<section class="card center">
-      <h2>はじめに家族を追加しましょう</h2>
-      <p>「家族・設定」から、予定を管理したい家族を追加できます。人数は自由です。</p>
-      <button class="btn primary" data-act="addMember">家族を追加</button>
+  return `<section class="notice">
+      <h2>はじめに家族を登録しましょう</h2>
+      <p>「家族」のページから、予定を書き込む家族を登録できます。人数に決まりはありません。</p>
+      <button class="btn primary" data-act="addMember">家族を登録する</button>
     </section>`;
 }
 
 function renderHome() {
   if (!state.members.length) return setMain(emptyMembers());
   const t = todayStr();
+  const d = parse(t);
   const end = addDays(t, UPCOMING_DAYS);
-  const cards = state.members
+  const people = state.members
     .map((m) => {
       const mine = state.events.filter((e) => e.memberIds.includes(m.id));
       const today = sortEvents(mine.filter((e) => e.date === t));
       const next = sortEvents(mine.filter((e) => e.date > t && e.date <= end));
-      return `<section class="card member-card" style="--c:${m.color}">
-          <h2><span class="avatar">${esc([...m.name][0] || "?")}</span>${esc(m.name)}
-            <span class="count">今日 ${today.length}件</span></h2>
-          <h3>今日</h3>
-          ${today.length ? `<ul class="evs">${today.map((e) => eventItem(e, { exceptId: m.id })).join("")}</ul>` : '<p class="none">予定なし</p>'}
-          <h3>これから（${UPCOMING_DAYS}日間）</h3>
-          ${next.length ? `<ul class="evs">${next.map((e) => eventItem(e, { showDate: true, exceptId: m.id })).join("")}</ul>` : '<p class="none">予定なし</p>'}
+      return `<section class="person" style="--c:${m.color}">
+          <h2><span class="mark"></span>${esc(m.name)}</h2>
+          ${today.length ? `<ul class="lines">${today.map((e) => line(e, { exceptId: m.id })).join("")}</ul>` : '<p class="none">今日の予定はありません</p>'}
+          <p class="sub">これからの予定</p>
+          ${next.length ? `<ul class="lines">${next.map((e) => line(e, { showDate: true, exceptId: m.id })).join("")}</ul>` : '<p class="none">一週間、予定はありません</p>'}
         </section>`;
     })
     .join("");
-  setMain(`<p class="page-label">今日 ${fmtDate(t)}</p><div class="member-grid">${cards}</div>`);
+  setMain(`
+    <div class="date-head">
+      <span class="date-big">${d.getMonth() + 1}月${d.getDate()}日</span>
+      <span class="date-wd">${WD[d.getDay()]}曜日</span>
+    </div>
+    <div class="people">${people}</div>`);
 }
 
-function visibleEventsOn(date) {
-  return sortEvents(
-    state.events.filter(
-      (e) =>
-        e.date === date &&
-        (e.memberIds.some((id) => memberById(id) && !state.hidden.has(id)) || !e.memberIds.some(memberById)),
-    ),
-  );
-}
-
-function renderCalendar() {
+function renderWeek() {
+  if (!state.members.length) return setMain(emptyMembers());
   const t = todayStr();
-  const [y, m] = state.month.split("-").map(Number);
-  const offset = new Date(y, m - 1, 1).getDay();
-  const days = new Date(y, m, 0).getDate();
+  const days = Array.from({ length: 7 }, (_, i) => addDays(state.week, i));
+  const first = parse(days[0]);
+  const last = parse(days[6]);
+  const label =
+    first.getMonth() === last.getMonth()
+      ? `${first.getMonth() + 1}月${first.getDate()}日 – ${last.getDate()}日`
+      : `${first.getMonth() + 1}月${first.getDate()}日 – ${last.getMonth() + 1}月${last.getDate()}日`;
 
-  let cells = WD.map((w, i) => `<div class="wd dow${i}">${w}</div>`).join("");
-  for (let i = 0; i < offset; i++) cells += '<div class="cell blank"></div>';
-  for (let d = 1; d <= days; d++) {
-    const ds = `${state.month}-${pad(d)}`;
-    const evs = visibleEventsOn(ds);
-    const dow = (offset + d - 1) % 7;
-    const chips = evs
-      .slice(0, 3)
-      .map((e) => `<span class="chip" style="--c:${eventColor(e)}">${esc(e.title)}</span>`)
-      .join("");
-    const more = evs.length > 3 ? `<span class="more">+${evs.length - 3}</span>` : "";
-    cells += `<button type="button" class="cell dow${dow}${ds === t ? " today" : ""}${ds === state.selected ? " sel" : ""}"
-        data-day="${ds}" aria-label="${fmtDate(ds)} 予定${evs.length}件">
-        <span class="num">${d}</span><span class="chips">${chips}${more}</span></button>`;
-  }
-
-  const filters = state.members
-    .map(
-      (mm) => `<button type="button" class="filter${state.hidden.has(mm.id) ? " off" : ""}" data-filter="${esc(mm.id)}"
-        style="--c:${mm.color}" aria-pressed="${!state.hidden.has(mm.id)}"><span class="dot"></span>${esc(mm.name)}</button>`,
-    )
+  const head = state.members
+    .map((m) => `<th scope="col" style="--c:${m.color}"><span class="mark"></span>${esc(m.name)}</th>`)
     .join("");
 
-  const sel = visibleEventsOn(state.selected);
+  const rows = days
+    .map((ds) => {
+      const d = parse(ds);
+      const cells = state.members
+        .map((m) => {
+          const evs = sortEvents(state.events.filter((e) => e.date === ds && e.memberIds.includes(m.id)));
+          const items = evs
+            .map((e) => {
+              const time = timeLabel(e);
+              return `<button type="button" class="slot" data-ev="${esc(e.id)}">${time ? `<span class="t">${time}</span>` : ""}<span class="ttl">${esc(e.title)}</span></button>`;
+            })
+            .join("");
+          return `<td data-cell="${ds}|${esc(m.id)}" style="--c:${m.color}" aria-label="${fmtDate(ds)} ${esc(m.name)} 予定${evs.length}件">${items}</td>`;
+        })
+        .join("");
+      return `<tr class="dow${d.getDay()}${ds === t ? " is-today" : ""}">
+          <th scope="row" class="day"><span class="n">${d.getDate()}</span><span class="w">${WD[d.getDay()]}</span></th>
+          ${cells}</tr>`;
+    })
+    .join("");
+
   setMain(`
-    <div class="cal-head">
-      <button type="button" class="icon-btn" data-month="-1" aria-label="前の月">‹</button>
-      <h2>${y}年${m}月</h2>
-      <button type="button" class="icon-btn" data-month="1" aria-label="次の月">›</button>
-      <button type="button" class="btn small" data-act="thisMonth">今日</button>
+    <div class="week-nav">
+      <button type="button" class="nav-btn" data-week="-1" aria-label="前の週">‹</button>
+      <h2>${first.getFullYear()}年 ${label}</h2>
+      <button type="button" class="nav-btn" data-week="1" aria-label="次の週">›</button>
+      ${state.week !== weekStartOf(t) ? '<button type="button" class="btn small" data-act="thisWeek">今週</button>' : ""}
     </div>
-    ${filters ? `<div class="filters">${filters}</div>` : ""}
-    <div class="cal">${cells}</div>
-    <section class="card day-detail">
-      <h2>${fmtDate(state.selected)}</h2>
-      ${sel.length ? `<ul class="evs">${sel.map((e) => eventItem(e)).join("")}</ul>` : '<p class="none">予定はありません</p>'}
-      <button class="btn" data-act="addOnDay">＋ この日に予定を追加</button>
-    </section>`);
+    <p class="hint">空いているところを押すと、その日・その人の予定を書き込めます。</p>
+    <div class="board-wrap">
+      <table class="board" style="--cols:${state.members.length}">
+        <thead><tr><th class="day"></th>${head}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`);
 }
 
 function renderSettings() {
   const u = state.user;
   const members = state.members
     .map(
-      (m) => `<li class="row-item">
-        <span class="avatar" style="--c:${m.color}">${esc([...m.name][0] || "?")}</span>
+      (m) => `<li class="row" style="--c:${m.color}">
+        <span class="mark"></span>
         <span class="grow">${esc(m.name)}</span>
         <button type="button" class="btn small" data-edit-member="${esc(m.id)}">編集</button>
       </li>`,
@@ -344,29 +332,29 @@ function renderSettings() {
     .join("");
 
   const access = u.isOwner
-    ? `<section class="card">
+    ? `<section class="block">
         <h2>アクセスできる人</h2>
-        <p class="hint">ここに追加した Google アカウントの人だけが、このアプリを見たり予定を書き込んだりできます。管理者（あなた）は常に使えます。</p>
-        <ul class="list">${
+        <p class="hint">ここに登録した Google アカウントの人だけが、この予定表を見たり書き込んだりできます。管理者（あなた）は常に使えます。</p>
+        <ul class="rows">${
           state.allowed.length
             ? state.allowed
                 .map(
-                  (em) => `<li class="row-item"><span class="grow mono">${esc(em)}</span>
-                  <button type="button" class="btn small danger" data-remove-allowed="${esc(em)}">削除</button></li>`,
+                  (em) => `<li class="row"><span class="grow mono">${esc(em)}</span>
+                  <button type="button" class="btn small danger" data-remove-allowed="${esc(em)}">取り消す</button></li>`,
                 )
                 .join("")
-            : '<li class="none">まだ誰も追加されていません</li>'
+            : '<li class="none">まだ誰も登録されていません</li>'
         }</ul>
         <form class="inline-form" data-form="allowed">
-          <input type="email" name="email" placeholder="家族のGmailアドレス" required autocomplete="off">
-          <button class="btn primary">追加</button>
+          <input type="email" name="email" placeholder="家族の Gmail アドレス" required autocomplete="off">
+          <button class="btn">登録</button>
         </form>
       </section>`
     : "";
 
   const demo =
     state.store.mode === "demo"
-      ? `<section class="card">
+      ? `<section class="block">
           <h2>デモモード</h2>
           <p class="hint">データはこの端末（ブラウザ）にだけ保存されています。家族とは共有されません。</p>
           <button class="btn" data-act="resetDemo">サンプルデータに戻す</button>
@@ -374,17 +362,17 @@ function renderSettings() {
       : "";
 
   setMain(`
-    <section class="card">
-      <h2>家族メンバー</h2>
-      <p class="hint">予定を管理する家族です。人数はいくらでも追加できます。</p>
-      <ul class="list">${members || '<li class="none">まだいません</li>'}</ul>
-      <button class="btn primary" data-act="addMember">＋ 家族を追加</button>
+    <section class="block">
+      <h2>家族</h2>
+      <p class="hint">予定を書き込む家族です。何人でも登録できます。</p>
+      <ul class="rows">${members || '<li class="none">まだ登録されていません</li>'}</ul>
+      <button class="btn" data-act="addMember">＋ 家族を登録</button>
     </section>
     ${access}
     ${demo}
-    <section class="card">
+    <section class="block">
       <h2>アカウント</h2>
-      <p>${esc(u.name)}<br><span class="hint mono">${esc(u.email)}</span>${u.isOwner ? ' <span class="badge">管理者</span>' : ""}</p>
+      <p>${esc(u.name)}${u.isOwner ? ' <span class="tag">管理者</span>' : ""}<br><span class="hint mono">${esc(u.email)}</span></p>
       ${state.store.mode === "demo" ? '<a class="btn" href="./">デモを終了</a>' : '<button class="btn" data-act="signOut">ログアウト</button>'}
     </section>`);
 }
@@ -413,7 +401,7 @@ function openDialog(html, onSubmit) {
     if (err) err.hidden = true;
   });
   dlg.showModal();
-  const first = $("input:not([type=checkbox]):not([type=hidden])", form);
+  const first = $("input:not([type=checkbox]):not([type=radio])", form);
   if (first && !first.value) first.focus();
   return form;
 }
@@ -425,37 +413,45 @@ function formError(form, msg) {
   return false;
 }
 
-function openEventDialog(e = null, date = state.selected) {
+function openEventDialog(e = null, date = todayStr(), memberId = null) {
   if (!state.members.length) {
-    toast("先に家族を追加してください");
+    toast("先に家族を登録してください");
     state.tab = "settings";
     return render();
   }
-  const ev = e || { title: "", date, start: "", end: "", allDay: false, memberIds: [], note: "" };
+  const ev = e || {
+    title: "",
+    date,
+    start: "",
+    end: "",
+    allDay: false,
+    memberIds: memberId ? [memberId] : [],
+    note: "",
+  };
   const checks = state.members
     .map(
       (m) => `<label class="pick" style="--c:${m.color}">
         <input type="checkbox" name="member" value="${esc(m.id)}" ${ev.memberIds.includes(m.id) ? "checked" : ""}>
-        <span>${esc(m.name)}</span></label>`,
+        <span class="mark"></span><span>${esc(m.name)}</span></label>`,
     )
     .join("");
 
   const form = openDialog(
-    `<h2>${e ? "予定を編集" : "予定を追加"}</h2>
-    <label class="field">タイトル<input name="title" maxlength="100" value="${esc(ev.title)}" placeholder="例：歯医者、塾、飲み会"></label>
+    `<h2>${e ? "予定を直す" : "予定を書く"}</h2>
+    <label class="field">何をする？<input name="title" maxlength="100" value="${esc(ev.title)}" placeholder="例：歯医者、塾、飲み会"></label>
     <label class="field">日付<input type="date" name="date" value="${esc(ev.date)}"></label>
-    <label class="switch"><input type="checkbox" name="allDay" ${ev.allDay ? "checked" : ""}> 終日</label>
+    <label class="check"><input type="checkbox" name="allDay" ${ev.allDay ? "checked" : ""}> 一日中</label>
     <div class="times"${ev.allDay ? " hidden" : ""}>
-      <label class="field">開始<input type="time" name="start" value="${esc(ev.start)}"></label>
-      <label class="field">終了<input type="time" name="end" value="${esc(ev.end)}"></label>
+      <label class="field">はじまり<input type="time" name="start" value="${esc(ev.start)}"></label>
+      <label class="field">おわり<input type="time" name="end" value="${esc(ev.end)}"></label>
     </div>
-    <fieldset class="field"><legend>だれの予定？（複数選べます）</legend><div class="picks">${checks}</div></fieldset>
-    <label class="field">メモ<textarea name="note" maxlength="1000" rows="3">${esc(ev.note)}</textarea></label>
+    <fieldset class="field"><legend>だれの予定？</legend><div class="picks">${checks}</div></fieldset>
+    <label class="field">メモ<textarea name="note" maxlength="1000" rows="2">${esc(ev.note)}</textarea></label>
     <p class="form-error" hidden></p>
     <div class="dlg-actions">
       ${e ? '<button type="button" class="btn danger" data-del>削除</button>' : ""}
       <span class="grow"></span>
-      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn" data-close>やめる</button>
       <button class="btn primary">保存</button>
     </div>`,
     async (f) => {
@@ -464,14 +460,13 @@ function openEventDialog(e = null, date = state.selected) {
       const start = allDay ? "" : f.start.value;
       const end = allDay ? "" : f.end.value;
       const memberIds = [...f.querySelectorAll("input[name=member]:checked")].map((i) => i.value);
-      if (!title) return formError(f, "タイトルを入力してください");
+      if (!title) return formError(f, "何をするか書いてください");
       if (!/^\d{4}-\d{2}-\d{2}$/.test(f.date.value)) return formError(f, "日付を選んでください");
       if (!memberIds.length) return formError(f, "だれの予定か選んでください");
-      if (start && end && end < start) return formError(f, "終了時刻が開始時刻より前になっています");
+      if (start && end && end < start) return formError(f, "おわりの時刻が、はじまりより前になっています");
       const data = { title, date: f.date.value, start, end, allDay, memberIds, note: f.note.value.trim() };
       await state.store.saveEvent(e ? { id: e.id, ...data } : data);
-      state.selected = data.date;
-      toast(e ? "予定を更新しました" : "予定を追加しました");
+      toast(e ? "予定を直しました" : "予定を書きました");
     },
   );
 
@@ -494,27 +489,27 @@ function openMemberDialog(m = null) {
   const used = new Set(state.members.map((x) => x.color));
   const color = m ? m.color : COLORS.find((c) => !used.has(c)) || COLORS[state.members.length % COLORS.length];
   const swatches = COLORS.map(
-    (c) => `<label class="swatch" style="--c:${c}"><input type="radio" name="color" value="${c}" ${c === color ? "checked" : ""}
-      aria-label="色 ${c}"><span></span></label>`,
+    (c, i) => `<label class="swatch" style="--c:${c}"><input type="radio" name="color" value="${c}" ${c === color ? "checked" : ""}
+      aria-label="色 ${i + 1}"><span></span></label>`,
   ).join("");
 
   const form = openDialog(
-    `<h2>${m ? "家族を編集" : "家族を追加"}</h2>
-    <label class="field">名前<input name="name" maxlength="30" value="${esc(m ? m.name : "")}" placeholder="例：パパ、ママ、ゆい"></label>
-    <fieldset class="field"><legend>色</legend><div class="swatches">${swatches}</div></fieldset>
+    `<h2>${m ? "家族を編集" : "家族を登録"}</h2>
+    <label class="field">名前<input name="name" maxlength="30" value="${esc(m ? m.name : "")}" placeholder="例：父、母、ゆい"></label>
+    <fieldset class="field"><legend>目印の色</legend><div class="swatches">${swatches}</div></fieldset>
     <p class="form-error" hidden></p>
     <div class="dlg-actions">
       ${m ? '<button type="button" class="btn danger" data-del>削除</button>' : ""}
       <span class="grow"></span>
-      <button type="button" class="btn" data-close>キャンセル</button>
+      <button type="button" class="btn" data-close>やめる</button>
       <button class="btn primary">保存</button>
     </div>`,
     async (f) => {
       const name = f.name.value.trim();
-      if (!name) return formError(f, "名前を入力してください");
+      if (!name) return formError(f, "名前を入れてください");
       const order = m ? m.order : Math.max(0, ...state.members.map((x) => x.order || 0)) + 1;
       await state.store.saveMember({ ...(m ? { id: m.id } : {}), name, color: f.color.value, order });
-      toast(m ? "更新しました" : `${name}さんを追加しました`);
+      toast(m ? "変更しました" : `${name}さんを登録しました`);
     },
   );
 
@@ -524,7 +519,6 @@ function openMemberDialog(m = null) {
       if (!confirm(`「${m.name}」を削除しますか？\nこの人だけの予定は表示されなくなります。`)) return;
       try {
         await state.store.deleteMember(m.id);
-        state.hidden.delete(m.id);
         dlg.close();
         toast("削除しました");
       } catch (err) {
@@ -545,7 +539,7 @@ document.addEventListener("click", async (ev) => {
     window.scrollTo(0, 0);
     return;
   }
-  if (t.closest("#fab")) return openEventDialog(null, state.tab === "calendar" ? state.selected : todayStr());
+  if (t.closest("#addBtn")) return openEventDialog(null, state.tab === "week" && state.week > todayStr() ? state.week : todayStr());
 
   const evBtn = t.closest("[data-ev]");
   if (evBtn) {
@@ -553,21 +547,14 @@ document.addEventListener("click", async (ev) => {
     if (e) openEventDialog(e);
     return;
   }
-  const day = t.closest("[data-day]");
-  if (day) {
-    state.selected = day.dataset.day;
-    return render();
+  const cell = t.closest("[data-cell]");
+  if (cell) {
+    const [date, memberId] = cell.dataset.cell.split("|");
+    return openEventDialog(null, date, memberId);
   }
-  const mon = t.closest("[data-month]");
-  if (mon) {
-    state.month = shiftMonth(state.month, Number(mon.dataset.month));
-    state.selected = `${state.month}-01`;
-    return render();
-  }
-  const filter = t.closest("[data-filter]");
-  if (filter) {
-    const id = filter.dataset.filter;
-    state.hidden.has(id) ? state.hidden.delete(id) : state.hidden.add(id);
+  const wk = t.closest("[data-week]");
+  if (wk) {
+    state.week = addDays(state.week, 7 * Number(wk.dataset.week));
     return render();
   }
   const editM = t.closest("[data-edit-member]");
@@ -606,12 +593,8 @@ document.addEventListener("click", async (ev) => {
     case "addMember":
       openMemberDialog();
       break;
-    case "addOnDay":
-      openEventDialog(null, state.selected);
-      break;
-    case "thisMonth":
-      state.month = todayStr().slice(0, 7);
-      state.selected = todayStr();
+    case "thisWeek":
+      state.week = weekStartOf(todayStr());
       render();
       break;
     case "resetDemo":
@@ -629,7 +612,7 @@ document.addEventListener("submit", async (ev) => {
   try {
     await state.store.addAllowed(email);
     f.reset();
-    toast(`${email} を追加しました`);
+    toast(`${email} を登録しました`);
   } catch (e) {
     fail(e);
   }
