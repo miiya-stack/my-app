@@ -31,8 +31,20 @@ const fmtShort = (s) => {
   const d = parse(s);
   return `${d.getMonth() + 1}/${d.getDate()} ${WD[d.getDay()]}`;
 };
-// 週の始まり（月曜日）
-const weekStartOf = (s) => addDays(s, -((dow(s) + 6) % 7));
+const monthEnd = (ym) => {
+  const [y, m] = ym.split("-").map(Number);
+  return ymd(new Date(y, m, 0));
+};
+const shiftMonth = (ym, n) => {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+};
+const toMin = (hm) => {
+  const [h, m] = hm.split(":").map(Number);
+  return h * 60 + m;
+};
+const fromMin = (n) => `${pad(Math.floor(n / 60) % 24)}:${pad(n % 60)}`;
 const isConfigured = (c) => c && typeof c.apiKey === "string" && c.apiKey && !c.apiKey.startsWith("YOUR_");
 const timeLabel = (e) => (e.allDay ? "終日" : e.start ? e.start + (e.end ? `–${e.end}` : "") : "");
 const sortEvents = (list) =>
@@ -52,7 +64,8 @@ const state = {
   events: [],
   allowed: [],
   tab: "home",
-  week: weekStartOf(todayStr()),
+  month: todayStr().slice(0, 7), // カレンダーで表示中の月
+  day: null, // バーチカル表示中の日付（null なら月表示）
   range: null,
   unsub: {},
 };
@@ -138,11 +151,11 @@ function startApp() {
   render();
 }
 
-// 表示中の週と「今日から7日間」がカバーできる範囲の予定だけを読み込む
+// 表示中の月（前後の週を含む）と「今日から7日間」がカバーできる範囲の予定だけを読み込む
 function ensureEventRange() {
   const t = todayStr();
-  const from = [state.week, t].sort()[0];
-  const to = [addDays(state.week, 6), addDays(t, UPCOMING_DAYS)].sort()[1];
+  const from = [addDays(`${state.month}-01`, -7), t].sort()[0];
+  const to = [addDays(monthEnd(state.month), 7), addDays(t, UPCOMING_DAYS)].sort()[1];
   const key = `${from}_${to}`;
   if (state.range === key) return;
   state.range = key;
@@ -211,7 +224,7 @@ function render() {
     .querySelectorAll("#tabs button")
     .forEach((b) => b.setAttribute("aria-current", b.dataset.tab === state.tab ? "page" : "false"));
   if (state.tab === "home") renderHome();
-  else if (state.tab === "week") renderWeek();
+  else if (state.tab === "calendar") state.day ? renderDay() : renderMonth();
   else renderSettings();
 }
 
@@ -267,57 +280,188 @@ function renderHome() {
     <div class="people">${people}</div>`);
 }
 
-function renderWeek() {
-  if (!state.members.length) return setMain(emptyMembers());
+const eventColor = (e) => (e.memberIds.map(memberById).find(Boolean) || { color: "#8a857c" }).color;
+const eventNames = (e) => {
+  const names = e.memberIds.map(memberById).filter(Boolean).map((m) => m.name);
+  return names.length > 2 ? `${names[0]}ほか` : names.join("・");
+};
+const eventsOn = (date) => sortEvents(state.events.filter((e) => e.date === date));
+
+/* ----- 月のカレンダー ----- */
+function renderMonth() {
   const t = todayStr();
-  const days = Array.from({ length: 7 }, (_, i) => addDays(state.week, i));
-  const first = parse(days[0]);
-  const last = parse(days[6]);
-  const label =
-    first.getMonth() === last.getMonth()
-      ? `${first.getMonth() + 1}月${first.getDate()}日 – ${last.getDate()}日`
-      : `${first.getMonth() + 1}月${first.getDate()}日 – ${last.getMonth() + 1}月${last.getDate()}日`;
+  const [y, m] = state.month.split("-").map(Number);
+  const first = `${state.month}-01`;
+  const lead = dow(first);
+  const days = Number(monthEnd(state.month).slice(8));
+  const weeks = Math.ceil((lead + days) / 7);
+  const start = addDays(first, -lead);
+
+  let cells = WD.map((w, i) => `<div class="wd dow${i}">${w}</div>`).join("");
+  for (let i = 0; i < weeks * 7; i++) {
+    const ds = addDays(start, i);
+    const evs = eventsOn(ds);
+    const chips = evs
+      .slice(0, 3)
+      .map(
+        (e) =>
+          `<span class="chip" style="--c:${eventColor(e)}"><span class="who">${esc(eventNames(e))}</span>${esc(e.title)}</span>`,
+      )
+      .join("");
+    const more = evs.length > 3 ? `<span class="more">ほか${evs.length - 3}件</span>` : "";
+    const out = ds.slice(0, 7) !== state.month;
+    cells += `<button type="button" class="cell dow${i % 7}${out ? " out" : ""}${ds === t ? " today" : ""}"
+        data-day="${ds}" aria-label="${fmtDate(ds)} 予定${evs.length}件">
+        <span class="num">${Number(ds.slice(8))}</span><span class="chips">${chips}${more}</span></button>`;
+  }
+
+  setMain(`
+    <div class="cal-nav">
+      <button type="button" class="nav-btn" data-month="-1" aria-label="前の月">‹</button>
+      <h2>${y}年${m}月</h2>
+      <button type="button" class="nav-btn" data-month="1" aria-label="次の月">›</button>
+      ${state.month !== t.slice(0, 7) ? '<button type="button" class="btn small" data-act="thisMonth">今日</button>' : ""}
+    </div>
+    <div class="month" style="--weeks:${weeks}">${cells}</div>
+    <p class="hint center">日付をタップすると、その日の予定を家族ごとに縦に並べて表示します。</p>`);
+}
+
+/* ----- 1日のバーチカル表示 ----- */
+const HOUR_PX = 56;
+
+// 同じ人の予定が時間で重なったら、横に並べる
+function layoutColumn(list) {
+  const items = list
+    .map((e) => {
+      const s = toMin(e.start);
+      const en = Math.min(e.end && e.end > e.start ? toMin(e.end) : s + 60, 24 * 60);
+      return { e, s, en };
+    })
+    .sort((a, b) => a.s - b.s || b.en - a.en);
+  let group = [];
+  let groupEnd = -1;
+  const flush = () => {
+    const lanes = [];
+    group.forEach((it) => {
+      let i = lanes.findIndex((end) => end <= it.s);
+      if (i < 0) i = lanes.push(0) - 1;
+      lanes[i] = it.en;
+      it.lane = i;
+    });
+    group.forEach((it) => (it.lanes = lanes.length));
+    group = [];
+  };
+  items.forEach((it) => {
+    if (group.length && it.s >= groupEnd) flush();
+    group.push(it);
+    groupEnd = Math.max(groupEnd, it.en);
+  });
+  flush();
+  return items;
+}
+
+function renderDay() {
+  if (!state.members.length) return setMain(emptyMembers());
+  const ds = state.day;
+  const t = todayStr();
+  const evs = state.events.filter((e) => e.date === ds);
+  const isTimed = (e) => !e.allDay && e.start;
+
+  // 表示する時間帯（基本は 7時〜22時、予定があれば広げる）
+  let h0 = 7;
+  let h1 = 22;
+  evs.filter(isTimed).forEach((e) => {
+    const s = toMin(e.start);
+    const en = e.end && e.end > e.start ? toMin(e.end) : s + 60;
+    h0 = Math.min(h0, Math.floor(s / 60));
+    h1 = Math.max(h1, Math.ceil(en / 60));
+  });
+  h1 = Math.min(h1, 24);
+  const px = (min) => ((min - h0 * 60) * HOUR_PX) / 60;
+  const height = (h1 - h0) * HOUR_PX;
 
   const head = state.members
-    .map((m) => `<th scope="col" style="--c:${m.color}"><span class="mark"></span>${esc(m.name)}</th>`)
+    .map((m) => `<div class="vh" style="--c:${m.color}"><span class="mark"></span>${esc(m.name)}</div>`)
     .join("");
 
-  const rows = days
-    .map((ds) => {
-      const d = parse(ds);
-      const cells = state.members
-        .map((m) => {
-          const evs = sortEvents(state.events.filter((e) => e.date === ds && e.memberIds.includes(m.id)));
-          const items = evs
-            .map((e) => {
-              const time = timeLabel(e);
-              return `<button type="button" class="slot" data-ev="${esc(e.id)}">${time ? `<span class="t">${time}</span>` : ""}<span class="ttl">${esc(e.title)}</span></button>`;
-            })
-            .join("");
-          return `<td data-cell="${ds}|${esc(m.id)}" style="--c:${m.color}" aria-label="${fmtDate(ds)} ${esc(m.name)} 予定${evs.length}件">${items}</td>`;
+  const allDay = state.members
+    .map((m) => {
+      const list = sortEvents(evs.filter((e) => !isTimed(e) && e.memberIds.includes(m.id)));
+      return `<div class="va" data-allday="${esc(m.id)}" style="--c:${m.color}">${list
+        .map(
+          (e) =>
+            `<button type="button" class="vchip" data-ev="${esc(e.id)}">${e.allDay ? "" : '<span class="t">時間未定</span>'}${esc(e.title)}</button>`,
+        )
+        .join("")}</div>`;
+    })
+    .join("");
+
+  const hours = Array.from({ length: h1 - h0 }, (_, i) => `<span style="top:${i * HOUR_PX}px">${h0 + i}:00</span>`).join("");
+
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const nowLine =
+    ds === t && nowMin >= h0 * 60 && nowMin <= h1 * 60 ? `<div class="now" style="top:${px(nowMin)}px"></div>` : "";
+
+  const cols = state.members
+    .map((m) => {
+      const blocks = layoutColumn(evs.filter((e) => isTimed(e) && e.memberIds.includes(m.id)))
+        .map(({ e, s, en, lane, lanes }) => {
+          const top = px(s);
+          const h = Math.max(px(en) - top, 24);
+          const others = e.memberIds.filter((id) => id !== m.id).map(memberById).filter(Boolean);
+          return `<button type="button" class="vev${h < 44 ? " short" : ""}" data-ev="${esc(e.id)}"
+              style="top:${top}px;height:${h}px;left:calc(${lane} / ${lanes} * 100%);width:calc(100% / ${lanes})">
+              ${
+                h < 44
+                  ? `<span class="ttl" title="${timeLabel(e)}">${esc(e.title)}</span>`
+                  : `<span class="t">${timeLabel(e)}</span><span class="ttl">${esc(e.title)}</span>${
+                      others.length ? `<span class="w">${others.map((o) => esc(o.name)).join("・")}と</span>` : ""
+                    }`
+              }</button>`;
         })
         .join("");
-      return `<tr class="dow${d.getDay()}${ds === t ? " is-today" : ""}">
-          <th scope="row" class="day"><span class="n">${d.getDate()}</span><span class="w">${WD[d.getDay()]}</span></th>
-          ${cells}</tr>`;
+      return `<div class="vcol" data-vcol="${esc(m.id)}" data-h0="${h0}" style="--c:${m.color};height:${height}px">${blocks}${nowLine}</div>`;
     })
     .join("");
 
   setMain(`
-    <div class="week-nav">
-      <button type="button" class="nav-btn" data-week="-1" aria-label="前の週">‹</button>
-      <h2>${first.getFullYear()}年 ${label}</h2>
-      <button type="button" class="nav-btn" data-week="1" aria-label="次の週">›</button>
-      ${state.week !== weekStartOf(t) ? '<button type="button" class="btn small" data-act="thisWeek">今週</button>' : ""}
+    <div class="day-nav">
+      <button type="button" class="btn small" data-act="backMonth">‹ ${Number(ds.slice(5, 7))}月のカレンダー</button>
+      <span class="grow"></span>
+      <button type="button" class="nav-btn" data-dayshift="-1" aria-label="前の日">‹</button>
+      <button type="button" class="nav-btn" data-dayshift="1" aria-label="次の日">›</button>
     </div>
-    <p class="hint">空いているところを押すと、その日・その人の予定を書き込めます。</p>
-    <div class="board-wrap">
-      <table class="board" style="--cols:${state.members.length}">
-        <thead><tr><th class="day"></th>${head}</tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`);
+    <h2 class="day-title${ds === t ? " is-today" : ""}">${fmtDate(ds)}${ds === t ? '<span class="tag">今日</span>' : ""}</h2>
+    <div class="vwrap">
+      <div class="vert" style="--cols:${state.members.length}; --hour:${HOUR_PX}px">
+        <div class="vrow vhead"><div class="corner"></div>${head}</div>
+        <div class="vrow vall"><div class="vlabel">終日</div>${allDay}</div>
+        <div class="vrow vbody"><div class="vtimes" style="height:${height}px">${hours}</div>${cols}</div>
+      </div>
+    </div>
+    <p class="hint center">空いている時間を押すと、その人のその時間に予定を書き込めます。</p>`);
 }
+
+function openDay(ds) {
+  if (!state.day) history.pushState({ day: true }, "");
+  state.day = ds;
+  state.month = ds.slice(0, 7);
+  render();
+  window.scrollTo(0, 0);
+}
+
+function closeDay() {
+  if (history.state && history.state.day) return history.back();
+  state.day = null;
+  render();
+}
+
+window.addEventListener("popstate", () => {
+  if (state.day) {
+    state.day = null;
+    render();
+  }
+});
 
 function renderSettings() {
   const u = state.user;
@@ -413,7 +557,7 @@ function formError(form, msg) {
   return false;
 }
 
-function openEventDialog(e = null, date = todayStr(), memberId = null) {
+function openEventDialog(e = null, date = todayStr(), memberId = null, preset = {}) {
   if (!state.members.length) {
     toast("先に家族を登録してください");
     state.tab = "settings";
@@ -427,6 +571,7 @@ function openEventDialog(e = null, date = todayStr(), memberId = null) {
     allDay: false,
     memberIds: memberId ? [memberId] : [],
     note: "",
+    ...preset,
   };
   const checks = state.members
     .map(
@@ -535,11 +680,16 @@ document.addEventListener("click", async (ev) => {
   const tab = t.closest("#tabs button");
   if (tab) {
     state.tab = tab.dataset.tab;
+    if (state.day) {
+      // 「カレンダー」を押したら月表示に戻る
+      state.day = null;
+      if (history.state && history.state.day) history.replaceState(null, "");
+    }
     render();
     window.scrollTo(0, 0);
     return;
   }
-  if (t.closest("#addBtn")) return openEventDialog(null, state.tab === "week" && state.week > todayStr() ? state.week : todayStr());
+  if (t.closest("#addBtn")) return openEventDialog(null, state.tab === "calendar" && state.day ? state.day : todayStr());
 
   const evBtn = t.closest("[data-ev]");
   if (evBtn) {
@@ -547,14 +697,31 @@ document.addEventListener("click", async (ev) => {
     if (e) openEventDialog(e);
     return;
   }
-  const cell = t.closest("[data-cell]");
-  if (cell) {
-    const [date, memberId] = cell.dataset.cell.split("|");
-    return openEventDialog(null, date, memberId);
+  const day = t.closest("[data-day]");
+  if (day) return openDay(day.dataset.day);
+
+  const col = t.closest("[data-vcol]");
+  if (col) {
+    // 押した位置の時刻（30分単位）で予定を書き始める
+    const y = ev.clientY - col.getBoundingClientRect().top;
+    const start = Math.min(Number(col.dataset.h0) * 60 + Math.floor((y / HOUR_PX) * 2) * 30, 23 * 60 + 30);
+    return openEventDialog(null, state.day, col.dataset.vcol, {
+      start: fromMin(start),
+      end: fromMin(Math.min(start + 60, 23 * 60 + 59)),
+    });
   }
-  const wk = t.closest("[data-week]");
-  if (wk) {
-    state.week = addDays(state.week, 7 * Number(wk.dataset.week));
+  const ad = t.closest("[data-allday]");
+  if (ad) return openEventDialog(null, state.day, ad.dataset.allday, { allDay: true });
+
+  const mon = t.closest("[data-month]");
+  if (mon) {
+    state.month = shiftMonth(state.month, Number(mon.dataset.month));
+    return render();
+  }
+  const shift = t.closest("[data-dayshift]");
+  if (shift) {
+    state.day = addDays(state.day, Number(shift.dataset.dayshift));
+    state.month = state.day.slice(0, 7);
     return render();
   }
   const editM = t.closest("[data-edit-member]");
@@ -593,9 +760,12 @@ document.addEventListener("click", async (ev) => {
     case "addMember":
       openMemberDialog();
       break;
-    case "thisWeek":
-      state.week = weekStartOf(todayStr());
+    case "thisMonth":
+      state.month = todayStr().slice(0, 7);
       render();
+      break;
+    case "backMonth":
+      closeDay();
       break;
     case "resetDemo":
       if (confirm("デモのデータをサンプルに戻しますか？")) state.store.reset();
