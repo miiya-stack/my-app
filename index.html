@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>メロのピアノれんしゅう</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#2F9BF0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="メロのピアノ">
+<meta name="format-detection" content="telephone=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Music&display=swap">
@@ -26,9 +31,11 @@
   --grass-soft:#18392A; --coral-soft:#43221F; --staff:#21304A; --paper:#FFFFFF; color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-display);font-weight:500;font-size:16px;line-height:1.55;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;-webkit-touch-callout:none;touch-action:manipulation;overscroll-behavior-y:none;background:var(--bg);color:var(--ink);font-family:var(--f-display);font-weight:500;font-size:16px;line-height:1.55;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input,select,textarea{font-size:16px}
 input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%}
 input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--primary);outline-offset:2px}
 h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
@@ -141,7 +148,7 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .notation .nt{transition:color .08s}
 .notation .nt.on{color:#2F9BF0!important;filter:drop-shadow(0 0 4px rgba(47,155,240,.6))}
 .countin{font-size:2rem;font-weight:800;text-align:center;min-height:3rem;color:var(--primary)}
-.tap-pad{width:100%;aspect-ratio:2.4/1;max-height:200px;border-radius:28px;border:0;background:var(--sun);box-shadow:0 8px 0 var(--sun-deep);font-size:1.6rem;font-weight:800;color:#5A3B00;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.tap-pad{touch-action:none;-webkit-touch-callout:none;width:100%;aspect-ratio:2.4/1;max-height:200px;border-radius:28px;border:0;background:var(--sun);box-shadow:0 8px 0 var(--sun-deep);font-size:1.6rem;font-weight:800;color:#5A3B00;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .tap-pad.hit{transform:translateY(5px);box-shadow:0 3px 0 var(--sun-deep)}
 .tap-pad:disabled{background:var(--line);box-shadow:0 8px 0 var(--line);color:var(--muted)}
 .timeline{position:relative;height:44px;background:var(--surface-2);border-radius:12px;border:2px solid var(--line)}
@@ -226,6 +233,35 @@ th{font-size:.78rem;color:var(--muted)}
 .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:70;pointer-events:none;animation:fall 2.4s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 .chest{display:flex;align-items:center;gap:12px}
+/* model performance player */
+.model{display:flex;flex-direction:column;gap:10px}
+.model video{width:100%;max-height:52vh;border-radius:12px;background:#000;display:block}
+.speed{display:flex;gap:4px;flex-wrap:wrap}
+.speed button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;font-weight:800;font-size:.85rem}
+.speed button.on{border-color:var(--primary);background:var(--primary);color:#fff}
+.seek{display:flex;gap:10px;align-items:center}
+.seek input{flex:1;padding:0;border:0;background:none;accent-color:var(--primary);height:32px}
+.seek span{font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);font-size:.9rem;min-width:7.5em;text-align:right}
+.tools button.mark{border-color:var(--sun-deep);background:#FFF3C7;color:#5A3B00}
+.song-grid{display:flex;flex-direction:column;gap:16px}
+.song-grid>div{display:flex;flex-direction:column;gap:16px;min-width:0}
+/* tablets (iPad / Android tablets) */
+@media (min-width:760px){
+  .app{max-width:1000px}
+  .home-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px;align-items:stretch}
+  .home-top .card{display:flex;flex-direction:column;justify-content:center}
+  .lessons{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+  .narrow{max-width:720px;width:100%;margin:0 auto}
+  .staff-wrap svg{max-width:540px}
+  .ans{padding:22px 6px;font-size:1.8rem}
+  .song-grid{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);align-items:start}
+  .song-grid .col-a{position:sticky;top:calc(12px + env(safe-area-inset-top,0px))}
+  .shop-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+  .tap-pad{max-height:240px}
+}
+@media (min-width:760px) and (orientation:landscape) and (max-height:900px){
+  .model video{max-height:40vh}
+}
 .chest svg{width:56px;height:56px;flex:none}
 </style>
 </head>
@@ -319,11 +355,20 @@ function markPractice(){const p=P(),t=dayKey();if(p.lastDay===t)return 0;
 
 /* ================= audio ================= */
 let AC=null;
-function ac(){if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==="suspended")AC.resume();return AC}
+function ac(){if(!AC){const K=window.AudioContext||window.webkitAudioContext;if(!K)return null;
+    // iPhone/iPad: play through the silent switch like a music app
+    try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+    AC=new K();try{const b=AC.createBuffer(1,1,22050),src=AC.createBufferSource();src.buffer=b;src.connect(AC.destination);src.start(0)}catch(e){}}
+  if(AC.state==="suspended"||AC.state==="interrupted")AC.resume();return AC}
+document.addEventListener("pointerdown",()=>ac(),{once:true,capture:true});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC&&AC.state!=="running")AC.resume().catch(()=>{});if(!document.hidden&&wakeWanted)wake(true)});
+/* keep the screen on while practising (tablet on the music stand) */
+let wakeLock=null,wakeWanted=false;
+async function wake(on){wakeWanted=on;try{if(on){if(!wakeLock&&navigator.wakeLock&&!document.hidden){wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>{wakeLock=null})}}else if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){wakeLock=null}}
 const SEMI={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 function freqOf(n){const m=12*(+n.slice(1)+1)+SEMI[n[0]];return 440*Math.pow(2,(m-69)/12)}
-function tone(freq,when=0,dur=.6,vol=.35,type="triangle"){const a=ac();if(!a)return;const t=when||a.currentTime;
-  const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(vol*.5,t+Math.min(.25,dur*.5));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);g.connect(a.destination);
+function tone(freq,when=0,dur=.6,vol=.35,type="triangle",dest){const a=ac();if(!a)return;const t=when||a.currentTime;
+  const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(vol*.5,t+Math.min(.25,dur*.5));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);g.connect(dest||a.destination);
   const o=a.createOscillator();o.type=type;o.frequency.value=freq;o.connect(g);o.start(t);o.stop(t+dur+.05);
   const o2=a.createOscillator(),g2=a.createGain();g2.gain.value=.25;o2.type="sine";o2.frequency.value=freq*2;o2.connect(g2);g2.connect(g);o2.start(t);o2.stop(t+dur+.05)}
 function click(when,accent){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="square";o.frequency.value=accent?1600:1100;
@@ -458,8 +503,8 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   const pct=(v,g)=>Math.min(100,Math.round(v/Math.max(1,g)*100));
   const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin;
   app.innerHTML=`<section class="screen">${topbar()}
-  <div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
-  <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div>
+  <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
+  <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
   ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
    <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
@@ -478,7 +523,7 @@ function startNotes(){const a=S.assignment;if(!a.notes.length){app.innerHTML=`<s
   let names=a.answerMode==="all"?LET:LET.filter(l=>a.notes.some(n=>n.split(":")[1][0]===l));if(names.length<3)names=LET;
   Q={list,i:0,hearts:3,correct:0,names};renderQ()}
 function renderQ(){const id=Q.list[Q.i],[clef,note]=id.split(":");
-  app.innerHTML=`<section class="screen"><div class="lesson-top"><button class="x" id="quit" aria-label="やめる">${IC.x}</button><div class="bar"><i style="width:${Q.i/Q.list.length*100}%"></i></div><div class="hearts">${[0,1,2].map(i=>i<Q.hearts?IC.heart:IC.heartOff).join("")}</div></div>
+  app.innerHTML=`<section class="screen narrow"><div class="lesson-top"><button class="x" id="quit" aria-label="やめる">${IC.x}</button><div class="bar"><i style="width:${Q.i/Q.list.length*100}%"></i></div><div class="hearts">${[0,1,2].map(i=>i<Q.hearts?IC.heart:IC.heartOff).join("")}</div></div>
   <div class="prompt">この おとは なに?</div><div class="label">${CLEF[clef].jp}きごう</div>
   <div class="staff-wrap">${staffSVG(clef,note)}</div>
   <div class="answers">${Q.names.map(l=>`<button class="ans" data-a="${l}">${SOL[l]}</button>`).join("")}</div></section>`;
@@ -498,7 +543,7 @@ function finishNotes(){const done=Q.hearts>0,perfect=done&&Q.correct===Q.list.le
   resultScreen({title:done?(perfect?"パーフェクト!":"レッスン クリア!"):"ハートが なくなっちゃった",ok:done,lines:[["せいかい",`${Q.correct}/${Q.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>go("notes")})}
 
 function resultScreen({title,ok,lines,streak,again,extra=""}){
-  app.innerHTML=`<section class="screen result"><div class="mascot ${ok?"happy":"worried"}" style="width:180px">${mascotSVG(ok?"happy":"worried")}</div><div class="big">${esc(title)}</div>
+  app.innerHTML=`<section class="screen result narrow"><div class="mascot ${ok?"happy":"worried"}" style="width:180px">${mascotSVG(ok?"happy":"worried")}</div><div class="big">${esc(title)}</div>
   <div class="reward">${lines.map(([k,v])=>`<div class="card"><span class="label">${k}</span><b>${v}</b></div>`).join("")}${streak?`<div class="card"><span class="label">れんぞくボーナス</span><b>+${streak}</b></div>`:""}</div>${extra}
   <div class="row" style="width:100%"><button class="btn ghost grow" id="again">もういちど</button><button class="btn green grow" id="home">ホームへ</button></div></section>`;
   if(ok){sfx("win");confetti()}else sfx("ng");$("#again").onclick=again;$("#home").onclick=()=>go("home");if(streak)setTimeout(()=>toast(`${P().streak}日れんぞく! ボーナス コイン+${streak}`),900)}
@@ -510,12 +555,12 @@ function bindBack(to="home"){$("#back").onclick=()=>go(to)}
 function rhythmStars(id){return P().rhythmToday[dayKey()+"|"+id]||0}
 function starsHTML(n){return `<span class="stars">${[1,2,3].map(i=>i<=n?IC.star:IC.starOff).join("")}</span>`}
 function renderRhythmList(){const a=S.assignment;
-  app.innerHTML=`<section class="screen">${backBar("リズムうち")}<p class="muted" style="margin:0">リズムを えらんで、ドラムを タップしよう。テンポ ${a.bpm}</p>
+  app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<p class="muted" style="margin:0">リズムを えらんで、ドラムを タップしよう。テンポ ${a.bpm}</p>
   <div class="rhythm-list">${a.rhythms.map(rhythmById).filter(Boolean).map(r=>`<button class="rcard" data-id="${r.id}"><span><span class="label">${esc(r.name)}</span>${rhythmSVG(r.tokens,{unit:52})}</span>${starsHTML(rhythmStars(r.id))}</button>`).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("rhythmPlay",b.dataset.id))}
 function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return go("rhythm");
   const beats=beatsOf(r.tokens),ons=onsetsOf(r.tokens);let busy=false,taps=[],measureStart=0,raf=0,timers=[],sounded=new Set();
-  app.innerHTML=`<section class="screen">${backBar(r.name)}
+  app.innerHTML=`<section class="screen narrow">${backBar(r.name)}
    <div class="notation-wrap" id="nw">${rhythmSVG(r.tokens,{playhead:1})}</div>
    <div class="countin" id="ci" aria-live="polite">${beats}拍子</div>
    <button class="tap-pad" id="pad" disabled>タップ!</button>
@@ -548,7 +593,7 @@ function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return
     else tone(freqOf("C5"),0,.15,.22);pad.classList.add("hit");setTimeout(()=>pad.classList.remove("hit"),80)}
   pad.addEventListener("pointerdown",hit);
   const key=e=>{if(e.code==="Space"&&!e.repeat&&!pad.disabled){hit(e)}};document.addEventListener("keydown",key);
-  cleanup=()=>{document.removeEventListener("keydown",key);timers.forEach(clearTimeout);cancelAnimationFrame(raf)};
+  wake(true);cleanup=()=>{document.removeEventListener("keydown",key);timers.forEach(clearTimeout);cancelAnimationFrame(raf);wake(false)};
   function judge(){pad.disabled=true;busy=false;setBtns(false);
     taps=taps.filter(t=>t>=measureStart-Math.min(.25,bd*.45));
     const exp=ons.map(o=>measureStart+o.beat*bd),used=new Set(),res=exp.map(t=>{let best=-1,bdiff=1e9;taps.forEach((tp,i)=>{if(used.has(i))return;const d=Math.abs(tp-t);if(d<bdiff){bdiff=d;best=i}});
@@ -578,17 +623,19 @@ function pointerToScore(e,song){const r=$("#sb").getBoundingClientRect(),H=song.
 function renderSong(id){const song=S.assignment.songs.find(s=>s.id===id);if(!song)return go("home");
   const memos=P().memos[song.id]||(P().memos[song.id]=[]);
   const st={sec:0,run:false,throughs:0,checked:new Set(),since:0,memoMode:false,active:null};let iv=null;
+  const mp=modelPlayer(song);
   function draw(){
-  app.innerHTML=`<section class="screen">${backBar(song.title)}
+  app.innerHTML=`<section class="screen">${backBar(song.title)}<div class="song-grid"><div class="col-a">
    <div class="tools"><button id="memo" class="${st.memoMode?"on":""}">${st.memoMode?"メモをかく: タップして ばしょを えらぶ":"じぶんメモを かく"}</button></div>
    ${scoreBox(song,{memos})}
-   <div id="memoForm"></div>
+   <div id="memoForm"></div><div id="mpHost"></div></div><div class="col-b">
    <div class="card"><div class="label">がくふの ちゅうい</div><ul class="pins-list" style="margin-top:8px">${song.pins.map((p,i)=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:${p.color}">${i+1}</span><span>${esc(p.text)}</span></li>`).join("")}${memos.map(p=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:#B05CE6">M</span><span style="flex:1">${esc(p.text)}</span><button class="del" data-delmemo="${p.id}" aria-label="メモをけす">けす</button></li>`).join("")}</ul></div>
    <div class="card"><div class="label">れんしゅうの ポイント(できたら タップ)</div><ul class="checklist" style="margin-top:8px">${song.checklist.map((c,i)=>`<li><button data-ci="${i}" class="${st.checked.has(i)?"on":""}"><span class="box">${st.checked.has(i)?IC.check:""}</span>${esc(c)}</button></li>`).join("")}</ul></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between"><span class="label">れんしゅう タイマー(もくひょう ${song.goalMin}ふん)</span><span class="label">とおして ひけた: <b id="thr">${st.throughs}</b>かい</span></div>
     <div class="timer" id="tm">${fmt(st.sec)}</div><div class="bar sun"><i id="tb" style="width:${Math.min(100,st.sec/(song.goalMin*60)*100)}%"></i></div>
     <div class="row"><button class="btn ${st.run?"ghost":"green"} grow" id="run">${st.run?"いちじ ていし":st.sec?"つづける":"れんしゅう スタート"}</button><button class="btn sun grow" id="thru">とおして ひけた! +1</button></div>
-    <button class="btn wide" id="fin" ${st.sec<5?"disabled":""}>れんしゅう おわり</button></div></section>`;
+    <button class="btn wide" id="fin" ${st.sec<5?"disabled":""}>れんしゅう おわり</button></div></div></div></section>`;
+  $("#mpHost").replaceWith(mp.el);
   bindBack(S.assignment.songs.length>1?"songs":"home");
   $("#memo").onclick=()=>{st.memoMode=!st.memoMode;draw()};
   $$("#sb .pin").forEach(b=>b.onclick=e=>{e.stopPropagation();st.active=b.dataset.pid;draw();const li=$(`.pins-list li[data-pid="${b.dataset.pid}"]`);if(li)li.scrollIntoView({block:"nearest",behavior:"smooth"})});
@@ -605,7 +652,7 @@ function renderSong(id){const song=S.assignment.songs.find(s=>s.id===id);if(!son
     m.innerHTML=`<div class="card"><div style="width:120px;margin:0 auto">${mascotSVG("happy")}</div><h2>目を やすめよう</h2><p style="margin:0">15ふん がんばったね! まどの そとの とおくを 20びょう みてね。</p><div class="timer" id="eb">${n}</div><button class="btn wide" id="ebok" disabled>やすめたよ</button></div>`;document.body.appendChild(m);
     const t=setInterval(()=>{n--;const e=$("#eb");if(e)e.textContent=n;if(n<=0){clearInterval(t);const b=$("#ebok");if(b){b.disabled=false;b.textContent="やすめたよ(コイン+2)"}}},1000);
     $("#ebok").onclick=()=>{P().coins+=2;save();sfx("coin");m.remove();draw()}}
-  function finish(){clearInterval(iv);st.run=false;const ratings=song.checklist.map(()=>null);
+  function finish(){clearInterval(iv);st.run=false;mp.destroy();const ratings=song.checklist.map(()=>null);
     app.innerHTML=`<section class="screen">${backBar("ふりかえり")}<div class="card"><b>きょうは どうだった?</b><p class="muted" style="margin:4px 0 0">れんしゅう ${fmt(st.sec)}・とおして ${st.throughs}かい</p></div>
     ${song.checklist.map((c,i)=>`<div class="card"><div>${esc(c)}</div><div class="rate" data-ri="${i}">${["できた","もうすこし","むずかしい"].map((l,j)=>`<button data-v="${j}">${l}</button>`).join("")}</div></div>`).join("")}
     <button class="btn green wide" id="done">ごほうびを もらう</button></section>`;bindBack("home");
@@ -614,7 +661,7 @@ function renderSong(id){const song=S.assignment.songs.find(s=>s.id===id);if(!son
       if(min>=1){r.songMin+=min;weekly().songMin+=min;sb=markPractice()}
       P().ratings[song.id]={date:dayKey(),items:song.checklist.map((c,i)=>({c,v:ratings[i]})),min,throughs:st.throughs};P().coins+=coins;save();
       resultScreen({title:min>=1?"きょくの れんしゅう おつかれさま!":"1ぷん いじょう れんしゅう しよう",ok:min>=1,lines:[["れんしゅう",`${min}ふん`],["コイン",`+${coins}`]],streak:sb,again:()=>go("song",song.id)})}}
-  draw();cleanup=()=>clearInterval(iv)}
+  draw();wake(true);cleanup=()=>{clearInterval(iv);mp.destroy();wake(false)}}
 const fmt=s=>`${pad2(Math.floor(s/60))}:${pad2(s%60)}`;
 function inlineForm(host,label,val,onOk,onCancel,extraBtn){host.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px"><label class="label" for="iff">${esc(label)}</label><input id="iff" value="${esc(val)}" maxlength="80"><div class="row">${extraBtn||""}<button class="btn ghost small grow" id="iffc">やめる</button><button class="btn small grow" id="iffo">OK</button></div></div>`;
   const i=$("#iff",host);i.focus();const ok=()=>{const v=i.value.trim();if(!v)return i.focus();host.innerHTML="";onOk(v)};$("#iffo",host).onclick=ok;i.onkeydown=e=>{if(e.key==="Enter")ok()};$("#iffc",host).onclick=()=>{host.innerHTML="";onCancel()}}
@@ -689,12 +736,16 @@ function tRhythm(el){const a=S.assignment;let build=[],ts=4;
   $("#bclr",el).onclick=()=>{build=[];draw()};
   $("#bsave",el).onclick=()=>{const r={id:"c"+uid(),name:`オリジナル ${S.customRhythms.length+1}`,tokens:build.slice(),custom:true};S.customRhythms.push(r);a.rhythms.push(r.id);build=[];saved();draw()}}
   draw()}
+let tPlayer=null;
 function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color="#FF6457",drawing=null;
-  function draw(){const song=a.songs.find(s=>s.id===cur);
+  function draw(){if(tPlayer){tPlayer.destroy();tPlayer=null}const song=a.songs.find(s=>s.id===cur);
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>練習する曲</b><div class="row">${a.songs.map(s=>`<button class="btn small ${s.id===cur?"":"ghost"}" data-s="${s.id}">${esc(s.title)}</button>`).join("")}<button class="btn green small" id="addS">+ 曲をふやす</button></div></div>
    ${song?`<div class="card" style="display:flex;flex-direction:column;gap:12px">
     <div class="field"><label for="st">曲名</label><input id="st" value="${esc(song.title)}" maxlength="40"></div>
     <div class="field"><label for="img">楽譜の写真・画像</label><input id="img" type="file" accept="image/*"><span class="muted" style="font-size:.8rem">スマホで撮った楽譜の写真をえらんでください(自動で小さくして保存します)</span></div>
+    <div class="field"><label for="mdl">おてほん演奏(先生の えんそうの 録音・動画)</label><input id="mdl" type="file" accept="audio/*,video/*">
+     <span class="muted" style="font-size:.8rem" id="mdlInfo">${song.model?"とうろく済み: "+({video:"動画",media:"録音",pcm:"録音(音だけ)",local:"この端末に保存"}[song.model.kind]||"録音"):"スマホの ボイスメモや カメラで 録った ファイルを えらんでください。20MBまでの 動画は そのまま、大きい動画は 音だけ 保存します。"}</span>
+     ${song.model?`<div class="row"><button class="btn ghost small" id="mdlTry">きいてみる</button><button class="del" style="padding:8px 12px" id="mdlDel">おてほんを けす</button></div><div id="mdlHost"></div>`:""}</div>
     <div class="label">楽譜に書きこむ</div>
     <div class="tools">${[["pin","ピンでちゅうい"],["pen","ペンでかく"],["erase","けしゴム"]].map(([k,l])=>`<button data-m="${k}" class="${mode===k?"on":""}">${l}</button>`).join("")}<span class="row" style="gap:6px;margin-left:auto">${["#FF6457","#2F9BF0","#3FBF73","#E3A10B"].map(c=>`<button class="swatch ${color===c?"on":""}" data-c="${c}" style="background:${c}" aria-label="いろ"></button>`).join("")}</span></div>
     <div class="muted" style="font-size:.8rem">${mode==="pin"?"楽譜をタップすると ちゅういピンを おけます。ピンをタップすると なおせます。":mode==="pen"?"指やマウスで 楽譜に 線や丸を かけます。":"けしたい 線やピンを タップしてください。"}</div>
@@ -714,6 +765,10 @@ function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color=
     if(C.on){if(!C.assets)return toast("楽譜の画像を のせる権限が ありません");toast("楽譜を アップロード中…");
       c.toBlob(b=>C.assets.upload(b,{contentType:"image/jpeg"}).then(r=>apply({assetId:r.id})).catch(()=>toast("アップロードに 失敗しました。もういちど ためしてください")),"image/jpeg",.82)}
     else apply({image:c.toDataURL("image/jpeg",.8)})};im.src=rd.result};rd.readAsDataURL(f)};
+  $("#mdl",el).onchange=async e=>{const f=e.target.files[0];if(!f)return;const info=$("#mdlInfo",el);info.textContent="おてほんを じゅんびしています…(長い曲は 少し 時間が かかります)";
+    try{const r=await importModel(f,song);save();toast(r==="audio"?"動画が 大きいので 音だけ 保存しました":"おてほん演奏を とうろくしました")}catch(err){toast(err&&err.msg||"おてほんを 読みこめませんでした。ボイスメモ(m4a)や mp4 で ためしてください")}draw()};
+  const mt=$("#mdlTry",el);if(mt)mt.onclick=()=>{if(tPlayer)tPlayer.destroy();tPlayer=modelPlayer(song);$("#mdlHost",el).replaceChildren(tPlayer.el);mt.remove()};
+  const md=$("#mdlDel",el);if(md)md.onclick=async()=>{const m=song.model;song.model=null;save();if(m.kind==="local")IDB.del(song.id).catch(()=>{});else if(C.assets)C.assets.delete(m.assetId).catch(()=>{});toast("おてほんを けしました");draw()};
   $$("[data-m]",el).forEach(b=>b.onclick=()=>{mode=b.dataset.m;draw()});
   $$("[data-c]",el).forEach(b=>b.onclick=()=>{color=b.dataset.c;draw()});
   $$("[data-cl]",el).forEach(i=>i.onchange=()=>{song.checklist[+i.dataset.cl]=i.value.trim();song.checklist=song.checklist.filter(Boolean);saved()});
@@ -770,6 +825,80 @@ function tSettings(el){const a=S.assignment;
   $("#reset",el).onclick=()=>{$("#rst",el).innerHTML=`<div class="row"><span>記録・コイン・ショップの アイテムが 消えます。よろしいですか?</span><button class="btn ghost small" id="rn">やめる</button><button class="btn red small" id="ry">リセット</button></div>`;$("#rn",el).onclick=()=>tSettings(el);$("#ry",el).onclick=()=>{S.p=defaultState().p;saved();tSettings(el)}}}
 
 /* ================= boot ================= */
+/* ================= model performance (おてほん演奏) =================
+   cloud: mp4/webm up to 20MB uploaded as-is (video or m4a audio); anything else / larger
+   is decoded, mixed to mono 22.05kHz and stored as 8-bit mu-law bytes, rebuilt to WAV on play.
+   local (index.html opened directly): original file kept in IndexedDB on this device. */
+const IDB={p:null,open(){return this.p||(this.p=new Promise((res,rej)=>{const r=indexedDB.open("meloPiano",1);r.onupgradeneeded=()=>r.result.createObjectStore("media");r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}))},
+  async op(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const tx=db.transaction("media",mode),rq=fn(tx.objectStore("media"));tx.oncomplete=()=>res(rq.result);tx.onerror=()=>rej(tx.error)})},
+  get(k){return this.op("readonly",s=>s.get(k))},put(k,v){return this.op("readwrite",s=>s.put(v,k))},del(k){return this.op("readwrite",s=>s.delete(k))}};
+const MU=Math.log(256);
+const muEnc=x=>{const a=Math.min(1,Math.abs(x));return (x<0?0x80:0)|Math.round(Math.log(1+255*a)/MU*127)};
+const muDec=b=>{const v=(Math.pow(256,(b&0x7F)/127)-1)/255;return b&0x80?-v:v};
+function wavFromMu(bytes,rate){const n=bytes.length,buf=new ArrayBuffer(44+n*2),v=new DataView(buf),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))};
+  w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+  const L=new Int16Array(256);for(let i=0;i<256;i++)L[i]=Math.round(muDec(i)*32767);for(let i=0;i<n;i++)v.setInt16(44+i*2,L[bytes[i]],true);return new Blob([buf],{type:"audio/wav"})}
+async function fileToMu(file){const A=ac();if(!A)throw{msg:"この ブラウザでは 音を あつかえません"};const ab=await file.arrayBuffer();
+  const buf=await new Promise((res,rej)=>{const p=A.decodeAudioData(ab,res,rej);if(p&&p.catch)p.catch(rej)});
+  const rate=22050,sec=Math.min(buf.duration,12*60),OC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  const oc=new OC(1,Math.max(1,Math.ceil(sec*rate)),rate),src=oc.createBufferSource();src.buffer=buf;src.connect(oc.destination);src.start(0);
+  const out=await new Promise((res,rej)=>{oc.oncomplete=e=>res(e.renderedBuffer);const p=oc.startRendering();if(p&&p.then)p.then(res,rej)});
+  const d=out.getChannelData(0);let pk=0;for(let i=0;i<d.length;i++){const a=Math.abs(d[i]);if(a>pk)pk=a}const g=pk>0?.97/pk:1;
+  const bytes=new Uint8Array(d.length);for(let i=0;i<d.length;i++)bytes[i]=muEnc(d[i]*g);return{bytes,rate}}
+async function importModel(file,song){
+  if(!C.on){await IDB.put(song.id,file);song.model={kind:"local",mime:file.type||""};return"local"}
+  if(!C.assets)throw{msg:"おてほんを のせる 権限が ありません"};
+  const nm=(file.type+" "+file.name).toLowerCase(),isVid=/video|\.(mp4|mov|m4v|webm)\b/.test(nm),direct=/mp4|m4a|m4v|mov|quicktime|aac|webm/.test(nm);
+  if(direct&&file.size<=19.5*1048576){const r=await C.assets.upload(file,{contentType:/webm/.test(nm)?"video/webm":"video/mp4"});song.model={kind:isVid?"video":"media",assetId:r.id};return isVid?"video":"media"}
+  const {bytes,rate}=await fileToMu(file);if(bytes.length>19.5*1048576)throw{msg:"おてほんが 長すぎます(12分まで)"};
+  const r=await C.assets.upload(new Blob([bytes]),{contentType:"text/plain"});song.model={kind:"pcm",assetId:r.id,rate};return isVid?"audio":"pcm"}
+async function modelSource(song){const m=song.model;
+  if(m.kind==="local"){const b=await IDB.get(song.id);if(!b)return null;const u=URL.createObjectURL(b);return{url:u,video:/^video/.test(b.type),revoke:()=>URL.revokeObjectURL(u)}}
+  if(m.kind==="pcm"){const r=await fetch("/_blob/"+m.assetId);if(!r.ok)throw 0;const u=URL.createObjectURL(wavFromMu(new Uint8Array(await r.arrayBuffer()),m.rate));return{url:u,video:false,revoke:()=>URL.revokeObjectURL(u)}}
+  return{url:"/_blob/"+m.assetId,video:m.kind==="video",revoke:()=>{}}}
+const SAMPLE_MELODY=[["C4",1],["C4",1],["G4",1],["G4",1],["A4",1],["A4",1],["G4",2],["F4",1],["F4",1],["E4",1],["E4",1],["D4",1],["D4",1],["C4",2],["G4",1],["G4",1],["F4",1],["F4",1],["E4",1],["E4",1],["D4",2],["G4",1],["G4",1],["F4",1],["F4",1],["E4",1],["E4",1],["D4",2]];
+const PLAYI=`<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>`,PAUSEI=`<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align:-3px"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z" fill="currentColor"/></svg>`;
+const mmss=t=>!isFinite(t)?"0:00":`${Math.floor(t/60)}:${pad2(Math.floor(t%60))}`;
+function modelPlayer(song){const el=document.createElement("div");el.className="card model";
+  const has=!!song.model,synthOnly=!has&&song.sample;if(!has&&!synthOnly){el.hidden=true;return{el,destroy(){}}}
+  let media=null,src=null,alive=true,rate=1,A=null,B=null,loop=false,synth=null,playing=false;
+  el.innerHTML=`<div class="row" style="justify-content:space-between"><b>おてほん演奏</b><span class="label">${has?"せんせいの えんそう":"きかいの えんそう"}</span></div><div class="mv-host"></div>
+   <div class="row"><button class="btn green" data-mp="play">${PLAYI} きく</button><div class="speed" role="group" aria-label="はやさ">${[[0.5,"ゆっくり"],[0.75,"すこし ゆっくり"],[1,"ふつう"]].map(([r,l])=>`<button data-rate="${r}" class="${r===1?"on":""}">${l}</button>`).join("")}</div></div>
+   ${has?`<div class="seek"><input type="range" data-mp="seek" min="0" max="1000" value="0" aria-label="ばしょ"><span data-mp="time">0:00 / 0:00</span></div>
+   <div class="tools"><button data-mp="a">ここから</button><button data-mp="b">ここまで</button><button data-mp="loop">くりかえし</button></div>`:""}
+   <div class="muted" data-mp="msg" style="font-size:.85rem">${has?"よみこみ中…":"サンプルの きょくは きかいが ひいてくれるよ"}</div>`;
+  const q=k=>el.querySelector(`[data-mp="${k}"]`),msg=t=>{q("msg").textContent=t},btn=q("play");
+  const setBtn=on=>{playing=on;btn.innerHTML=on?`${PAUSEI} とめる`:`${PLAYI} きく`;btn.className="btn "+(on?"ghost":"green")};
+  const abText=()=>{if(!has)return;q("a").classList.toggle("mark",A!=null);q("b").classList.toggle("mark",B!=null);q("loop").classList.toggle("on",loop);
+    msg(A!=null||B!=null?`くりかえす ところ: ${A!=null?mmss(A):"はじめ"} 〜 ${B!=null?mmss(B):"おわり"}`:"「ここから」「ここまで」で にがてな ところだけ くりかえせるよ")};
+  $$("[data-rate]",el).forEach(b=>b.onclick=()=>{rate=+b.dataset.rate;$$("[data-rate]",el).forEach(x=>x.classList.toggle("on",x===b));if(media){media.playbackRate=rate}if(synth&&playing){stopSynth();playSynth()}});
+  function playSynth(){const a=ac();if(!a)return;const out=a.createGain();out.connect(a.destination);const bd=60/(96*rate);let t=a.currentTime+.15;
+    SAMPLE_MELODY.forEach(([n,b])=>{tone(freqOf(n),t,Math.max(.2,b*bd*.95),.3,"triangle",out);t+=b*bd});
+    synth={out,timer:setTimeout(()=>{stopSynth()},(t-a.currentTime)*1000+300)};setBtn(true)}
+  function stopSynth(){if(synth){clearTimeout(synth.timer);try{synth.out.disconnect()}catch(e){}synth=null}setBtn(false)}
+  btn.onclick=()=>{ac();if(!has){playing?stopSynth():playSynth();return}if(!media)return;
+    if(media.paused){media.playbackRate=rate;try{media.preservesPitch=true;media.webkitPreservesPitch=true}catch(e){}if(loop&&A!=null&&(media.currentTime<A||(B!=null&&media.currentTime>=B)))media.currentTime=A;
+      const p=media.play();if(p&&p.catch)p.catch(()=>msg("さいせい できませんでした。もういちど おしてね"))}else media.pause()};
+  if(has){btn.disabled=true;
+    modelSource(song).then(s=>{if(!alive){if(s)s.revoke();return}if(!s){msg("おてほんが この端末に みつかりません");return}src=s;
+      media=document.createElement(s.video?"video":"audio");media.preload="metadata";media.playsInline=true;media.setAttribute("playsinline","");media.setAttribute("webkit-playsinline","");media.src=s.url;
+      if(s.video)el.querySelector(".mv-host").appendChild(media);
+      btn.disabled=false;abText();
+      const seek=q("seek"),time=q("time");let dragging=false;
+      seek.addEventListener("input",()=>{dragging=true;if(isFinite(media.duration))time.textContent=`${mmss(seek.value/1000*media.duration)} / ${mmss(media.duration)}`});
+      seek.addEventListener("change",()=>{dragging=false;if(isFinite(media.duration))media.currentTime=seek.value/1000*media.duration});
+      const upd=()=>{const d=media.duration;if(!dragging&&isFinite(d)&&d>0){seek.value=Math.round(media.currentTime/d*1000);time.textContent=`${mmss(media.currentTime)} / ${mmss(d)}`}
+        if(loop&&A!=null&&B!=null&&media.currentTime>=B){media.currentTime=A}};
+      media.addEventListener("timeupdate",upd);media.addEventListener("loadedmetadata",upd);media.addEventListener("durationchange",upd);
+      media.addEventListener("play",()=>setBtn(true));media.addEventListener("pause",()=>setBtn(false));
+      media.addEventListener("ended",()=>{if(loop){media.currentTime=A!=null?A:0;media.play().catch(()=>{})}else setBtn(false)});
+      media.addEventListener("error",()=>msg("この端末では この おてほんを さいせい できません"));
+      q("a").onclick=()=>{A=media.currentTime;if(B!=null&&B<=A)B=null;abText()};
+      q("b").onclick=()=>{B=media.currentTime;if(A!=null&&A>=B)A=null;if(A==null)A=0;loop=true;abText()};
+      q("loop").onclick=()=>{loop=!loop;if(!loop){A=null;B=null}abText()};
+    }).catch(()=>msg("おてほんを よみこめませんでした"))}
+  return{el,destroy(){alive=false;stopSynth();if(media){media.pause();media.removeAttribute("src");try{media.load()}catch(e){}}if(src)src.revoke()}}}
+
 /* ================= cloud sync (shared page: teacher -> students, students -> teacher) =================
    class/current      : the common assignment (everyone without their own)
    assign/<studentId> : one student's own assignment (optional)
