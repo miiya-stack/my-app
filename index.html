@@ -138,6 +138,8 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .stars svg{width:22px;height:22px}
 .notation-wrap{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:6px}
 .notation-wrap svg{width:100%;height:auto;display:block}
+.notation .nt{transition:color .08s}
+.notation .nt.on{color:#2F9BF0!important;filter:drop-shadow(0 0 4px rgba(47,155,240,.6))}
 .countin{font-size:2rem;font-weight:800;text-align:center;min-height:3rem;color:var(--primary)}
 .tap-pad{width:100%;aspect-ratio:2.4/1;max-height:200px;border-radius:28px;border:0;background:var(--sun);box-shadow:0 8px 0 var(--sun-deep);font-size:1.6rem;font-weight:800;color:#5A3B00;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 .tap-pad.hit{transform:translateY(5px);box-shadow:0 3px 0 var(--sun-deep)}
@@ -368,15 +370,17 @@ function rhythmSVG(tokens,o={}){const unit=o.unit||64,mini=o.mini,left=mini?6:56
     g+=`<text x="22" y="${y-6}" text-anchor="middle" font-size="22" font-weight="800" fill="#21304A" font-family="sans-serif">${beats}</text><text x="22" y="${y+18}" text-anchor="middle" font-size="22" font-weight="800" fill="#21304A" font-family="sans-serif">4</text>`;
     g+=`<line x1="44" x2="44" y1="${y-18}" y2="${y+18}" stroke="#21304A" stroke-width="2"/><line x1="${W-16}" x2="${W-16}" y1="${y-18}" y2="${y+18}" stroke="#21304A" stroke-width="2"/><line x1="${W-10}" x2="${W-10}" y1="${y-18}" y2="${y+18}" stroke="#21304A" stroke-width="5"/>`}
   let b=0;const SH=40;
-  const head=(x,fill,c,wide)=>`<ellipse cx="${x}" cy="${y}" rx="${wide?10:8.5}" ry="6.4" transform="rotate(${wide?-10:-20} ${x} ${y})" fill="${fill?c:"#fff"}" stroke="${c}" stroke-width="${fill?0:2.6}"/>`;
-  const stem=(x,c)=>`<line x1="${x+7.6}" x2="${x+7.6}" y1="${y-2}" y2="${y-SH}" stroke="${c}" stroke-width="2.2"/>`;
+  const head=(x,fill,wide)=>`<ellipse cx="${x}" cy="${y}" rx="${wide?10:8.5}" ry="6.4" transform="rotate(${wide?-10:-20} ${x} ${y})" fill="${fill?"currentColor":"#fff"}" stroke="currentColor" stroke-width="${fill?0:2.6}"/>`;
+  const stem=x=>`<line x1="${x+7.6}" x2="${x+7.6}" y1="${y-2}" y2="${y-SH}" stroke="currentColor" stroke-width="2.2"/>`;
+  const dot=x=>`<circle cx="${x+16}" cy="${y-4}" r="3" fill="currentColor"/>`;
+  const N=inner=>{const c=colors[k]||"#21304A";return `<g class="nt" data-k="${k++}" style="color:${c}">${inner}</g>`};
   tokens.forEach(t=>{const x=left+off+b*unit;
-    if(t==="q"){const c=colors[k++]||"#21304A";g+=head(x,1,c)+stem(x,c)}
-    else if(t==="h"){const c=colors[k++]||"#21304A";g+=head(x,0,c)+stem(x,c)}
-    else if(t==="hd"){const c=colors[k++]||"#21304A";g+=head(x,0,c)+stem(x,c)+`<circle cx="${x+16}" cy="${y-4}" r="3" fill="${c}"/>`}
-    else if(t==="w"){const c=colors[k++]||"#21304A";g+=head(x,0,c,1)}
-    else if(t==="ee"){const c1=colors[k++]||"#21304A",c2=colors[k++]||"#21304A",x2=x+unit/2;g+=head(x,1,c1)+stem(x,c1)+head(x2,1,c2)+stem(x2,c2)+`<rect x="${x+6.5}" y="${y-SH}" width="${x2-x+2.2}" height="6" fill="#21304A"/>`}
-    else if(t==="qde"){const c1=colors[k++]||"#21304A",c2=colors[k++]||"#21304A",x2=x+1.5*unit;g+=head(x,1,c1)+stem(x,c1)+`<circle cx="${x+16}" cy="${y-4}" r="3" fill="${c1}"/>`+head(x2,1,c2)+stem(x2,c2)+`<path d="M${x2+7.6} ${y-SH} q3 10 12 14 q-2 -6 -12 -8z" fill="${c2}"/>`}
+    if(t==="q")g+=N(head(x,1)+stem(x));
+    else if(t==="h")g+=N(head(x,0)+stem(x));
+    else if(t==="hd")g+=N(head(x,0)+stem(x)+dot(x));
+    else if(t==="w")g+=N(head(x,0,1));
+    else if(t==="ee"){const x2=x+unit/2;g+=N(head(x,1)+stem(x))+N(head(x2,1)+stem(x2))+`<rect x="${x+6.5}" y="${y-SH}" width="${x2-x+2.2}" height="6" fill="#21304A"/>`}
+    else if(t==="qde"){const x2=x+1.5*unit;g+=N(head(x,1)+stem(x)+dot(x))+N(head(x2,1)+stem(x2)+`<path d="M${x2+7.6} ${y-SH} q3 10 12 14 q-2 -6 -12 -8z" fill="currentColor"/>`)}
     else if(t==="qr"){g+=`<path d="M${x-3} ${y-22} l8 9 l-7 8 l8 9 c-7 -3 -11 2 -5 8 c-10 -4 -8 -12 0 -9 l-9 -9 l7 -8z" fill="#21304A"/>`}
     else if(t==="hr"){g+=`<rect x="${x-9}" y="${y-8}" width="18" height="8" fill="#21304A"/>`}
     b+=TOK[t].b});
@@ -510,7 +514,7 @@ function renderRhythmList(){const a=S.assignment;
   <div class="rhythm-list">${a.rhythms.map(rhythmById).filter(Boolean).map(r=>`<button class="rcard" data-id="${r.id}"><span><span class="label">${esc(r.name)}</span>${rhythmSVG(r.tokens,{unit:52})}</span>${starsHTML(rhythmStars(r.id))}</button>`).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("rhythmPlay",b.dataset.id))}
 function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return go("rhythm");
-  const beats=beatsOf(r.tokens),ons=onsetsOf(r.tokens);let busy=false,taps=[],measureStart=0,raf=0,timers=[];
+  const beats=beatsOf(r.tokens),ons=onsetsOf(r.tokens);let busy=false,taps=[],measureStart=0,raf=0,timers=[],sounded=new Set();
   app.innerHTML=`<section class="screen">${backBar(r.name)}
    <div class="notation-wrap" id="nw">${rhythmSVG(r.tokens,{playhead:1})}</div>
    <div class="countin" id="ci" aria-live="polite">${beats}拍子</div>
@@ -521,21 +525,27 @@ function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return
   bindBack("rhythm");
   const pad=$("#pad"),ci=$("#ci");
   const bd=60/a.bpm;
-  function animate(start,endBeat){const svg=$("#nw svg"),ph=$(".ph",svg);const unit=64,left=56,off=22;ph.style.display="";
-    const step=()=>{const b=(ac().currentTime-start)/bd;if(b>endBeat+.2){ph.style.display="none";return}ph.setAttribute("x",left+off-3+Math.max(0,b)*unit);raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+  const setHL=(k,on)=>{const n=$(`#nw .nt[data-k="${k}"]`);if(n)n.classList.toggle("on",on)};
+  function animate(start,endBeat,follow){const svg=$("#nw svg"),ph=$(".ph",svg);const unit=64,left=56,off=22;ph.style.display="";
+    const step=()=>{const b=(ac().currentTime-start)/bd;if(b>endBeat+.2){ph.style.display="none";if(follow)ons.forEach((o,k)=>setHL(k,false));return}ph.setAttribute("x",left+off-3+Math.max(0,b)*unit);
+      if(follow)ons.forEach((o,k)=>setHL(k,b>=o.beat&&b<o.beat+o.dur*.95));raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
   function schedule(withNotes){const A=ac();if(!A){toast("このブラウザでは おとが でません");return null}
     const t0=A.currentTime+.35;for(let k=0;k<beats;k++){click(t0+k*bd,k===0);timers.push(setTimeout(()=>{ci.textContent=beats-k},(t0+k*bd-A.currentTime)*1000))}
     const ms=t0+beats*bd;if(a.metronome)for(let k=0;k<beats;k++)click(ms+k*bd,k===0);
     if(withNotes)ons.forEach(o=>tone(freqOf("C5"),ms+o.beat*bd,Math.max(.15,o.dur*bd*.92),.3));
     timers.push(setTimeout(()=>{ci.textContent=withNotes?"きいてね":"たたいて!"},(ms-A.currentTime)*1000));
-    animate(ms,beats);return ms}
+    animate(ms,beats,withNotes);return ms}
   $("#demo").onclick=()=>{if(busy)return;busy=true;$("#res").innerHTML="";setBtns(true);const ms=schedule(true);if(ms==null){busy=false;setBtns(false);return}
     timers.push(setTimeout(()=>{busy=false;setBtns(false);ci.textContent="こんどは きみの ばん!"},(ms+beats*bd-ac().currentTime)*1000+300))};
-  $("#go").onclick=()=>{if(busy)return;busy=true;taps=[];$("#res").innerHTML="";$("#nw").innerHTML=rhythmSVG(r.tokens,{playhead:1});setBtns(true);
+  $("#go").onclick=()=>{if(busy)return;busy=true;taps=[];sounded=new Set();$("#res").innerHTML="";$("#nw").innerHTML=rhythmSVG(r.tokens,{playhead:1});setBtns(true);
     measureStart=schedule(false);if(measureStart==null){busy=false;setBtns(false);return}pad.disabled=false;
     timers.push(setTimeout(judge,(measureStart+beats*bd-ac().currentTime)*1000+bd*400))};
   function setBtns(dis){$("#demo").disabled=dis;$("#go").disabled=dis}
-  function hit(e){if(e)e.preventDefault();if(pad.disabled)return;const A=ac();taps.push(A.currentTime-(A.outputLatency||A.baseLatency||0));tone(freqOf("G4"),0,.12,.18,"sine");pad.classList.add("hit");setTimeout(()=>pad.classList.remove("hit"),80)}
+  function hit(e){if(e)e.preventDefault();if(pad.disabled)return;const A=ac(),t=A.currentTime-(A.outputLatency||A.baseLatency||0);taps.push(t);
+    // sound the note the child is aiming at, for that note's length (quarter = short, half = long)
+    let best=-1,dmin=1e9;ons.forEach((o,k)=>{if(sounded.has(k))return;const d=Math.abs(t-(measureStart+o.beat*bd));if(d<dmin){dmin=d;best=k}});
+    if(best>=0&&dmin<=Math.max(.3,bd*.5)){sounded.add(best);const len=Math.max(.15,ons[best].dur*bd*.92);tone(freqOf("C5"),0,len,.3);setHL(best,true);const kk=best;timers.push(setTimeout(()=>setHL(kk,false),len*1000))}
+    else tone(freqOf("C5"),0,.15,.22);pad.classList.add("hit");setTimeout(()=>pad.classList.remove("hit"),80)}
   pad.addEventListener("pointerdown",hit);
   const key=e=>{if(e.code==="Space"&&!e.repeat&&!pad.disabled){hit(e)}};document.addEventListener("keydown",key);
   cleanup=()=>{document.removeEventListener("keydown",key);timers.forEach(clearTimeout);cancelAnimationFrame(raf)};
@@ -639,9 +649,12 @@ function renderTeacherGate(){if(teacherOK)return renderTeacher();let code="",fir
 function renderTeacher(){setNav("teacher");const a=S.assignment;
   const tabs=[["notes","音符"],["rhythm","リズム"],["song","曲"],["record","記録"],["settings","課題・設定"]];
   app.innerHTML=`<section class="screen"><div class="row" style="justify-content:space-between"><h2>せんせい用ページ</h2>${C.on?`<span class="stat" id="syncPill" style="font-size:.8rem"></span>`:`<button class="btn ghost small" id="lock">とじる</button>`}</div>
-   <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-t="${k}" class="${tTab===k?"on":""}">${l}</button>`).join("")}</div><div id="tb" class="screen"></div></section>`;
+   ${C.on&&C.teacher?targetBar():""}<div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-t="${k}" class="${tTab===k?"on":""}">${l}</button>`).join("")}</div><div id="tb" class="screen"></div></section>`;
   const lk=$("#lock");if(lk)lk.onclick=()=>{teacherOK=false;go("home")};syncPill();
   $$("[data-t]").forEach(b=>b.onclick=()=>{tTab=b.dataset.t;renderTeacher()});
+  if(C.on&&C.teacher){bindTargetBar();if(!editable()&&tTab!=="record"){const nm=esc(stuName(C.target));
+    $("#tb").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center"><b>${nm}さん 専用の課題は まだ ありません</b><p class="muted" style="margin:0">いまの 共通の課題を コピーして、${nm}さん だけの 音符・リズム・曲・目標に かえられます。</p><button class="btn green" id="mkIndiv">${nm}さん 専用の課題を つくる</button></div>`;
+    $("#mkIndiv").onclick=()=>makeIndiv(C.target);return}}
   ({notes:tNotes,rhythm:tRhythm,song:tSong,record:tRecord,settings:tSettings}[tTab])($("#tb"))}
 const saved=()=>{if(save())toast("保存しました")};
 function tNotes(el){const a=S.assignment;
@@ -725,11 +738,12 @@ function tRecord(el){if(C.on&&C.teacher)return tRecordCloud(el);tRecordBody(el)}
 function tRecordCloud(el){watchStudents(()=>{const list=C.students;
   if(!list){el.innerHTML=`<div class="card muted">生徒の記録を よみこみ中…</div>`;return}
   if(!list.length){el.innerHTML=`<div class="card"><b>まだ 生徒の記録が ありません</b><p class="muted" style="margin:6px 0 0">このページを 生徒と共有して、生徒が 練習すると ここに 記録が とどきます。</p></div>`;return}
-  if(!list.some(s=>s.id===C.stuSel))C.stuSel=list[0].id;
+  if(C.target!=="common")C.stuSel=C.target;if(!list.some(s=>s.id===C.stuSel))C.stuSel=list[0].id;
   const st=list.find(s=>s.id===C.stuSel);
   el.innerHTML=`<div class="card"><div class="label">生徒を えらぶ</div><div class="row" style="margin-top:8px">${list.map(s=>`<button class="btn small ${s.id===C.stuSel?"":"ghost"}" data-stu="${s.id}">${esc(C.names[s.id]||"生徒")}</button>`).join("")}</div><div class="muted" style="font-size:.8rem;margin-top:6px">さいごの 更新: ${st.updatedAt?new Date(st.updatedAt).toLocaleString("ja-JP"):"-"}</div></div><div id="stuRec" class="screen"></div>`;
-  $$("[data-stu]",el).forEach(b=>b.onclick=()=>{C.stuSel=b.dataset.stu;tRecordCloud(el)});
-  const o=S.p;S.p={...defaultState().p,...JSON.parse(JSON.stringify(st.p||{}))};try{tRecordBody($("#stuRec",el))}finally{S.p=o}})}
+  $$("[data-stu]",el).forEach(b=>b.onclick=()=>{C.stuSel=b.dataset.stu;if(C.target!=="common")switchTarget(b.dataset.stu);else tRecordCloud(el)});
+  const eff=C.indiv[st.id]||C.common;const o=S.p,oa=S.assignment;S.p={...defaultState().p,...JSON.parse(JSON.stringify(st.p||{}))};if(eff)S.assignment={...defaultState().assignment,...JSON.parse(JSON.stringify(eff.assignment))};
+  try{tRecordBody($("#stuRec",el))}finally{S.p=o;S.assignment=oa}})}
 function tRecordBody(el){const a=S.assignment,w=weekly(),G=a.goals,days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(dayKey(d))}
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>今週の課題の進み具合</b><span class="muted" style="font-size:.85rem">課題スタート: ${a.startedAt}</span>
    ${[["音符の練習",w.notes,G.notes,"回"],["リズムのクリア",w.rhythm,G.rhythm,"回"],["曲の練習",w.songMin,G.songMin,"分"]].map(([l,v,g,u])=>`<div><div class="row" style="justify-content:space-between"><span>${l}</span><b>${v}/${g}${u}</b></div><div class="bar"><i style="width:${Math.min(100,v/g*100)}%"></i></div></div>`).join("")}
@@ -756,46 +770,80 @@ function tSettings(el){const a=S.assignment;
   $("#reset",el).onclick=()=>{$("#rst",el).innerHTML=`<div class="row"><span>記録・コイン・ショップの アイテムが 消えます。よろしいですか?</span><button class="btn ghost small" id="rn">やめる</button><button class="btn red small" id="ry">リセット</button></div>`;$("#rn",el).onclick=()=>tSettings(el);$("#ry",el).onclick=()=>{S.p=defaultState().p;saved();tSettings(el)}}}
 
 /* ================= boot ================= */
-/* ================= cloud sync (shared page: teacher -> students, students -> teacher) ================= */
+/* ================= cloud sync (shared page: teacher -> students, students -> teacher) =================
+   class/current      : the common assignment (everyone without their own)
+   assign/<studentId> : one student's own assignment (optional)
+   progress/<studentId>: that student's practice record, read by the teacher */
 function imgSrc(song){return song.assetId?"/_blob/"+song.assetId:song.image}
-const C={on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",lastA:"",lastP:"",pushT:0,pushing:false,again:false,progT:0,students:null,stuUnsub:null,stuSel:null,names:{}};
+const C={on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",
+  target:"common",common:null,indiv:{},mine:null,lastA:{},lastEff:"",lastP:"",pushT:0,pushing:false,again:false,progT:0,
+  students:null,stuUnsub:null,stuSel:null,names:{},sig:"",confirmDel:false,initAt:0};
+const pickA=d=>d?JSON.stringify({assignment:d.assignment,customRhythms:d.customRhythms||[]}):"";
 const assignJSON=()=>JSON.stringify({assignment:S.assignment,customRhythms:S.customRhythms});
+const tPath=t=>t==="common"?"class/current":"assign/"+t;
+const saveLocal=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+function applyA(json){const d=JSON.parse(json);S.assignment={...defaultState().assignment,...d.assignment};S.customRhythms=d.customRhythms||[];saveLocal()}
+const editable=()=>C.target==="common"||!!C.indiv[C.target];
+const stuName=id=>C.names[id]||"生徒";
 function cloudAfterSave(){
-  if(C.teacher){const j=assignJSON();if(j!==C.lastA&&C.loaded){clearTimeout(C.pushT);C.status="sending";syncPill();C.pushT=setTimeout(pushAssignment,700)}}
+  if(C.teacher){if(!C.loaded||!editable())return;const j=assignJSON();if(j!==C.lastA[C.target]){clearTimeout(C.pushT);C.status="sending";syncPill();C.pushT=setTimeout(pushAssignment,700)}}
   else if(C.uid){const j=JSON.stringify(S.p);if(j!==C.lastP){clearTimeout(C.progT);C.progT=setTimeout(pushProgress,1500)}}}
-async function pushAssignment(){if(C.pushing){C.again=true;return}C.pushing=true;const j=assignJSON();
-  try{if(j.length>240000)throw{code:"too_big"};await C.db.doc("class/current").set({...JSON.parse(j),updatedAt:Date.now()});C.lastA=j;C.status="ok"}
+async function pushAssignment(){clearTimeout(C.pushT);C.pushT=0;if(C.pushing){C.again=true;return}C.pushing=true;const t=C.target,j=assignJSON();
+  try{if(j.length>240000)throw{code:"too_big"};const d=JSON.parse(j);await C.db.doc(tPath(t)).set({...d,updatedAt:Date.now()});C.lastA[t]=j;if(t==="common")C.common=d;else C.indiv[t]=d;C.status="ok"}
   catch(e){C.status="err";toast(e&&e.code==="too_big"?"課題が大きすぎて送れません(楽譜画像を とりこみ直してください)":"生徒への送信に失敗しました。通信を確認してください")}
   C.pushing=false;syncPill();if(C.again){C.again=false;pushAssignment()}}
+async function flushPush(){if(C.pushT)await pushAssignment();while(C.pushing)await new Promise(r=>setTimeout(r,80))}
 async function pushProgress(){if(C.pushing)return(C.progT=setTimeout(pushProgress,1500));C.pushing=true;const j=JSON.stringify(S.p);
-  try{await C.db.doc("progress/"+C.uid).set({p:JSON.parse(j),updatedAt:Date.now()});C.lastP=j;S.pAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}catch(e){}
+  try{await C.db.doc("progress/"+C.uid).set({p:JSON.parse(j),updatedAt:Date.now()});C.lastP=j;S.pAt=Date.now();saveLocal()}catch(e){}
   C.pushing=false}
 function syncPill(){const el=$("#syncPill");if(!el)return;const t={ok:["var(--grass)","生徒に とどいています"],sending:["var(--sun-deep)","生徒に おくっています…"],err:["var(--coral)","送信エラー"],wait:["var(--muted)","接続中…"],local:["var(--muted)","この端末だけ"]}[C.status]||["var(--muted)",""];
   el.innerHTML=`<i style="width:10px;height:10px;border-radius:50%;background:${t[0]};display:inline-block"></i>${t[1]}`}
 let curScreen="home";
+const onTeacher=()=>curScreen==="teacher"||curScreen==="teacherMain";
 function refreshScreen(){if(curScreen==="home")renderHome();else if(curScreen==="teacher"&&!teacherOK)renderTeacherGate();setNav(curScreen==="teacherMain"?"teacher":curScreen)}
+/* teacher: redraw when the student list or the set of own assignments changes, but never while typing */
+function teacherSoft(){if(!onTeacher()||!teacherOK)return;const sig=(C.students||[]).map(x=>x.id).join()+"|"+Object.keys(C.indiv).join()+"|"+Object.values(C.names).join();
+  if(sig===C.sig&&tTab!=="record")return;const a=document.activeElement;if(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))return;C.sig=sig;renderTeacher()}
+/* student: use own assignment if the teacher made one, else the common one */
+function studentApply(){const eff=C.mine||C.common;if(!eff)return;const j=pickA(eff);if(j===C.lastEff)return;C.lastEff=j;applyA(j);
+  if(Date.now()-C.initAt>4000)toast("せんせいから あたらしい課題が とどいたよ!");refreshScreen()}
+async function switchTarget(t){await flushPush();C.target=t;C.confirmDel=false;const src=t==="common"?C.common:C.indiv[t];if(src)applyA(pickA(src));if(t!=="common")C.stuSel=t;renderTeacher()}
+async function makeIndiv(id){await flushPush();const base=C.common?pickA(C.common):assignJSON();C.target=id;applyA(base);C.indiv[id]=JSON.parse(base);C.lastA[id]="";await pushAssignment();toast(`${stuName(id)}さん 専用の課題を つくりました`);renderTeacher()}
+async function dropIndiv(id){await flushPush();try{await C.db.doc("assign/"+id).delete();delete C.indiv[id];delete C.lastA[id];C.confirmDel=false;toast(`${stuName(id)}さんは 共通の課題に もどりました`)}catch(e){toast("もどせませんでした。通信を確認してください")}renderTeacher()}
 async function initCloud(){const cl=window.claude;if(!cl||typeof cl.use!=="function")return;
   const db=await cl.use("db");if(!db)return;const user=await cl.use("user");
-  C.db=db;C.user=user;C.on=true;C.status="wait";
+  C.db=db;C.user=user;C.on=true;C.status="wait";C.initAt=Date.now();
   try{C.teacher=user?await user.canEdit():false;C.uid=user?await user.id():null;const me=user?await user.me():null;C.myName=(me&&me.name||"").split(/\s+/)[0]||""}catch(e){}
   if(C.teacher){C.assets=await cl.use("assets");teacherOK=true}
   const timer=setTimeout(()=>{if(!C.loaded){C.status="err";syncPill();toast("せんせいの課題に まだ つながりません(オフラインかも)")}},10000);
   db.doc("class/current").onSnapshot(snap=>{
-    if(snap.metadata.hasPendingWrites)return;
-    const first=!C.loaded;
-    if(snap.exists){const d=snap.data();const j=JSON.stringify({assignment:d.assignment,customRhythms:d.customRhythms||[]});
-      if(j!==C.lastA&&!(C.teacher&&!first)){S.assignment={...defaultState().assignment,...d.assignment};S.customRhythms=d.customRhythms||[];try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(!first&&!C.teacher)toast("せんせいから あたらしい課題が とどいたよ!")}
-      C.lastA=j}
-    if(!snap.metadata.fromCache){clearTimeout(timer);C.loaded=true;C.status="ok";if(!snap.exists&&C.teacher)pushAssignment()}
-    if(first||!C.teacher)refreshScreen();syncPill()},
+    if(snap.metadata.hasPendingWrites)return;const first=!C.loaded;
+    if(snap.exists){C.common=snap.data();const j=pickA(C.common);
+      if(C.teacher){if(first&&C.target==="common")applyA(j);C.lastA.common=j}else studentApply()}
+    if(!snap.metadata.fromCache){clearTimeout(timer);C.loaded=true;C.status="ok";if(!snap.exists&&C.teacher&&C.target==="common")pushAssignment()}
+    if(first)refreshScreen();syncPill()},
     e=>{clearTimeout(timer);C.status="err";syncPill()});
-  if(C.uid&&!C.teacher){try{const ps=await db.doc("progress/"+C.uid).get();if(ps.exists){const d=ps.data();if((d.updatedAt||0)>(S.pAt||0)){S.p={...defaultState().p,...d.p};S.pAt=d.updatedAt;C.lastP=JSON.stringify(S.p);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}refreshScreen()}}else cloudAfterSave()}catch(e){}}
+  if(C.teacher){
+    db.collection("assign").onSnapshot(snap=>{if(snap.metadata.hasPendingWrites)return;const next={};snap.docs.forEach(d=>{next[d.id]=d.data();if(!(d.id in C.lastA))C.lastA[d.id]=pickA(d.data())});
+      if(C.target!=="common"&&C.indiv[C.target]&&!next[C.target]&&C.pushing)next[C.target]=C.indiv[C.target];C.indiv=next;teacherSoft()},()=>{});
+    watchStudents(()=>{})}
+  else if(C.uid){
+    db.doc("assign/"+C.uid).onSnapshot(snap=>{if(snap.metadata.fromCache&&!snap.exists)return;C.mine=snap.exists?snap.data():null;studentApply()},()=>{});
+    try{const ps=await db.doc("progress/"+C.uid).get();if(ps.exists){const d=ps.data();if((d.updatedAt||0)>(S.pAt||0)){S.p={...defaultState().p,...d.p};S.pAt=d.updatedAt;C.lastP=JSON.stringify(S.p);saveLocal();refreshScreen()}}else cloudAfterSave()}catch(e){}}
   refreshScreen()}
 function watchStudents(cb){if(C.stuUnsub){cb();return}C.students=null;
   C.stuUnsub=C.db.collection("progress").onSnapshot(async snap=>{C.students=snap.docs.map(d=>({id:d.id,...d.data()}));
-    try{const ps=C.user?await C.user.profiles(C.students.map(s=>s.id)):{};C.students.forEach(s=>C.names[s.id]=(ps[s.id]&&ps[s.id].name)||"生徒")}catch(e){}
-    if((curScreen==="teacherMain"||curScreen==="teacher")&&tTab==="record")renderTeacher()},()=>{C.students=[];C.stuUnsub=null});
+    try{const ps=C.user?await C.user.profiles(C.students.map(x=>x.id)):{};C.students.forEach(x=>C.names[x.id]=(ps[x.id]&&ps[x.id].name)||"生徒")}catch(e){}
+    teacherSoft()},()=>{C.students=[];C.stuUnsub=null});
   cb()}
+function targetBar(){const ids=[...new Set([...(C.students||[]).map(x=>x.id),...Object.keys(C.indiv)])],t=C.target,nm=stuName(t);
+  return `<div class="card" style="display:flex;flex-direction:column;gap:8px"><div class="label">だれの 課題を へんしゅうする?</div>
+   <div class="row"><button class="btn small ${t==="common"?"":"ghost"}" data-tg="common">みんな(共通)</button>${ids.map(id=>`<button class="btn small ${t===id?"":"ghost"}" data-tg="${id}">${esc(stuName(id))}${C.indiv[id]?" ★":""}</button>`).join("")}</div>
+   <div class="muted" style="font-size:.85rem">${t==="common"?"★の ついていない 生徒は みんな この 共通の課題を つかいます。":C.indiv[t]?`<b>${esc(nm)}さん 専用</b>の課題を へんしゅう中。変えた内容は ${esc(nm)}さんに だけ とどきます。`:`${esc(nm)}さんは いま 共通の課題を つかっています。`}</div>
+   ${t!=="common"&&C.indiv[t]?(C.confirmDel?`<div class="row"><span>専用の課題を けして 共通に もどしますか?</span><button class="btn ghost small" id="dropNo">やめる</button><button class="btn red small" id="dropYes">もどす</button></div>`:`<div><button class="btn ghost small" id="drop">共通の課題に もどす</button></div>`):""}
+   ${ids.length?"":`<div class="muted" style="font-size:.8rem">生徒が このページを ひらいて 練習すると、ここに 名前が でます。名前を えらぶと その生徒 専用の課題を つくれます。</div>`}</div>`}
+function bindTargetBar(){$$("[data-tg]").forEach(b=>b.onclick=()=>switchTarget(b.dataset.tg));const d=$("#drop");if(d)d.onclick=()=>{C.confirmDel=true;renderTeacher()};
+  const n=$("#dropNo");if(n)n.onclick=()=>{C.confirmDel=false;renderTeacher()};const y=$("#dropYes");if(y)y.onclick=()=>dropIndiv(C.target)}
 go("home");
 initCloud();
 </script>
