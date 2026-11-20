@@ -127,6 +127,14 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .prompt{font-size:1.3rem;font-weight:800}
 .staff-wrap{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:8px;display:flex;justify-content:center}
 .staff-wrap svg{width:100%;max-width:420px;height:auto}
+.staff-wrap.grand svg{max-width:340px;max-height:46vh}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.steps button{border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);border-radius:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:800;font-size:.9rem}
+.steps button small{font-weight:500;color:var(--muted);font-size:.75rem}
+.steps button.on{border-color:var(--berry);background:var(--berry);color:#fff}
+.steps button.on small{color:#fff}
+.steps .n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--berry);color:#fff;font-size:.8rem}
+.steps button.on .n{background:#fff;color:var(--berry)}
 .answers{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:10px}
 .ans{border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);border-radius:16px;padding:16px 6px;font-size:1.5rem;font-weight:800}
 .ans:active{transform:translateY(2px);border-bottom-width:3px}
@@ -331,7 +339,7 @@ function sampleSong(){return {id:"s-sample",title:"きらきらぼし(サンプ�
 function defaultState(){return{
   pin:null,studentName:"",
   assignment:{id:uid(),startedAt:dayKey(),message:"今週は ト音きごうの ド〜ソ と、4分音符・2分音符のリズムを がんばろう!",
-    notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",
+    notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",
     rhythms:["r1","r2","r4","r5"],bpm:80,metronome:true,
     songs:[sampleSong()],
     goals:{notes:5,rhythm:10,songMin:60}},
@@ -399,20 +407,31 @@ const CLEF={treble:{ref:30,glyph:"\u{1D11E}",lo:"A3",hi:"C6",jp:"ト音"},bass:{
 function notesOf(clef){const c=CLEF[clef],r=[];for(let d=diat(c.lo);d<=diat(c.hi);d++)r.push(fromDiat(d));return r}
 const noteLabel=id=>SOL[id.split(":")[1][0]];
 /* staff with one note. s = line spacing */
-function staffSVG(clef,note,o={}){const s=o.s||14,W=o.w||220,H=o.h||140,y0=o.y0||40,bot=y0+4*s,nx=o.nx||145,col=o.color||"#21304A";
-  let g=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${clef==="treble"?"ト音記号":"ヘ音記号"}の音符"><rect width="${W}" height="${H}" fill="#fff"/>`;
-  for(let i=0;i<5;i++)g+=`<line x1="8" x2="${W-8}" y1="${y0+i*s}" y2="${y0+i*s}" stroke="#21304A" stroke-width="1.6"/>`;
-  g+=clefGlyph(clef,14,y0,s);
+function staffSVG(clef,note,o={}){const W=o.w||220,H=o.h||140;
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${clef==="treble"?"ト音記号":"ヘ音記号"}の音符"><rect width="${W}" height="${H}" fill="#fff"/>${staffInner(clef,note,o)}</svg>`}
+/* 大譜表: treble + bass joined by a brace; the note sits on the staff of its clef */
+function grandSVG(clef,note){const W=240,H=250,s=13,yT=28,yB=yT+10*s,x0=24,o={s,w:W,x0,nx:150};
+  let g=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="大譜表の音符"><rect width="${W}" height="${H}" fill="#fff"/>`;
+  g+=staffInner("treble",clef==="treble"?note:null,{...o,y0:yT})+staffInner("bass",clef==="bass"?note:null,{...o,y0:yB});
+  const top=yT,bot=yB+4*s,mid=(top+bot)/2;
+  g+=`<line x1="${x0}" x2="${x0}" y1="${top}" y2="${bot}" stroke="#21304A" stroke-width="2"/><line x1="${W-8}" x2="${W-8}" y1="${top}" y2="${bot}" stroke="#21304A" stroke-width="1.6"/>`;
+  g+=`<path d="M${x0-4} ${top} Q${x0-13} ${top} ${x0-13} ${top+16} L${x0-13} ${mid-16} Q${x0-13} ${mid} ${x0-20} ${mid} Q${x0-13} ${mid} ${x0-13} ${mid+16} L${x0-13} ${bot-16} Q${x0-13} ${bot} ${x0-4} ${bot}" fill="none" stroke="#21304A" stroke-width="3.2" stroke-linecap="round"/>`;
+  return g+"</svg>"}
+function staffInner(clef,note,o={}){const s=o.s||14,W=o.w||220,y0=o.y0||40,bot=y0+4*s,nx=o.nx||145,col=o.color||"#21304A",x0=o.x0||8;
+  let g="";
+  for(let i=0;i<5;i++)g+=`<line x1="${x0}" x2="${W-8}" y1="${y0+i*s}" y2="${y0+i*s}" stroke="#21304A" stroke-width="1.6"/>`;
+  g+=clefGlyph(clef,x0+6,y0,s);
   if(note){const c=CLEF[clef],d=diat(note),y=bot-(d-c.ref)*s/2,rx=s*.66,ry=s*.48;
     for(let k=c.ref-2;k>=d;k-=2){const ly=bot-(k-c.ref)*s/2;g+=`<line x1="${nx-rx-7}" x2="${nx+rx+7}" y1="${ly}" y2="${ly}" stroke="#21304A" stroke-width="1.6"/>`}
     for(let k=c.ref+10;k<=d;k+=2){const ly=bot-(k-c.ref)*s/2;g+=`<line x1="${nx-rx-7}" x2="${nx+rx+7}" y1="${ly}" y2="${ly}" stroke="#21304A" stroke-width="1.6"/>`}
     g+=`<ellipse cx="${nx}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(-20 ${nx} ${y})" fill="${col}"/>`;
     if(d<c.ref+4)g+=`<line x1="${nx+rx-1}" x2="${nx+rx-1}" y1="${y-1}" y2="${y-3.5*s}" stroke="${col}" stroke-width="2"/>`;
     else g+=`<line x1="${nx-rx+1}" x2="${nx-rx+1}" y1="${y+1}" y2="${y+3.5*s}" stroke="${col}" stroke-width="2"/>`}
-  return g+"</svg>"}
+  return g}
 function clefGlyph(clef,x,y0,s){
-  if(clef==="treble")return `<text x="${x}" y="${y0+3*s}" font-family='"Noto Music","Bravura","Segoe UI Symbol",serif' font-size="${s*4.4}" fill="#21304A">${CLEF.treble.glyph}</text>`;
-  return `<text x="${x}" y="${y0+1*s}" font-family='"Noto Music","Bravura","Segoe UI Symbol",serif' font-size="${s*4.4}" fill="#21304A" dy="${s*0.1}">${CLEF.bass.glyph}</text>`}
+  // baselines tuned to Noto Music: treble curl circles the G line, bass dots sit around the F line
+  if(clef==="treble")return `<text x="${x}" y="${y0+3.93*s}" font-family='"Noto Music","Bravura","Segoe UI Symbol",serif' font-size="${s*4.4}" fill="#21304A">${CLEF.treble.glyph}</text>`;
+  return `<text x="${x}" y="${y0+3.75*s}" font-family='"Noto Music","Bravura","Segoe UI Symbol",serif' font-size="${s*4.4}" fill="#21304A">${CLEF.bass.glyph}</text>`}
 
 /* rhythm notation (single-line percussion staff) */
 const TOK={q:{b:1,on:[[0,1]]},h:{b:2,on:[[0,2]]},hd:{b:3,on:[[0,3]]},w:{b:4,on:[[0,4]]},ee:{b:1,on:[[0,.5],[.5,.5]]},qde:{b:2,on:[[0,1.5],[1.5,.5]]},qr:{b:1,on:[]},hr:{b:2,on:[]}};
@@ -518,7 +537,7 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
   ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
-   <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
+   <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.staffView==="grand"?"大譜表・":""}${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
    <button class="lesson" data-l="rhythm"><span class="ic" style="background:var(--sun-deep)">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${a.rhythms.length}この リズム・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
    <button class="lesson" data-l="songs"><span class="ic" style="background:var(--berry)">${IC.score}</span><span><h3>きょくの れんしゅう</h3><span class="sub">${a.songs.map(s=>esc(s.title)).join("・")||"きょくが まだ ありません"}</span><div class="bar"><i style="width:${pct(w.songMin,G.songMin)}%"></i></div><span class="sub">こんしゅう ${w.songMin}/${G.songMin}ふん</span></span><span class="check ${today.songMin?"on":""}">${today.songMin?IC.check:""}</span></button>
   </div>
@@ -535,8 +554,8 @@ function startNotes(){const a=S.assignment;if(!a.notes.length){app.innerHTML=`<s
   Q={list,i:0,hearts:3,correct:0,names};renderQ()}
 function renderQ(){const id=Q.list[Q.i],[clef,note]=id.split(":");
   app.innerHTML=`<section class="screen narrow"><div class="lesson-top"><button class="x" id="quit" aria-label="やめる">${IC.x}</button><div class="bar"><i style="width:${Q.i/Q.list.length*100}%"></i></div><div class="hearts">${[0,1,2].map(i=>i<Q.hearts?IC.heart:IC.heartOff).join("")}</div>${sndBtn()}</div>
-  <div class="prompt">この おとは なに?</div><div class="label">${CLEF[clef].jp}きごう</div>
-  <div class="staff-wrap">${staffSVG(clef,note)}</div>
+  <div class="prompt">この おとは なに?</div><div class="label">${S.assignment.staffView==="grand"?"大譜表":CLEF[clef].jp+"きごう"}</div>
+  <div class="staff-wrap ${S.assignment.staffView==="grand"?"grand":""}">${S.assignment.staffView==="grand"?grandSVG(clef,note):staffSVG(clef,note)}</div>
   <div class="answers">${Q.names.map(l=>`<button class="ans" data-a="${l}">${SOL[l]}</button>`).join("")}</div></section>`;
   $("#quit").onclick=()=>go("home");
   $$(".ans").forEach(b=>b.onclick=()=>answerQ(b))}
@@ -577,7 +596,7 @@ function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return
    <button class="tap-pad" id="pad" disabled>タップ!</button>
    <div class="row"><button class="btn ghost grow" id="demo">おてほんを きく</button><button class="btn green grow" id="go">スタート</button></div>
    <div id="res"></div>
-   <p class="muted" style="font-size:.85rem;margin:0">「スタート」を おすと ${beats}かい カチカチ なってから はじまるよ。キーボードの スペースキーでも うてるよ。</p></section>`;
+   <p class="muted" style="font-size:.85rem;margin:0">「スタート」を おすと 2小節ぶん「${[...Array(beats)].map((_,i)=>i+1).join("・")}」と カチカチ なってから はじまるよ。キーボードの スペースキーでも うてるよ。</p></section>`;
   bindBack("rhythm");
   const pad=$("#pad"),ci=$("#ci");
   const bd=60/a.bpm;
@@ -586,8 +605,9 @@ function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return
     const step=()=>{const b=(ac().currentTime-start)/bd;if(b>endBeat+.2){ph.style.display="none";if(follow)ons.forEach((o,k)=>setHL(k,false));return}ph.setAttribute("x",left+off-3+Math.max(0,b)*unit);
       if(follow)ons.forEach((o,k)=>setHL(k,b>=o.beat&&b<o.beat+o.dur*.95));raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
   function schedule(withNotes){const A=ac();if(!A){toast("このブラウザでは おとが でません");return null}
-    const t0=A.currentTime+.35;for(let k=0;k<beats;k++){click(t0+k*bd,k===0);timers.push(setTimeout(()=>{ci.textContent=beats-k},(t0+k*bd-A.currentTime)*1000))}
-    const ms=t0+beats*bd;if(a.metronome)for(let k=0;k<beats;k++)click(ms+k*bd,k===0);
+    // count-in: 2 measures, counting up (1,2,3,4 / 1,2,3,4), accent on each downbeat
+    const t0=A.currentTime+.35,CI=beats*2;for(let k=0;k<CI;k++){click(t0+k*bd,k%beats===0);timers.push(setTimeout(()=>{ci.textContent=String(k%beats+1)},(t0+k*bd-A.currentTime)*1000))}
+    const ms=t0+CI*bd;if(a.metronome)for(let k=0;k<beats;k++)click(ms+k*bd,k===0);
     if(withNotes)ons.forEach(o=>tone(freqOf("C5"),ms+o.beat*bd,Math.max(.15,o.dur*bd*.92),.3));
     timers.push(setTimeout(()=>{ci.textContent=withNotes?"きいてね":"たたいて!"},(ms-A.currentTime)*1000));
     animate(ms,beats,withNotes);return ms}
@@ -717,7 +737,13 @@ function renderTeacher(){setNav("teacher");const a=S.assignment;
 const saved=()=>{if(save())toast("保存しました")};
 function tNotes(el){const a=S.assignment;
   const grid=clef=>notesOf(clef).map(n=>{const id=clef+":"+n,on=a.notes.includes(id);return `<button class="chip ${on?"on":""}" data-n="${id}">${staffSVG(clef,n,{s:8,w:84,h:84,y0:22,nx:58})}${SOL[n[0]]}<small>${n}</small></button>`}).join("");
-  el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>生徒が 練習する音符を えらぶ(${a.notes.length}こ 選択中)</b>
+  const step=a.staffView==="grand"?3:a.notes.length&&a.notes.every(n=>n.startsWith("treble"))?1:a.notes.length&&a.notes.every(n=>n.startsWith("bass"))?2:0;
+  el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>譜読みの ステップ</b>
+   <div class="steps">${[[1,"ト音記号","ト音記号だけ"],[2,"ヘ音記号","ヘ音記号だけ"],[3,"大譜表","ト音とヘ音をいっしょに"]].map(([n,l,d])=>`<button data-step="${n}" class="${step===n?"on":""}"><span class="n">${n}</span>${l}<small>${d}</small></button>`).join("")}</div>
+   <div class="muted" style="font-size:.8rem">ステップを えらぶと おすすめの 音符が セットされます。そのあと 下で 音符を 足したり 減らしたり できます。</div>
+   <div class="field"><label for="sv">楽譜の 出し方</label><select id="sv"><option value="single" ${a.staffView!=="grand"?"selected":""}>1つの 譜表(ト音・ヘ音 べつべつに)</option><option value="grand" ${a.staffView==="grand"?"selected":""}>大譜表(ト音と ヘ音を いっしょに)</option></select></div>
+   <div class="staff-wrap ${a.staffView==="grand"?"grand":""}" style="max-width:360px">${a.staffView==="grand"?grandSVG((a.notes[0]||"treble:C4").split(":")[0],(a.notes[0]||"treble:C4").split(":")[1]):staffSVG((a.notes[0]||"treble:C4").split(":")[0],(a.notes[0]||"treble:C4").split(":")[1])}</div></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>生徒が 練習する音符を えらぶ(${a.notes.length}こ 選択中)</b>
    <div class="row">${[["ドレミ",["treble:C4","treble:D4","treble:E4"]],["ド〜ソ",["C4","D4","E4","F4","G4"].map(n=>"treble:"+n)],["ド〜高いド",["C4","D4","E4","F4","G4","A4","B4","C5"].map(n=>"treble:"+n)],["ヘ音 ド〜ソ",["C3","D3","E3","F3","G3"].map(n=>"bass:"+n)]].map(([l,v],i)=>`<button class="btn ghost small" data-pre="${i}">${l}</button>`).join("")}<button class="btn ghost small" data-pre="clr">ぜんぶ はずす</button></div>
    <div class="label">ト音きごう</div><div class="note-grid">${grid("treble")}</div>
    <div class="label">ヘ音きごう</div><div class="note-grid">${grid("bass")}</div></div>
@@ -726,7 +752,11 @@ function tNotes(el){const a=S.assignment;
   const presets=[["treble:C4","treble:D4","treble:E4"],["C4","D4","E4","F4","G4"].map(n=>"treble:"+n),["C4","D4","E4","F4","G4","A4","B4","C5"].map(n=>"treble:"+n),["C3","D3","E3","F3","G3"].map(n=>"bass:"+n)];
   $$("[data-n]",el).forEach(b=>b.onclick=()=>{const id=b.dataset.n,i=a.notes.indexOf(id);i>=0?a.notes.splice(i,1):a.notes.push(id);tone(freqOf(id.split(":")[1]),0,.5,.25);save();tNotes(el)});
   $$("[data-pre]",el).forEach(b=>b.onclick=()=>{a.notes=b.dataset.pre==="clr"?[]:presets[+b.dataset.pre].slice();saved();tNotes(el)});
-  $("#nc",el).onchange=e=>{a.notesCount=+e.target.value;saved()};$("#am",el).onchange=e=>{a.answerMode=e.target.value;saved()}}
+  $("#nc",el).onchange=e=>{a.notesCount=+e.target.value;saved()};$("#am",el).onchange=e=>{a.answerMode=e.target.value;saved()};
+  $("#sv",el).onchange=e=>{a.staffView=e.target.value;saved();tNotes(el)};
+  const STEPS={1:{v:"single",n:["C4","D4","E4","F4","G4"].map(n=>"treble:"+n)},2:{v:"single",n:["C3","D3","E3","F3","G3"].map(n=>"bass:"+n)},
+    3:{v:"grand",n:[...["C3","D3","E3","F3","G3","A3","B3"].map(n=>"bass:"+n),...["C4","D4","E4","F4","G4","A4","B4","C5"].map(n=>"treble:"+n)]}};
+  $$("[data-step]",el).forEach(b=>b.onclick=()=>{const st=STEPS[b.dataset.step];a.staffView=st.v;a.notes=st.n.slice();saved();tNotes(el)})}
 function tRhythm(el){const a=S.assignment;let build=[],ts=4;
   function draw(){const lib=allRhythms();
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>生徒が 練習するリズムを えらぶ(${a.rhythms.length}こ 選択中)</b>
