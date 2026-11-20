@@ -298,7 +298,7 @@ function defaultState(){return{
 }}
 let S;
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);const def=defaultState();return {...def,...d,assignment:{...def.assignment,...d.assignment},p:{...def.p,...d.p}}}}catch(e){}return defaultState()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){toast("保存できませんでした(画像が大きすぎるかも)");return false}}
+function save(){let ok=true;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){ok=false;if(!C.on)toast("保存できませんでした(画像が大きすぎるかも)")}if(C.on)cloudAfterSave();return ok||C.on}
 S=load();
 const P=()=>S.p;
 function dayRec(k=dayKey()){const d=P().days;return d[k]||(d[k]={notesC:0,notesT:0,notesS:0,rhythm:0,songMin:0})}
@@ -428,7 +428,7 @@ function mascotSVG(m="normal",eq=P().equip){const [c,cd]=MOODCOL[m],ink="#21304A
   if(m==="angry")g+=`<path d="M82 154 q18 -18 36 0" fill="none" stroke="${ink}" stroke-width="6" stroke-linecap="round"/><g stroke="#C9302A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M150 50 q6 6 12 0 M150 50 q-6 6 0 12 M162 62 q6 -6 0 -12 M162 62 q-6 6 -12 0"/></g><g fill="#fff" opacity=".85"><circle cx="28" cy="56" r="9"/><circle cx="18" cy="44" r="7"/><circle cx="12" cy="30" r="5"/><circle cx="174" cy="34" r="8"/><circle cx="186" cy="22" r="5"/></g>`;
   if(m==="happy")g+=`<g fill="#FFF7B0"><path d="M24 50 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/><path d="M172 150 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/></g>`;
   return g+"</svg>"}
-function moodText(){const n=S.studentName?S.studentName+"ちゃん":"きみ",m=mood(),g=gapDays();
+function moodText(){const nm=S.studentName||C.myName,n=nm?nm+"さん":"きみ",m=mood(),g=gapDays();
   if(m==="happy")return `きょうも れんしゅう できたね! ${n} すごい! この ちょうしで いこう`;
   if(m==="worried")return "きのうは ピアノ おやすみ だったね… きょうは いっしょに やろうよ";
   if(m==="angry")return `もう ${g}日も れんしゅう してないよ! プンプン! メロ まっかに なっちゃった`;
@@ -439,10 +439,10 @@ const app=$("#app");
 let toastT;function toast(msg){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function confetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const cols=["#FFC83A","#2F9BF0","#3FBF73","#FF6457","#B05CE6"];
   for(let i=0;i<40;i++){const d=document.createElement("i");d.className="confetti";d.style.left=Math.random()*100+"vw";d.style.background=cols[i%5];d.style.animationDelay=Math.random()*.6+"s";d.style.animationDuration=(1.8+Math.random())+"s";document.body.appendChild(d);setTimeout(()=>d.remove(),3500)}}
-function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));$("#nav").hidden=!["home","shop","teacher"].includes(name)}
+function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));$("#nav").hidden=!["home","shop","teacher"].includes(name);$("#nav [data-go=teacher]").hidden=C.on&&!C.teacher}
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
-function go(name,arg){if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
+function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
   ({home:renderHome,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
 function topbar(){return `<div class="topbar"><div class="brand"><span style="width:36px;height:36px;display:block">${mascotSVG(mood())}</span>メロのピアノ</div><div class="stats"><span class="stat flame ${practicedToday()?"":"off"}" title="れんぞく日数">${IC.flame}${shownStreak()}</span><span class="stat" title="コイン">${IC.coin}<span id="coinN">${P().coins}</span></span></div></div>`}
 function removeFeedback(){$$(".feedback,.modal").forEach(e=>e.remove())}
@@ -456,7 +456,7 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   app.innerHTML=`<section class="screen">${topbar()}
   <div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div>
-  ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから</div><div>${esc(a.message)}</div></div></div>`:""}
+  ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
    <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
    <button class="lesson" data-l="rhythm"><span class="ic" style="background:var(--sun-deep)">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${a.rhythms.length}この リズム・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
@@ -560,7 +560,7 @@ function renderSongList(){const songs=S.assignment.songs;if(songs.length===1)ret
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("song",b.dataset.id))}
 function scoreBox(song,opts={}){const memos=opts.memos||[];const H=song.h/song.w*1000;
   const pins=[...song.pins.map((p,i)=>({...p,n:i+1,own:false})),...memos.map((p,i)=>({...p,n:"M"+(i+1),own:true}))];
-  return `<div class="score-box" id="sb">${song.image?`<img src="${song.image}" alt="${esc(song.title)}の楽譜" draggable="false">`:song.sample?sampleScoreSVG():`<div style="padding:40px;text-align:center" class="muted">がくふの しゃしんが まだ ありません</div>`}
+  return `<div class="score-box" id="sb">${imgSrc(song)?`<img src="${esc(imgSrc(song))}" alt="${esc(song.title)}の楽譜" draggable="false">`:song.sample?sampleScoreSVG():`<div style="padding:40px;text-align:center" class="muted">がくふの しゃしんが まだ ありません</div>`}
    <svg class="overlay" viewBox="0 0 1000 ${H}" preserveAspectRatio="none">${song.strokes.map((s,i)=>`<polyline data-si="${i}" points="${s.pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="${s.w}" stroke-linecap="round" stroke-linejoin="round" opacity=".8"/>`).join("")}</svg>
    ${pins.map(p=>`<button class="pin" data-pid="${p.id}" style="left:${p.x/10}%;top:${p.y/H*100}%;background:${p.own?"#B05CE6":p.color}" aria-label="ちゅうい ${p.n}"><span>${p.own?"M":p.n}</span></button>`).join("")}</div>`}
 function pointerToScore(e,song){const r=$("#sb").getBoundingClientRect(),H=song.h/song.w*1000;return [Math.round(clamp((e.clientX-r.left)/r.width,0,1)*1000),Math.round(clamp((e.clientY-r.top)/r.height,0,1)*H)]}
@@ -638,9 +638,9 @@ function renderTeacherGate(){if(teacherOK)return renderTeacher();let code="",fir
   draw()}
 function renderTeacher(){setNav("teacher");const a=S.assignment;
   const tabs=[["notes","音符"],["rhythm","リズム"],["song","曲"],["record","記録"],["settings","課題・設定"]];
-  app.innerHTML=`<section class="screen"><div class="row" style="justify-content:space-between"><h2>せんせい用ページ</h2><button class="btn ghost small" id="lock">とじる</button></div>
+  app.innerHTML=`<section class="screen"><div class="row" style="justify-content:space-between"><h2>せんせい用ページ</h2>${C.on?`<span class="stat" id="syncPill" style="font-size:.8rem"></span>`:`<button class="btn ghost small" id="lock">とじる</button>`}</div>
    <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-t="${k}" class="${tTab===k?"on":""}">${l}</button>`).join("")}</div><div id="tb" class="screen"></div></section>`;
-  $("#lock").onclick=()=>{teacherOK=false;go("home")};
+  const lk=$("#lock");if(lk)lk.onclick=()=>{teacherOK=false;go("home")};syncPill();
   $$("[data-t]").forEach(b=>b.onclick=()=>{tTab=b.dataset.t;renderTeacher()});
   ({notes:tNotes,rhythm:tRhythm,song:tSong,record:tRecord,settings:tSettings}[tTab])($("#tb"))}
 const saved=()=>{if(save())toast("保存しました")};
@@ -696,8 +696,11 @@ function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color=
   $("#st",el).onchange=e=>{song.title=e.target.value.trim()||"曲";saved();draw()};
   $("#gm",el).onchange=e=>{song.goalMin=clamp(+e.target.value||10,1,60);saved()};
   $("#img",el).onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(1,1400/im.width),c=document.createElement("canvas");c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
-    const old={image:song.image,w:song.w,h:song.h,sample:song.sample};song.image=c.toDataURL("image/jpeg",.8);song.w=c.width;song.h=c.height;song.sample=false;song.pins=[];song.strokes=[];
-    if(!save()){Object.assign(song,old)}else toast("楽譜を とりこみました");draw()};im.src=rd.result};rd.readAsDataURL(f)};
+    const apply=(fields)=>{const old={image:song.image,assetId:song.assetId,w:song.w,h:song.h,sample:song.sample};Object.assign(song,{image:null,assetId:null,w:c.width,h:c.height,sample:false,pins:[],strokes:[]},fields);
+      if(!save()){Object.assign(song,old)}else toast("楽譜を とりこみました");draw()};
+    if(C.on){if(!C.assets)return toast("楽譜の画像を のせる権限が ありません");toast("楽譜を アップロード中…");
+      c.toBlob(b=>C.assets.upload(b,{contentType:"image/jpeg"}).then(r=>apply({assetId:r.id})).catch(()=>toast("アップロードに 失敗しました。もういちど ためしてください")),"image/jpeg",.82)}
+    else apply({image:c.toDataURL("image/jpeg",.8)})};im.src=rd.result};rd.readAsDataURL(f)};
   $$("[data-m]",el).forEach(b=>b.onclick=()=>{mode=b.dataset.m;draw()});
   $$("[data-c]",el).forEach(b=>b.onclick=()=>{color=b.dataset.c;draw()});
   $$("[data-cl]",el).forEach(i=>i.onchange=()=>{song.checklist[+i.dataset.cl]=i.value.trim();song.checklist=song.checklist.filter(Boolean);saved()});
@@ -718,7 +721,16 @@ function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color=
   const end=()=>{if(!drawing)return;if(drawing.pts.length>1){song.strokes.push({color:drawing.color,w:drawing.w,pts:drawing.pts.filter((p,i)=>i%2===0||i===drawing.pts.length-1)});save()}drawing=null};
   sb.addEventListener("pointerup",end);sb.addEventListener("pointercancel",end)}
   draw()}
-function tRecord(el){const a=S.assignment,w=weekly(),G=a.goals,days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(dayKey(d))}
+function tRecord(el){if(C.on&&C.teacher)return tRecordCloud(el);tRecordBody(el)}
+function tRecordCloud(el){watchStudents(()=>{const list=C.students;
+  if(!list){el.innerHTML=`<div class="card muted">生徒の記録を よみこみ中…</div>`;return}
+  if(!list.length){el.innerHTML=`<div class="card"><b>まだ 生徒の記録が ありません</b><p class="muted" style="margin:6px 0 0">このページを 生徒と共有して、生徒が 練習すると ここに 記録が とどきます。</p></div>`;return}
+  if(!list.some(s=>s.id===C.stuSel))C.stuSel=list[0].id;
+  const st=list.find(s=>s.id===C.stuSel);
+  el.innerHTML=`<div class="card"><div class="label">生徒を えらぶ</div><div class="row" style="margin-top:8px">${list.map(s=>`<button class="btn small ${s.id===C.stuSel?"":"ghost"}" data-stu="${s.id}">${esc(C.names[s.id]||"生徒")}</button>`).join("")}</div><div class="muted" style="font-size:.8rem;margin-top:6px">さいごの 更新: ${st.updatedAt?new Date(st.updatedAt).toLocaleString("ja-JP"):"-"}</div></div><div id="stuRec" class="screen"></div>`;
+  $$("[data-stu]",el).forEach(b=>b.onclick=()=>{C.stuSel=b.dataset.stu;tRecordCloud(el)});
+  const o=S.p;S.p={...defaultState().p,...JSON.parse(JSON.stringify(st.p||{}))};try{tRecordBody($("#stuRec",el))}finally{S.p=o}})}
+function tRecordBody(el){const a=S.assignment,w=weekly(),G=a.goals,days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(dayKey(d))}
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>今週の課題の進み具合</b><span class="muted" style="font-size:.85rem">課題スタート: ${a.startedAt}</span>
    ${[["音符の練習",w.notes,G.notes,"回"],["リズムのクリア",w.rhythm,G.rhythm,"回"],["曲の練習",w.songMin,G.songMin,"分"]].map(([l,v,g,u])=>`<div><div class="row" style="justify-content:space-between"><span>${l}</span><b>${v}/${g}${u}</b></div><div class="bar"><i style="width:${Math.min(100,v/g*100)}%"></i></div></div>`).join("")}
    <div class="row" style="gap:16px"><span>れんぞく: <b>${shownStreak()}日</b></span><span>ベスト: <b>${P().best}日</b></span><span>コイン: <b>${P().coins}</b></span></div></div>
@@ -729,22 +741,63 @@ function tSettings(el){const a=S.assignment;
    <div class="field"><label for="msg">せんせいからの ひとこと(ホームに表示)</label><textarea id="msg" rows="3" maxlength="140">${esc(a.message)}</textarea></div>
    <div class="row"><div class="field grow"><label for="g1">音符(回/週)</label><input id="g1" type="number" min="1" max="50" value="${a.goals.notes}"></div><div class="field grow"><label for="g2">リズム(クリア/週)</label><input id="g2" type="number" min="1" max="100" value="${a.goals.rhythm}"></div><div class="field grow"><label for="g3">曲(分/週)</label><input id="g3" type="number" min="5" max="600" value="${a.goals.songMin}"></div></div>
    <div id="nw"><button class="btn berry small" style="background:var(--berry);box-shadow:0 4px 0 #7E3BB0" id="newWeek">あたらしい週の 課題として 出す</button><div class="muted" style="font-size:.8rem;margin-top:6px">今週の目標の カウントが 0から はじまります(コインや れんぞく日数は のこります)。</div></div></div>
-   <div class="card" style="display:flex;flex-direction:column;gap:12px"><b>生徒</b><div class="field"><label for="sn">生徒の なまえ(メロが よびます)</label><input id="sn" value="${esc(S.studentName)}" maxlength="12"></div></div>
-   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>課題を 生徒の 端末に わたす</b><p class="muted" style="margin:0;font-size:.85rem">せんせいの 端末で 作った課題を ファイルに して、生徒の 端末で 読みこみます(記録や コインは そのまま)。</p>
-    <div class="row"><button class="btn small grow" id="exp">課題ファイルを 保存</button><label class="btn ghost small grow" style="text-align:center">課題ファイルを 読みこむ<input id="imp" type="file" accept="application/json,.json" hidden></label></div></div>
-   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>暗証番号</b><div class="row"><input id="np" inputmode="numeric" maxlength="4" placeholder="あたらしい 4けた" class="grow" style="flex:1"><button class="btn ghost small" id="npb">かえる</button></div></div>
-   <div class="card" id="rst"><button class="btn red small" id="reset">生徒の 記録と コインを リセット</button></div>`;
+   ${C.on?"":`<div class="card" style="display:flex;flex-direction:column;gap:12px"><b>生徒</b><div class="field"><label for="sn">生徒の なまえ(メロが よびます)</label><input id="sn" value="${esc(S.studentName)}" maxlength="12"></div></div>`}
+   ${C.on?`<div class="card" style="display:flex;flex-direction:column;gap:6px"><b>生徒への とどけかた</b><p class="muted" style="margin:0;font-size:.9rem">ここで 変えた課題は 自動で 生徒に とどきます。このページを 生徒(保護者)と「共有」してください。生徒の練習記録は「記録」タブに とどきます。</p></div>`:`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>課題を 生徒の 端末に わたす</b><p class="muted" style="margin:0;font-size:.85rem">せんせいの 端末で 作った課題を ファイルに して、生徒の 端末で 読みこみます(記録や コインは そのまま)。</p>
+    <div class="row"><button class="btn small grow" id="exp">課題ファイルを 保存</button><label class="btn ghost small grow" style="text-align:center">課題ファイルを 読みこむ<input id="imp" type="file" accept="application/json,.json" hidden></label></div></div>`}
+   ${C.on?"":`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>暗証番号</b><div class="row"><input id="np" inputmode="numeric" maxlength="4" placeholder="あたらしい 4けた" class="grow" style="flex:1"><button class="btn ghost small" id="npb">かえる</button></div></div>`}
+   <div class="card" id="rst"><button class="btn red small" id="reset">${C.on?"この端末の 記録と コインを リセット":"生徒の 記録と コインを リセット"}</button></div>`;
   $("#msg",el).onchange=e=>{a.message=e.target.value.trim();saved()};
   [["g1","notes"],["g2","rhythm"],["g3","songMin"]].forEach(([i,k])=>$("#"+i,el).onchange=e=>{a.goals[k]=Math.max(1,+e.target.value||1);saved()});
-  $("#sn",el).onchange=e=>{S.studentName=e.target.value.trim();saved()};
+  if($("#sn",el))$("#sn",el).onchange=e=>{S.studentName=e.target.value.trim();saved()};
   $("#newWeek",el).onclick=()=>{a.id=uid();a.startedAt=dayKey();saved();toast("あたらしい週の 課題を 出しました")};
-  $("#exp",el).onclick=()=>{const data=JSON.stringify({type:"meloPiano-assignment",assignment:a,customRhythms:S.customRhythms});const blob=new Blob([data],{type:"application/json"});const u=URL.createObjectURL(blob);const l=document.createElement("a");l.href=u;l.download=`piano-kadai-${dayKey()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("ファイルを 保存しました")};
-  $("#imp",el).onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const d=JSON.parse(t);if(d.type!=="meloPiano-assignment")throw 0;S.assignment={...defaultState().assignment,...d.assignment};S.customRhythms=d.customRhythms||[];save();toast("課題を 読みこみました");renderTeacher()}).catch(()=>toast("このファイルは 読みこめません"))};
-  $("#npb",el).onclick=()=>{const v=$("#np",el).value;if(!/^\d{4}$/.test(v))return toast("4けたの 数字を 入れてください");S.pin=v;saved();$("#np",el).value=""};
+  if($("#exp",el))$("#exp",el).onclick=()=>{const data=JSON.stringify({type:"meloPiano-assignment",assignment:a,customRhythms:S.customRhythms});const blob=new Blob([data],{type:"application/json"});const u=URL.createObjectURL(blob);const l=document.createElement("a");l.href=u;l.download=`piano-kadai-${dayKey()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("ファイルを 保存しました")};
+  if($("#imp",el))$("#imp",el).onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const d=JSON.parse(t);if(d.type!=="meloPiano-assignment")throw 0;S.assignment={...defaultState().assignment,...d.assignment};S.customRhythms=d.customRhythms||[];save();toast("課題を 読みこみました");renderTeacher()}).catch(()=>toast("このファイルは 読みこめません"))};
+  if($("#npb",el))$("#npb",el).onclick=()=>{const v=$("#np",el).value;if(!/^\d{4}$/.test(v))return toast("4けたの 数字を 入れてください");S.pin=v;saved();$("#np",el).value=""};
   $("#reset",el).onclick=()=>{$("#rst",el).innerHTML=`<div class="row"><span>記録・コイン・ショップの アイテムが 消えます。よろしいですか?</span><button class="btn ghost small" id="rn">やめる</button><button class="btn red small" id="ry">リセット</button></div>`;$("#rn",el).onclick=()=>tSettings(el);$("#ry",el).onclick=()=>{S.p=defaultState().p;saved();tSettings(el)}}}
 
 /* ================= boot ================= */
+/* ================= cloud sync (shared page: teacher -> students, students -> teacher) ================= */
+function imgSrc(song){return song.assetId?"/_blob/"+song.assetId:song.image}
+const C={on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",lastA:"",lastP:"",pushT:0,pushing:false,again:false,progT:0,students:null,stuUnsub:null,stuSel:null,names:{}};
+const assignJSON=()=>JSON.stringify({assignment:S.assignment,customRhythms:S.customRhythms});
+function cloudAfterSave(){
+  if(C.teacher){const j=assignJSON();if(j!==C.lastA&&C.loaded){clearTimeout(C.pushT);C.status="sending";syncPill();C.pushT=setTimeout(pushAssignment,700)}}
+  else if(C.uid){const j=JSON.stringify(S.p);if(j!==C.lastP){clearTimeout(C.progT);C.progT=setTimeout(pushProgress,1500)}}}
+async function pushAssignment(){if(C.pushing){C.again=true;return}C.pushing=true;const j=assignJSON();
+  try{if(j.length>240000)throw{code:"too_big"};await C.db.doc("class/current").set({...JSON.parse(j),updatedAt:Date.now()});C.lastA=j;C.status="ok"}
+  catch(e){C.status="err";toast(e&&e.code==="too_big"?"課題が大きすぎて送れません(楽譜画像を とりこみ直してください)":"生徒への送信に失敗しました。通信を確認してください")}
+  C.pushing=false;syncPill();if(C.again){C.again=false;pushAssignment()}}
+async function pushProgress(){if(C.pushing)return(C.progT=setTimeout(pushProgress,1500));C.pushing=true;const j=JSON.stringify(S.p);
+  try{await C.db.doc("progress/"+C.uid).set({p:JSON.parse(j),updatedAt:Date.now()});C.lastP=j;S.pAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}catch(e){}
+  C.pushing=false}
+function syncPill(){const el=$("#syncPill");if(!el)return;const t={ok:["var(--grass)","生徒に とどいています"],sending:["var(--sun-deep)","生徒に おくっています…"],err:["var(--coral)","送信エラー"],wait:["var(--muted)","接続中…"],local:["var(--muted)","この端末だけ"]}[C.status]||["var(--muted)",""];
+  el.innerHTML=`<i style="width:10px;height:10px;border-radius:50%;background:${t[0]};display:inline-block"></i>${t[1]}`}
+let curScreen="home";
+function refreshScreen(){if(curScreen==="home")renderHome();else if(curScreen==="teacher"&&!teacherOK)renderTeacherGate();setNav(curScreen==="teacherMain"?"teacher":curScreen)}
+async function initCloud(){const cl=window.claude;if(!cl||typeof cl.use!=="function")return;
+  const db=await cl.use("db");if(!db)return;const user=await cl.use("user");
+  C.db=db;C.user=user;C.on=true;C.status="wait";
+  try{C.teacher=user?await user.canEdit():false;C.uid=user?await user.id():null;const me=user?await user.me():null;C.myName=(me&&me.name||"").split(/\s+/)[0]||""}catch(e){}
+  if(C.teacher){C.assets=await cl.use("assets");teacherOK=true}
+  const timer=setTimeout(()=>{if(!C.loaded){C.status="err";syncPill();toast("せんせいの課題に まだ つながりません(オフラインかも)")}},10000);
+  db.doc("class/current").onSnapshot(snap=>{
+    if(snap.metadata.hasPendingWrites)return;
+    const first=!C.loaded;
+    if(snap.exists){const d=snap.data();const j=JSON.stringify({assignment:d.assignment,customRhythms:d.customRhythms||[]});
+      if(j!==C.lastA&&!(C.teacher&&!first)){S.assignment={...defaultState().assignment,...d.assignment};S.customRhythms=d.customRhythms||[];try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(!first&&!C.teacher)toast("せんせいから あたらしい課題が とどいたよ!")}
+      C.lastA=j}
+    if(!snap.metadata.fromCache){clearTimeout(timer);C.loaded=true;C.status="ok";if(!snap.exists&&C.teacher)pushAssignment()}
+    if(first||!C.teacher)refreshScreen();syncPill()},
+    e=>{clearTimeout(timer);C.status="err";syncPill()});
+  if(C.uid&&!C.teacher){try{const ps=await db.doc("progress/"+C.uid).get();if(ps.exists){const d=ps.data();if((d.updatedAt||0)>(S.pAt||0)){S.p={...defaultState().p,...d.p};S.pAt=d.updatedAt;C.lastP=JSON.stringify(S.p);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}refreshScreen()}}else cloudAfterSave()}catch(e){}}
+  refreshScreen()}
+function watchStudents(cb){if(C.stuUnsub){cb();return}C.students=null;
+  C.stuUnsub=C.db.collection("progress").onSnapshot(async snap=>{C.students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    try{const ps=C.user?await C.user.profiles(C.students.map(s=>s.id)):{};C.students.forEach(s=>C.names[s.id]=(ps[s.id]&&ps[s.id].name)||"生徒")}catch(e){}
+    if((curScreen==="teacherMain"||curScreen==="teacher")&&tTab==="record")renderTeacher()},()=>{C.students=[];C.stuUnsub=null});
+  cb()}
 go("home");
+initCloud();
 </script>
 </body>
 </html>
