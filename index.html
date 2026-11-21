@@ -656,7 +656,10 @@ const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${ha
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
 function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.3;const v=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
-function startFinger(){const F=S.assignment.finger;if(F.stage===2)return renderFingerList();renderFingerLearn()}
+let FSO=null;
+function fingerOrder(){const F=S.assignment.finger;if(!F.shuffleEx)return F.ex;
+  if(!FSO||FSO.length!==F.ex.length||FSO.some(id=>!F.ex.find(e=>e.id===id)))FSO=shuffle(F.ex.map(e=>e.id));return FSO.map(id=>F.ex.find(e=>e.id===id))}
+function startFinger(){FSO=null;const F=S.assignment.finger;if(F.stage===2)return renderFingerList();renderFingerLearn()}
 function renderFingerLearn(){const F=S.assignment.finger;let sel=null;
   function draw(){app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<div class="card"><b>ゆびには ばんごうが あるよ</b><p class="muted" style="margin:4px 0 0">おやゆびが 1、こゆびが 5。ゆびを タップしてみよう。</p></div>
     <div id="lh">${handsHTML(["L","R"],h=>({hl:sel&&sel.hand===h?sel.f:null}))}</div>
@@ -687,28 +690,30 @@ function finishFQ(){const r=dayRec(),perfect=FQ.correct===FQ.list.length;let coi
 const seqHTML=(seq,sm)=>`<div class="fseq">${seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn ${sm?"sm":""}">${c}</span>`).join("")}</div>`).join("")}</div>`;
 function renderFingerList(){const F=S.assignment.finger;
   app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="muted" style="margin:0">ひかった ゆびを みながら、つくえの うえで ゆびを うごかそう。</p>
-   <div class="rhythm-list">${F.ex.map(e=>`<button class="rcard" data-id="${e.id}"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span>${(P().fingerToday[dayKey()+"|"+e.id]||0)?`<span class="check on" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grass)">${IC.check}</span>`:""}</button>`).join("")||`<div class="card">せんせいが まだ れんしゅうを つくっていません。</div>`}</div>
+   <div class="rhythm-list">${fingerOrder().map(e=>`<button class="rcard" data-id="${e.id}"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span>${(P().fingerToday[dayKey()+"|"+e.id]||0)?`<span class="check on" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grass)">${IC.check}</span>`:""}</button>`).join("")||`<div class="card">せんせいが まだ れんしゅうを つくっていません。</div>`}</div>
    <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("fingerPlay",b.dataset.id));$("#learn").onclick=()=>renderFingerLearn()}
-function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id===id);if(!ex)return go("finger");const nextEx=F.ex[F.ex.indexOf(ex)+1];
-  const hands=handList(ex.hand),steps=[...ex.seq].filter(c=>c!=="|").map(Number);
+function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id===id);if(!ex)return go("finger");const ord=fingerOrder(),nextEx=ord[ord.indexOf(ex)+1];
+  const hands=handList(ex.hand);let steps=[];
   let speed=1,busy=false,timers=[],cur=-1;const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false;
-  let k=0;const chips=ex.seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn" data-i="${k++}">${c}</span>`).join("")}</div>`).join("");
+  // blocks in registered order, or shuffled every time the child presses start
+  function layout(){const g=ex.seq.split("|").filter(Boolean),gs=F.shuffleBlocks?shuffle(g):g;let k=0;steps=[...gs.join("")].map(Number);
+    $("#fs").innerHTML=gs.map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn" data-i="${k++}">${c}</span>`).join("")}</div>`).join("")}
   app.innerHTML=`<section class="screen narrow">${backBar(HANDNAME[ex.hand]+"の れんしゅう")}
-   <div class="fseq" id="fs">${chips}</div>
+   <div class="fseq" id="fs"></div>
    <div class="countin" id="ci" aria-live="polite">スタートを おしてね</div>
    <div id="fh">${handsHTML(hands,{})}</div>
    <button class="btn green wide" id="go">スタート</button>
    <div class="row" style="justify-content:center"><div class="seg" role="group" aria-label="はやさ"><button data-sp="0.7">ゆっくり</button><button data-sp="1" class="on">ふつう</button></div>
     <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div>
    <div id="res"></div><p class="muted" style="font-size:.85rem;margin:0;text-align:center">テンポ ${F.bpm}・ひかった すうじの ゆびを うごかそう</p></section>`;
-  $("#back").onclick=()=>go("fingerList");const ci=$("#ci");
+  $("#back").onclick=()=>go("fingerList");const ci=$("#ci");layout();
   const show=i=>{cur=i;$$("#fs .fn").forEach((n,j)=>{n.classList.toggle("on",j===i);n.classList.toggle("done",j<i)});const f=steps[i];
     $("#fh").innerHTML=handsHTML(hands,{hl:f});ci.innerHTML=f?`<span class="fbig">${f}</span>`:"&nbsp;"};
   $$("[data-sp]").forEach(b=>b.onclick=()=>{if(busy)return;speed=+b.dataset.sp;$$("[data-sp]").forEach(x=>x.classList.toggle("on",x===b))});
   $("#cnt").onclick=e=>{S.prefs.fCount=!count();save();e.target.classList.toggle("on",count());e.target.textContent=`カウント ${count()?"あり":"なし"}`};
   $("#voi").onclick=e=>{S.prefs.fVoice=!voice();save();e.target.classList.toggle("on",voice());e.target.textContent=`よみあげ ${voice()?"オン":"オフ"}`;if(!voice())try{speechSynthesis.cancel()}catch(x){}};
-  $("#go").onclick=()=>{if(busy)return;const A=ac();if(!A)return toast("このブラウザでは うごきません");busy=true;$("#go").disabled=true;$("#res").innerHTML="";show(-1);
+  $("#go").onclick=()=>{if(busy)return;const A=ac();if(!A)return toast("このブラウザでは うごきません");busy=true;$("#go").disabled=true;$("#res").innerHTML="";if(F.shuffleBlocks)layout();show(-1);
     if(voice())sayJa(count()?"":"よーい");
     const bd=60/(F.bpm*speed),t0=A.currentTime+.4;let start;
     if(count()){for(let c=0;c<4;c++){click(t0+c*bd,c===0);timers.push(setTimeout(()=>{ci.textContent=String(c+1)},(t0+c*bd-A.currentTime)*1000))}start=t0+4*bd}
@@ -952,6 +957,9 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[],editI
     <div class="field grow"><label>どちらの 手?</label><div class="seg">${[["R","右手"],["L","左手"],["B","両手(まぜて)"]].map(([k,l])=>`<button data-qh="${k}" class="${F.quizHand===k?"on":""}">${l}</button>`).join("")}</div></div>
     <div class="field"><label for="fqc">問題数</label><select id="fqc" style="width:auto">${[5,10,15].map(n=>`<option ${F.quizCount===n?"selected":""}>${n}</option>`).join("")}</select></div></div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>ステップ2の れんしゅう(${F.ex.length}こ)</b>
+    <div class="row"><span class="label" style="min-width:8em">れんしゅうの 順番</span><div class="seg"><button data-sx="0" class="${F.shuffleEx?"":"on"}">登録した順</button><button data-sx="1" class="${F.shuffleEx?"on":""}">毎回 ばらばら</button></div></div>
+    <div class="row"><span class="label" style="min-width:8em">かたまりの 順番</span><div class="seg"><button data-sb="0" class="${F.shuffleBlocks?"":"on"}">登録した順</button><button data-sb="1" class="${F.shuffleBlocks?"on":""}">毎回 ばらばら</button></div></div>
+    <div class="muted" style="font-size:.8rem">「かたまり」は「｜」で 区切った 数字の まとまりです。ばらばらに すると スタートの たびに 順番が かわり、数字を おぼえずに 毎回 読む 練習に なります。</div>
     <div class="muted" style="font-size:.8rem">⠿ を つかんで 上下に ドラッグ、または ↑↓ で じゅんばんを かえられます(生徒には この順で ならびます)。</div>
     <div class="rhythm-list exlist">${F.ex.map((e,ei)=>`<div class="rcard exrow" data-ei="${ei}"><span class="exgrip" aria-hidden="true">⠿</span><span class="exmove"><button class="btn ghost small" data-eup="${ei}" ${ei===0?"disabled":""} aria-label="上へ">↑</button><button class="btn ghost small" data-edown="${ei}" ${ei===F.ex.length-1?"disabled":""} aria-label="下へ">↓</button></span><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;flex:1;min-width:0"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><span style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost small" data-fedit="${e.id}">なおす</button><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></span></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${editId?"れんしゅうを なおす":"あたらしい れんしゅうを つくる"}</b>
@@ -966,6 +974,8 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[],editI
     <div class="field grow"><label for="fci">はじめの カウント(生徒が 切りかえ できます)</label><select id="fci"><option value="0" ${F.countIn?"":"selected"}>なし</option><option value="1" ${F.countIn?"selected":""}>あり(1・2・3・4)</option></select></div></div>`;
   $$("[data-on]",el).forEach(b=>b.onclick=()=>{F.on=b.dataset.on==="1";saved();draw()});
   $$("[data-fstep]",el).forEach(b=>b.onclick=()=>{F.stage=+b.dataset.fstep;saved();draw()});
+  $$("[data-sx]",el).forEach(b=>b.onclick=()=>{F.shuffleEx=b.dataset.sx==="1";saved();draw()});
+  $$("[data-sb]",el).forEach(b=>b.onclick=()=>{F.shuffleBlocks=b.dataset.sb==="1";saved();draw()});
   $$("[data-qh]",el).forEach(b=>b.onclick=()=>{F.quizHand=b.dataset.qh;saved();draw()});
   $("#fqc",el).onchange=e=>{F.quizCount=+e.target.value;saved()};
   $$("[data-fdel]",el).forEach(b=>b.onclick=()=>{F.ex=F.ex.filter(x=>x.id!==b.dataset.fdel);saved();draw()});
