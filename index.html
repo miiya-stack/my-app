@@ -343,11 +343,12 @@ const IC={
 /* ================= storage ================= */
 const KEY="meloPiano.v1";
 /* rhythm corners: 3 built-in sets of 5 problems + the teacher's originals */
-const RHYTHM_CORNERS=[{id:"qh",name:"4分音符と 2分音符",icon:["q","h"]},{id:"eq",name:"8分音符と 4分音符",icon:["ee","q"]},{id:"eqh",name:"8分・4分・2分音符",icon:["ee","q","h"]},{id:"orig",name:"せんせいの オリジナル",icon:null}];
+const RHYTHM_CORNERS=[{id:"qh",name:"4分音符と 2分音符",icon:["q","h"]},{id:"eq",name:"8分音符と 4分音符",icon:["ee","q"]},{id:"eqh",name:"8分・4分・2分音符",icon:["ee","q","h"]},{id:"rest",name:"休符",icon:["q","qr","hr"]},{id:"orig",name:"せんせいの オリジナル",icon:null}];
 const RHYTHM_LIB=[
   ["qh",["q","q","q","q"]],["qh",["h","h"]],["qh",["q","q","h"]],["qh",["h","q","q"]],["qh",["q","h","q"]],
   ["eq",["ee","q","ee","q"]],["eq",["q","ee","q","ee"]],["eq",["ee","ee","q","q"]],["eq",["q","q","ee","ee"]],["eq",["ee","ee","ee","q"]],
-  ["eqh",["ee","q","h"]],["eqh",["h","ee","q"]],["eqh",["q","ee","h"]],["eqh",["ee","ee","h"]],["eqh",["h","q","ee"]]
+  ["eqh",["ee","q","h"]],["eqh",["h","ee","q"]],["eqh",["q","ee","h"]],["eqh",["ee","ee","h"]],["eqh",["h","q","ee"]],
+  ["rest",["q","q","q","qr"]],["rest",["q","qr","q","qr"]],["rest",["qr","q","qr","q"]],["rest",["h","q","qr"]],["rest",["q","q","hr"]]
 ].map(([c,tokens],i)=>{const n=i%5+1;return{id:c+n,c,n,name:`${RHYTHM_CORNERS.find(x=>x.id===c).name} ${n}`,tokens}});
 function sampleSong(){return {id:"s-sample",title:"きらきらぼし(サンプル)",image:null,sample:true,w:1000,h:430,
   pins:[{id:uid(),x:120,y:150,text:"さいしょのドは やさしく はじめよう",color:"#FF6457"},{id:uid(),x:455,y:120,text:"ラ→ラ→ソは 指をかえずに",color:"#2F9BF0"},{id:uid(),x:860,y:330,text:"さいごのドは のばして 2つかぞえる",color:"#3FBF73"}],
@@ -357,7 +358,7 @@ function defaultState(){return{
   pin:null,studentName:"",
   assignment:{id:uid(),startedAt:dayKey(),message:"今週は ト音きごうの ド〜ソ と、4分音符・2分音符のリズムを がんばろう!",
     notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",order:["notes","rhythm","finger","songs"],
-    rhythms:[],rhythmCorners:{qh:true,eq:true,eqh:true,orig:true},bpm:80,metronome:true,
+    rhythms:[],rhythmCorners:{qh:true,eq:true,eqh:true,rest:true,orig:true},bpm:80,metronome:true,
     songs:[sampleSong()],
     finger:{on:true,stage:1,quizHand:"B",quizCount:10,bpm:60,countIn:false,
       ex:[{id:"f1",hand:"R",seq:"12345|54321"},{id:"f2",hand:"L",seq:"12345|54321"},{id:"f3",hand:"B",seq:"12345|54321"}]},
@@ -899,7 +900,7 @@ function tNotes(el){const a=S.assignment;
   $$("[data-step]",el).forEach(b=>b.onclick=()=>{const st=STEPS[b.dataset.step];a.staffView=st.v;a.notes=st.n.slice();saved();tNotes(el)})}
 function tRhythm(el){const a=S.assignment;let build=[],ts=4;
   function draw(){
-  const RC=a.rhythmCorners||(a.rhythmCorners={qh:true,eq:true,eqh:true,orig:true});
+  const RC=a.rhythmCorners||(a.rhythmCorners={qh:true,eq:true,eqh:true,rest:true,orig:true});
   el.innerHTML=RHYTHM_CORNERS.map((c,i)=>{const on=RC[c.id]!==false,list=cornerRhythms(c.id);return `<div class="card" style="display:flex;flex-direction:column;gap:10px;${on?"":"opacity:.75"}">
    <div class="row" style="justify-content:space-between"><b>${i+1}. ${c.name}(${list.length}もん)</b><div class="seg"><button data-rc="${c.id}" data-v="1" class="${on?"on":""}">出す</button><button data-rc="${c.id}" data-v="0" class="${on?"":"on"}">出さない</button></div></div>
    ${list.length?`<div class="rhythm-list">${list.map(r=>`<div class="rcard" style="padding:6px 10px"><span style="min-width:0"><span class="label">${c.id==="orig"?"オリジナル":"もんだい"} ${r.n}</span>${rhythmSVG(r.tokens,{unit:44})}</span>${c.id==="orig"?`<button class="del" style="padding:6px 10px" data-rdel="${r.id}">けす</button>`:""}</div>`).join("")}</div>`:`<div class="muted" style="font-size:.9rem">まだ ありません。下の「オリジナルの リズムを つくる」で 作ると ここに 入ります。</div>`}</div>`}).join("")+`
