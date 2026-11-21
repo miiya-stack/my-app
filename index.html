@@ -447,8 +447,21 @@ function tone(freq,when=0,dur=.6,vol=.35,type="triangle",dest){const a=ac();if(!
   const g=a.createGain();g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.012);g.gain.exponentialRampToValueAtTime(vol*.5,t+Math.min(.25,dur*.5));g.gain.exponentialRampToValueAtTime(0.0001,t+dur);g.connect(dest||master());
   const o=a.createOscillator();o.type=type;o.frequency.value=freq;o.connect(g);o.start(t);o.stop(t+dur+.05);
   const o2=a.createOscillator(),g2=a.createGain();g2.gain.value=.25;o2.type="sine";o2.frequency.value=freq*2;o2.connect(g2);g2.connect(g);o2.start(t);o2.stop(t+dur+.05)}
-function click(when,accent,dest){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=accent?1500:1000;
-  g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(accent?.32:.2,when+.004);g.gain.exponentialRampToValueAtTime(0.0001,when+.07);o.connect(g);g.connect(dest||master());o.start(when);o.stop(when+.08)}
+/* ---- unpitched percussion (no musical pitch): filtered noise ---- */
+let NOISE=null;
+function noiseBuf(a){if(!NOISE){const n=a.createBuffer(1,a.sampleRate,a.sampleRate),d=n.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;NOISE=n}return NOISE}
+function noiseHit(a,when,{type="bandpass",freq=1000,q=1,vol=.4,attack=.002,decay=.08,dest}={}){const src=a.createBufferSource();src.buffer=noiseBuf(a);src.loop=true;
+  const f=a.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;const g=a.createGain();
+  g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+attack);g.gain.exponentialRampToValueAtTime(0.0001,when+attack+decay);
+  src.connect(f);f.connect(g);g.connect(dest||master());src.start(when,Math.random()*.5);src.stop(when+attack+decay+.05)}
+/* metronome: a dry wood-block "tock" */
+function click(when,accent,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
+  noiseHit(a,t,{type:"bandpass",freq:accent?2600:2100,q:4,vol:accent?.9:.55,decay:.035,dest})}
+/* rhythm note: a soft drum hit; long notes keep a quiet brush sound for their length */
+function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
+  noiseHit(a,t,{type:"lowpass",freq:240,q:.8,vol:1,decay:.14,dest});
+  noiseHit(a,t,{type:"bandpass",freq:1500,q:.8,vol:.3,decay:.07,dest});
+  if(len>.3)noiseHit(a,t+.03,{type:"bandpass",freq:4200,q:.5,vol:.09,attack:.05,decay:Math.max(.2,len-.08),dest})}
 /* soft chime: one sine, gentle attack and decay */
 function chime(freq,when,dur=.35,vol=.16){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=freq;
   g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.025);g.gain.exponentialRampToValueAtTime(0.0001,when+dur);o.connect(g);g.connect(master());o.start(when);o.stop(when+dur+.05)}
@@ -812,7 +825,7 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
     runOut=A.createGain();runOut.connect(master());
     const t0=A.currentTime+.35,CI=beats*2;for(let k=0;k<CI;k++){click(t0+k*bd,k%beats===0,runOut);timers.push(setTimeout(()=>{ci.textContent=String(k%beats+1)},(t0+k*bd-A.currentTime)*1000))}
     const ms=t0+CI*bd;if(a.metronome)for(let k=0;k<beats;k++)click(ms+k*bd,k===0,runOut);
-    if(withNotes)ons.forEach(o=>tone(freqOf("C5"),ms+o.beat*bd,Math.max(.15,o.dur*bd*.92),.3,"triangle",runOut));
+    if(withNotes)ons.forEach(o=>drum(ms+o.beat*bd,o.dur*bd*.92,runOut));
     timers.push(setTimeout(()=>{ci.textContent=withNotes?"きいてね":"たたいて!"},(ms-A.currentTime)*1000));
     animate(ms,beats,withNotes);return ms}
   function stopRun(){timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf);if(runOut){try{runOut.disconnect()}catch(e){}runOut=null}
@@ -828,8 +841,8 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
   function hit(e){if(e)e.preventDefault();if(pad.disabled)return;const A=ac(),t=A.currentTime-(A.outputLatency||A.baseLatency||0);taps.push(t);
     // sound the note the child is aiming at, for that note's length (quarter = short, half = long)
     let best=-1,dmin=1e9;ons.forEach((o,k)=>{if(sounded.has(k))return;const d=Math.abs(t-(measureStart+o.beat*bd));if(d<dmin){dmin=d;best=k}});
-    if(best>=0&&dmin<=Math.max(.3,bd*.5)){sounded.add(best);const len=Math.max(.15,ons[best].dur*bd*.92);tone(freqOf("C5"),0,len,.3);setHL(best,true);const kk=best;timers.push(setTimeout(()=>setHL(kk,false),len*1000))}
-    else tone(freqOf("C5"),0,.15,.22);pad.classList.add("hit");setTimeout(()=>pad.classList.remove("hit"),80)}
+    if(best>=0&&dmin<=Math.max(.3,bd*.5)){sounded.add(best);const len=Math.max(.15,ons[best].dur*bd*.92);drum(0,len);setHL(best,true);const kk=best;timers.push(setTimeout(()=>setHL(kk,false),len*1000))}
+    else drum(0,.12);pad.classList.add("hit");setTimeout(()=>pad.classList.remove("hit"),80)}
   pad.addEventListener("pointerdown",hit);
   const key=e=>{if(e.code==="Space"&&!e.repeat&&!pad.disabled){hit(e)}};document.addEventListener("keydown",key);
   wake(true);cleanup=()=>{document.removeEventListener("keydown",key);timers.forEach(clearTimeout);cancelAnimationFrame(raf);if(runOut)try{runOut.disconnect()}catch(e){}wake(false)};
