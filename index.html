@@ -260,6 +260,10 @@ th{font-size:.78rem;color:var(--muted)}
 .fn{width:44px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:1.6rem;font-weight:800;background:var(--surface-2);color:var(--ink);transition:transform .1s,background .1s}
 .fn.on{background:var(--sun);color:#5A3B00;transform:scale(1.2);box-shadow:0 0 0 4px rgba(255,200,58,.4)}
 .fn.done{opacity:.4}
+.fcard{display:flex;flex-direction:column;align-items:center;gap:6px}
+.fcount{font-weight:800;color:var(--muted);font-size:.9rem;letter-spacing:.06em}
+.fgroup.big{padding:12px 16px;gap:10px;border-width:3px}
+.fgroup.big .fn{width:58px;height:68px;font-size:2.1rem}
 .fn.sm{width:28px;height:32px;font-size:1rem;border-radius:8px}
 .fbig{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--sun);color:#5A3B00;font-size:1.5em;vertical-align:middle;margin:0 .1em}
 .keypad5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -655,7 +659,12 @@ function handSVG(hand,o={}){const L=hand==="L",col=o.colors||{},nums=o.nums!==fa
 const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${hands.map(h=>`<div class="hand-box" data-hand="${h}"><div class="label">${HANDNAME[h]}</div>${handSVG(h,typeof o==="function"?o(h):o)}</div>`).join("")}</div>`;
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
-function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.3;const v=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+/* read-aloud: prefer a female Japanese voice where the device has one, and raise the pitch so it sounds bright and friendly */
+const CUTE_VOICES=/Kyoko|O-?Ren|Haruka|Nanami|Ayumi|Mizuki|Sayaka|Hikari|Google 日本語|ja-jp-x-(htm|jab|jac)|female|女性/i;
+let jaVoice=null;
+function pickJaVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));jaVoice=vs.find(v=>CUTE_VOICES.test(v.name+" "+v.voiceURI))||vs.find(v=>!/Otoya|Ichiro|Keita|Hattori|male|男性/i.test(v.name))||vs[0]||null}catch(e){}}
+try{if(window.speechSynthesis){pickJaVoice();speechSynthesis.addEventListener?speechSynthesis.addEventListener("voiceschanged",pickJaVoice):(speechSynthesis.onvoiceschanged=pickJaVoice)}}catch(e){}
+function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();if(!jaVoice)pickJaVoice();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.15;u.pitch=1.7;u.volume=1;if(jaVoice)u.voice=jaVoice;speechSynthesis.speak(u)}catch(e){}}
 let FSO=null;
 function fingerOrder(){const F=S.assignment.finger;if(!F.shuffleEx)return F.ex;
   if(!FSO||FSO.length!==F.ex.length||FSO.some(id=>!F.ex.find(e=>e.id===id)))FSO=shuffle(F.ex.map(e=>e.id));return FSO.map(id=>F.ex.find(e=>e.id===id))}
@@ -697,8 +706,12 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
   const hands=handList(ex.hand);let steps=[];
   let speed=1,busy=false,timers=[],cur=-1;const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false;
   // blocks in registered order, or shuffled every time the child presses start
-  function layout(){const g=ex.seq.split("|").filter(Boolean),gs=F.shuffleBlocks?shuffle(g):g;let k=0;steps=[...gs.join("")].map(Number);
-    $("#fs").innerHTML=gs.map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn" data-i="${k++}">${c}</span>`).join("")}</div>`).join("")}
+  // only the current block is shown, like a flash card; the next block appears when this one is done
+  let blocks=[],gOf=[],gStart=[];
+  function layout(){const g=ex.seq.split("|").filter(Boolean);blocks=F.shuffleBlocks?shuffle(g):g;steps=[];gOf=[];gStart=[];
+    blocks.forEach((b,gi)=>{gStart.push(steps.length);[...b].forEach(c=>{steps.push(+c);gOf.push(gi)})});drawBlock(0,-1)}
+  function drawBlock(gi,i){const b=blocks[gi]||"";
+    $("#fs").innerHTML=`<div class="fcard">${blocks.length>1?`<div class="fcount">${gi+1} / ${blocks.length}</div>`:""}<div class="fgroup big">${[...b].map((c,j)=>{const idx=gStart[gi]+j;return `<span class="fn ${idx===i?"on":""} ${i>=0&&idx<i?"done":""}">${c}</span>`}).join("")}</div></div>`}
   app.innerHTML=`<section class="screen narrow">${backBar(HANDNAME[ex.hand]+"の れんしゅう")}
    <div class="fseq" id="fs"></div>
    <div class="countin" id="ci" aria-live="polite">スタートを おしてね</div>
@@ -708,7 +721,7 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
     <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div>
    <div id="res"></div><p class="muted" style="font-size:.85rem;margin:0;text-align:center">テンポ ${F.bpm}・ひかった すうじの ゆびを うごかそう</p></section>`;
   $("#back").onclick=()=>go("fingerList");const ci=$("#ci");layout();
-  const show=i=>{cur=i;$$("#fs .fn").forEach((n,j)=>{n.classList.toggle("on",j===i);n.classList.toggle("done",j<i)});const f=steps[i];
+  const show=i=>{cur=i;if(i<0)drawBlock(0,-1);else if(i>=steps.length)drawBlock(blocks.length-1,steps.length);else drawBlock(gOf[i],i);const f=steps[i];
     $("#fh").innerHTML=handsHTML(hands,{hl:f});ci.innerHTML=f?`<span class="fbig">${f}</span>`:"&nbsp;"};
   $$("[data-sp]").forEach(b=>b.onclick=()=>{if(busy)return;speed=+b.dataset.sp;$$("[data-sp]").forEach(x=>x.classList.toggle("on",x===b))});
   $("#cnt").onclick=e=>{S.prefs.fCount=!count();save();e.target.classList.toggle("on",count());e.target.textContent=`カウント ${count()?"あり":"なし"}`};
