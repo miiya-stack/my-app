@@ -243,6 +243,26 @@ th{font-size:.78rem;color:var(--muted)}
 .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:70;pointer-events:none;animation:fall 2.4s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 .chest{display:flex;align-items:center;gap:12px}
+/* finger numbers */
+.hands{display:flex;gap:12px;justify-content:center;align-items:flex-end}
+.hand-box{flex:1;max-width:240px;text-align:center;display:flex;flex-direction:column;gap:2px}
+.hands.one .hand-box{max-width:300px}
+.hand{width:100%;height:auto;display:block;touch-action:manipulation}
+.hand .fg{cursor:pointer}
+.hand .fg.glow rect{filter:drop-shadow(0 0 8px rgba(255,200,58,.9))}
+.fseq{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.fgroup{display:flex;gap:6px;padding:8px 10px;border-radius:14px;background:var(--surface);border:2px solid var(--line)}
+.fn{width:44px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:1.6rem;font-weight:800;background:var(--surface-2);color:var(--ink);transition:transform .1s,background .1s}
+.fn.on{background:var(--sun);color:#5A3B00;transform:scale(1.2);box-shadow:0 0 0 4px rgba(255,200,58,.4)}
+.fn.done{opacity:.4}
+.fn.sm{width:28px;height:32px;font-size:1rem;border-radius:8px}
+.fbig{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--sun);color:#5A3B00;font-size:1.5em;vertical-align:middle;margin:0 .1em}
+.keypad5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.keypad5 button{padding:14px 0;font-size:1.5rem;font-weight:800;border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);border-radius:14px}
+.steps.two{grid-template-columns:repeat(2,1fr)}
+.seg{display:flex;gap:4px;flex-wrap:wrap}
+.seg button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:800;font-size:.9rem}
+.seg button.on{border-color:var(--primary);background:var(--primary);color:#fff}
 /* model performance player */
 .model{display:flex;flex-direction:column;gap:10px}
 .speed{display:flex;gap:4px;flex-wrap:wrap}
@@ -311,6 +331,7 @@ const IC={
   note:`<svg viewBox="0 0 48 48"><g fill="none" stroke="#fff" stroke-width="2.4"><path d="M4 14h40M4 20h40M4 26h40M4 32h40M4 38h40" opacity=".7"/></g><ellipse cx="20" cy="32" rx="6" ry="4.4" transform="rotate(-20 20 32)" fill="#fff"/><path d="M25.5 31V9" stroke="#fff" stroke-width="3"/></svg>`,
   drum:`<svg viewBox="0 0 48 48"><ellipse cx="24" cy="20" rx="16" ry="6" fill="#fff"/><path d="M8 20v12c0 3.3 7.2 6 16 6s16-2.7 16-6V20" fill="none" stroke="#fff" stroke-width="3"/><path d="M14 6l8 12M34 6l-8 12" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>`,
   score:`<svg viewBox="0 0 48 48"><rect x="9" y="5" width="30" height="38" rx="4" fill="#fff"/><g stroke="#B05CE6" stroke-width="2"><path d="M14 14h20M14 18h20M14 22h20M14 30h20M14 34h20"/></g><circle cx="33" cy="36" r="6" fill="#FF6457" stroke="#fff" stroke-width="2"/></svg>`,
+  hand:`<svg viewBox="0 0 48 48"><g fill="#fff"><rect x="15" y="7" width="5.5" height="22" rx="2.75"/><rect x="21.5" y="4" width="5.5" height="24" rx="2.75"/><rect x="28" y="6" width="5.5" height="23" rx="2.75"/><rect x="34.5" y="11" width="5" height="19" rx="2.5"/><rect x="7" y="21" width="5.5" height="15" rx="2.75" transform="rotate(-35 9.75 36)"/><rect x="12" y="22" width="28" height="20" rx="10"/></g></svg>`,
   chest:`<svg viewBox="0 0 56 56"><rect x="6" y="22" width="44" height="26" rx="4" fill="#C9822B" stroke="#8A5212" stroke-width="2.5"/><path d="M6 24c0-10 8-14 22-14s22 4 22 14z" fill="#E09A3E" stroke="#8A5212" stroke-width="2.5"/><rect x="24" y="24" width="8" height="10" rx="2" fill="#FFC83A" stroke="#8A5212" stroke-width="2"/></svg>`,
 };
 
@@ -342,17 +363,19 @@ function defaultState(){return{
     notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",
     rhythms:["r1","r2","r4","r5"],bpm:80,metronome:true,
     songs:[sampleSong()],
-    goals:{notes:5,rhythm:10,songMin:60}},
+    finger:{on:true,stage:1,quizHand:"B",quizCount:10,bpm:60,countIn:false,
+      ex:[{id:"f1",hand:"R",seq:"12345|54321"},{id:"f2",hand:"L",seq:"12345|54321"},{id:"f3",hand:"B",seq:"12345|54321"}]},
+    goals:{notes:5,rhythm:10,songMin:60,finger:5}},
   customRhythms:[],prefs:{bar:true,mute:false},
-  p:{coins:20,xp:0,streak:0,best:0,lastDay:null,days:{},weekly:{},owned:[],equip:{head:null,glasses:"#21304A",bg:"bg-sky"},memos:{},ratings:{},rhythmToday:{}}
+  p:{coins:20,xp:0,streak:0,best:0,lastDay:null,days:{},weekly:{},owned:[],equip:{head:null,glasses:"#21304A",bg:"bg-sky"},memos:{},ratings:{},rhythmToday:{},fingerToday:{}}
 }}
 let S;
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){const d=JSON.parse(raw);const def=defaultState();return {...def,...d,assignment:{...def.assignment,...d.assignment},p:{...def.p,...d.p},prefs:{...def.prefs,...(d.prefs||{})}}}}catch(e){}return defaultState()}
 function save(){let ok=true;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){ok=false;if(!C.on)toast("保存できませんでした(画像が大きすぎるかも)")}if(C.on)cloudAfterSave();return ok||C.on}
 S=load();
 const P=()=>S.p;
-function dayRec(k=dayKey()){const d=P().days;return d[k]||(d[k]={notesC:0,notesT:0,notesS:0,rhythm:0,songMin:0})}
-function weekly(){const w=P().weekly,id=S.assignment.id;return w[id]||(w[id]={notes:0,rhythm:0,songMin:0,claimed:false})}
+function dayRec(k=dayKey()){const d=P().days;return d[k]||(d[k]={notesC:0,notesT:0,notesS:0,rhythm:0,songMin:0,finger:0})}
+function weekly(){const w=P().weekly,id=S.assignment.id;return w[id]||(w[id]={notes:0,rhythm:0,songMin:0,finger:0,claimed:false})}
 function allRhythms(){return [...RHYTHM_LIB,...S.customRhythms]}
 function rhythmById(id){return allRhythms().find(r=>r.id===id)}
 
@@ -522,7 +545,7 @@ function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dat
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
 function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
-  ({home:renderHome,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
+  ({home:renderHome,finger:startFinger,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
 function topbar(){return `<div class="topbar"><div class="brand"><span style="width:36px;height:36px;display:block">${mascotSVG(mood())}</span>メロのピアノ</div><div class="stats"><span class="stat flame ${practicedToday()?"":"off"}" title="れんぞく日数">${IC.flame}${shownStreak()}</span><span class="stat" title="コイン">${IC.coin}<span id="coinN">${P().coins}</span></span>${sndBtn()}</div></div>`}
 function removeFeedback(){$$(".feedback,.modal").forEach(e=>e.remove())}
 
@@ -531,7 +554,8 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   const mon=new Date();mon.setDate(mon.getDate()-((mon.getDay()+6)%7));
   const days=[..."月火水木金土日"].map((l,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);const k=dayKey(d),r=P().days[k],done=r&&(r.notesS||r.rhythm||r.songMin);return `<div class="d"><span class="dot ${done?"done":""} ${k===dayKey()?"today":""}">${done?IC.check:""}</span>${l}</div>`}).join("");
   const pct=(v,g)=>Math.min(100,Math.round(v/Math.max(1,g)*100));
-  const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin;
+  const FGon=a.finger&&a.finger.on,GF=G.finger||5;
+  const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin&&(!FGon||(w.finger||0)>=GF);
   app.innerHTML=`<section class="screen">${topbar()}
   <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
@@ -540,8 +564,9 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
    <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.staffView==="grand"?"大譜表・":""}${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
    <button class="lesson" data-l="rhythm"><span class="ic" style="background:var(--sun-deep)">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${a.rhythms.length}この リズム・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
    <button class="lesson" data-l="songs"><span class="ic" style="background:var(--berry)">${IC.score}</span><span><h3>きょくの れんしゅう</h3><span class="sub">${a.songs.map(s=>esc(s.title)).join("・")||"きょくが まだ ありません"}</span><div class="bar"><i style="width:${pct(w.songMin,G.songMin)}%"></i></div><span class="sub">こんしゅう ${w.songMin}/${G.songMin}ふん</span></span><span class="check ${today.songMin?"on":""}">${today.songMin?IC.check:""}</span></button>
+   ${FGon?`<button class="lesson" data-l="finger"><span class="ic" style="background:var(--grass)">${IC.hand}</span><span><h3>ゆびばんごう</h3><span class="sub">${a.finger.stage===2?`ステップ2・${a.finger.ex.length}この れんしゅう`:"ステップ1・ゆびの ばんごうを おぼえよう"}</span><div class="bar"><i style="width:${pct(w.finger||0,GF)}%"></i></div><span class="sub">こんしゅう ${w.finger||0}/${GF}かい</span></span><span class="check ${today.finger?"on":""}">${today.finger?IC.check:""}</span></button>`:""}
   </div>
-  <div class="card chest">${IC.chest}<div style="flex:1"><b>こんしゅうの たからばこ</b><div class="sub muted" style="font-size:.85rem">3つの もくひょうを ぜんぶ たっせいすると コイン30まい!</div></div>${w.claimed?`<span class="label">うけとりずみ</span>`:`<button class="btn sun small" id="claim" ${allDone?"":"disabled"}>あける</button>`}</div>
+  <div class="card chest">${IC.chest}<div style="flex:1"><b>こんしゅうの たからばこ</b><div class="sub muted" style="font-size:.85rem">${FGon?4:3}つの もくひょうを ぜんぶ たっせいすると コイン30まい!</div></div>${w.claimed?`<span class="label">うけとりずみ</span>`:`<button class="btn sun small" id="claim" ${allDone?"":"disabled"}>あける</button>`}</div>
   </section>`;
   $$(".lesson").forEach(b=>b.onclick=()=>{ac();go(b.dataset.l)});
   const c=$("#claim");if(c)c.onclick=()=>{w.claimed=true;P().coins+=30;save();sfx("win");confetti();toast("たからばこから コイン30まい!");renderHome()}}
@@ -580,6 +605,95 @@ function resultScreen({title,ok,lines,streak,again,extra=""}){
 
 function backBar(title){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1">${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
 function bindBack(to="home"){$("#back").onclick=()=>go(to)}
+
+/* ================= FINGER NUMBERS ================= */
+/* hand seen from above (back of the hand): right thumb on the left, left thumb on the right */
+const FG=[{f:1,x:22,y:112,w:31,h:74,r:-34},{f:2,x:52,y:40,w:27,h:96,r:-7},{f:3,x:84,y:24,w:28,h:110,r:0},{f:4,x:116,y:34,w:27,h:100,r:6},{f:5,x:147,y:62,w:24,h:80,r:14}];
+const HANDNAME={R:"みぎて",L:"ひだりて",B:"りょうて"};
+const FREAD=["","いち","に","さん","よん","ご"];
+const rotP=(px,py,cx,cy,deg)=>{const a=deg*Math.PI/180,dx=px-cx,dy=py-cy;return[cx+dx*Math.cos(a)-dy*Math.sin(a),cy+dx*Math.sin(a)+dy*Math.cos(a)]};
+function handSVG(hand,o={}){const L=hand==="L",mx=x=>L?200-x:x,col=o.colors||{},nums=o.nums!==false;
+  const skin="#FFDCC2",line="#D9A07A",paint={hl:["#FFC83A","#E3A10B"],ok:["#8FE3B0","#2A9958"],ng:["#FF9C93","#D8413A"]};
+  let g=`<svg viewBox="${L?"0":"-24"} 0 224 236" class="hand" role="img" aria-label="${HANDNAME[hand]}">`,tips="";
+  FG.forEach(F=>{const cx=mx(F.x+F.w/2),r=L?-F.r:F.r,by=F.y+F.h,state=col[F.f]||(o.hl===F.f?"hl":null),[fill,st]=paint[state]||[skin,line],[tx,ty]=rotP(cx,F.y+17,cx,by,r);
+    g+=`<g data-f="${F.f}" class="fg ${state==="hl"?"glow":""}"><rect x="${cx-F.w/2}" y="${F.y}" width="${F.w}" height="${F.h+22}" rx="${F.w/2}" transform="rotate(${r} ${cx} ${by})" fill="${fill}" stroke="${st}" stroke-width="3"/></g>`;
+    if(nums||state)tips+=`<g data-f="${F.f}" class="fg"><circle cx="${tx}" cy="${ty}" r="12.5" fill="#fff" stroke="${st}" stroke-width="2.5"/><text x="${tx}" y="${ty+5.5}" text-anchor="middle" font-size="16" font-weight="800" fill="#21304A" font-family="sans-serif">${F.f}</text></g>`});
+  g+=`<rect x="${L?42:62}" y="196" width="96" height="38" rx="12" fill="${skin}" stroke="${line}" stroke-width="3"/><rect x="${L?18:42}" y="118" width="140" height="90" rx="42" fill="${skin}" stroke="${line}" stroke-width="3"/>`;
+  return g+tips+"</svg>"}
+const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${hands.map(h=>`<div class="hand-box" data-hand="${h}"><div class="label">${HANDNAME[h]}</div>${handSVG(h,typeof o==="function"?o(h):o)}</div>`).join("")}</div>`;
+const handList=h=>h==="B"?["L","R"]:[h];
+/* read the number aloud (browser voice); respects the in-app mute */
+function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.3;const v=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
+/* C position: right 1-5 = ド〜ソ, left 5-1 = ド〜ソ an octave lower */
+const fingerNote=(hand,f)=>hand==="L"?["","G3","F3","E3","D3","C3"][f]:["","C4","D4","E4","F4","G4"][f];
+function startFinger(){const F=S.assignment.finger;if(F.stage===2)return renderFingerList();renderFingerLearn()}
+function renderFingerLearn(){const F=S.assignment.finger;let sel=null;
+  function draw(){app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<div class="card"><b>ゆびには ばんごうが あるよ</b><p class="muted" style="margin:4px 0 0">おやゆびが 1、こゆびが 5。ゆびを タップしてみよう。</p></div>
+    <div id="lh">${handsHTML(["L","R"],h=>({hl:sel&&sel.hand===h?sel.f:null}))}</div>
+    <div class="countin" aria-live="polite">${sel?`${HANDNAME[sel.hand]}の <span class="fbig">${sel.f}</span>`:"&nbsp;"}</div>
+    <button class="btn green wide" id="quiz">クイズに ちょうせん!(${F.quizCount}もん)</button></section>`;
+    bindBack();$("#quiz").onclick=()=>startFingerQuiz();
+    $$("#lh .hand-box").forEach(box=>box.addEventListener("pointerdown",e=>{const g=e.target.closest(".fg");if(!g)return;sel={hand:box.dataset.hand,f:+g.dataset.f};tone(freqOf(fingerNote(sel.hand,sel.f)),0,.5,.25);sayJa(FREAD[sel.f]);draw()}))}
+  draw()}
+let FQ;
+function startFingerQuiz(){const F=S.assignment.finger,list=[];let last="";
+  for(let i=0;i<F.quizCount;i++){let q;do{q={hand:F.quizHand==="B"?(Math.random()<.5?"R":"L"):F.quizHand,f:1+Math.floor(Math.random()*5)}}while(q.hand+q.f===last);last=q.hand+q.f;list.push(q)}
+  FQ={list,i:0,correct:0};renderFQ()}
+function renderFQ(){const {hand,f}=FQ.list[FQ.i];
+  app.innerHTML=`<section class="screen narrow"><div class="lesson-top"><button class="x" id="quit" aria-label="やめる">${IC.x}</button><div class="bar"><i style="width:${FQ.i/FQ.list.length*100}%"></i></div>${sndBtn()}</div>
+   <div class="prompt" style="text-align:center">${HANDNAME[hand]}の <span class="fbig">${f}</span> の ゆびは どれ?</div>
+   <div id="qh">${handsHTML([hand],{nums:false})}</div></section>`;
+  $("#quit").onclick=()=>go("home");
+  $("#qh").addEventListener("pointerdown",e=>{const g=e.target.closest(".fg");if(!g||$(".feedback"))return;const t=+g.dataset.f,ok=t===f;
+    $("#qh").innerHTML=handsHTML([hand],{colors:ok?{[f]:"ok"}:{[t]:"ng",[f]:"ok"}});
+    if(ok){FQ.correct++;tone(freqOf(fingerNote(hand,f)),0,.6,.25);setTimeout(()=>sfx("ok"),250);sayJa(FREAD[f])}else sfx("ng");
+    const fb=document.createElement("div");fb.className="feedback "+(ok?"ok":"ng");
+    fb.innerHTML=`<div class="in"><h2>${ok?["せいかい!","すごい!","ばっちり!"][FQ.i%3]:"ざんねん…"}</h2>${ok?"":`<div>${HANDNAME[hand]}の ${f}は みどりの ゆびだよ</div>`}<button class="btn ${ok?"green":"red"} wide" id="next">つぎへ</button></div>`;
+    document.body.appendChild(fb);$("#next").onclick=()=>{fb.remove();if(FQ.i>=FQ.list.length-1)finishFQ();else{FQ.i++;renderFQ()}}})}
+function finishFQ(){const r=dayRec(),perfect=FQ.correct===FQ.list.length;let coins=FQ.correct+(perfect?5:0);
+  r.finger=(r.finger||0)+1;const w=weekly();w.finger=(w.finger||0)+1;const sb=markPractice();P().coins+=coins;save();
+  resultScreen({title:perfect?"パーフェクト!":"クイズ クリア!",ok:true,lines:[["せいかい",`${FQ.correct}/${FQ.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>startFingerQuiz()})}
+const seqHTML=(seq,sm)=>`<div class="fseq">${seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn ${sm?"sm":""}">${c}</span>`).join("")}</div>`).join("")}</div>`;
+function renderFingerList(){const F=S.assignment.finger;
+  app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="muted" style="margin:0">ひかった ゆびを みながら、つくえの うえで ゆびを うごかそう。</p>
+   <div class="rhythm-list">${F.ex.map(e=>`<button class="rcard" data-id="${e.id}"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span>${(P().fingerToday[dayKey()+"|"+e.id]||0)?`<span class="check on" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grass)">${IC.check}</span>`:""}</button>`).join("")||`<div class="card">せんせいが まだ れんしゅうを つくっていません。</div>`}</div>
+   <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button></section>`;
+  bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("fingerPlay",b.dataset.id));$("#learn").onclick=()=>renderFingerLearn()}
+function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id===id);if(!ex)return go("finger");
+  const hands=handList(ex.hand),steps=[...ex.seq].filter(c=>c!=="|").map(Number);
+  let speed=1,busy=false,timers=[],cur=-1;const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false;
+  let k=0;const chips=ex.seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn" data-i="${k++}">${c}</span>`).join("")}</div>`).join("");
+  app.innerHTML=`<section class="screen narrow">${backBar(HANDNAME[ex.hand]+"の れんしゅう")}
+   <div class="fseq" id="fs">${chips}</div>
+   <div class="countin" id="ci" aria-live="polite">スタートを おしてね</div>
+   <div id="fh">${handsHTML(hands,{})}</div>
+   <button class="btn green wide" id="go">スタート</button>
+   <div class="row" style="justify-content:center"><div class="seg" role="group" aria-label="はやさ"><button data-sp="0.7">ゆっくり</button><button data-sp="1" class="on">ふつう</button></div>
+    <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div>
+   <div id="res"></div><p class="muted" style="font-size:.85rem;margin:0;text-align:center">テンポ ${F.bpm}・ひかった すうじの ゆびを うごかそう</p></section>`;
+  bindBack("finger");const ci=$("#ci");
+  const show=i=>{cur=i;$$("#fs .fn").forEach((n,j)=>{n.classList.toggle("on",j===i);n.classList.toggle("done",j<i)});const f=steps[i];
+    $("#fh").innerHTML=handsHTML(hands,{hl:f});ci.innerHTML=f?`<span class="fbig">${f}</span>`:"&nbsp;"};
+  $$("[data-sp]").forEach(b=>b.onclick=()=>{if(busy)return;speed=+b.dataset.sp;$$("[data-sp]").forEach(x=>x.classList.toggle("on",x===b))});
+  $("#cnt").onclick=e=>{S.prefs.fCount=!count();save();e.target.classList.toggle("on",count());e.target.textContent=`カウント ${count()?"あり":"なし"}`};
+  $("#voi").onclick=e=>{S.prefs.fVoice=!voice();save();e.target.classList.toggle("on",voice());e.target.textContent=`よみあげ ${voice()?"オン":"オフ"}`;if(!voice())try{speechSynthesis.cancel()}catch(x){}};
+  $("#go").onclick=()=>{if(busy)return;const A=ac();if(!A)return toast("このブラウザでは うごきません");busy=true;$("#go").disabled=true;$("#res").innerHTML="";show(-1);
+    if(voice())sayJa(count()?"":"よーい");
+    const bd=60/(F.bpm*speed),t0=A.currentTime+.4;let start;
+    if(count()){for(let c=0;c<4;c++){click(t0+c*bd,c===0);timers.push(setTimeout(()=>{ci.textContent=String(c+1)},(t0+c*bd-A.currentTime)*1000))}start=t0+4*bd}
+    else{ci.textContent="よーい…";start=t0+bd}
+    steps.forEach((f,i)=>{const t=start+i*bd;
+      if(voice())click(t,false);else hands.forEach(h=>tone(freqOf(fingerNote(h,f)),t,Math.max(.2,bd*.8),.22));
+      timers.push(setTimeout(()=>{show(i);if(voice())sayJa(FREAD[f])},(t-A.currentTime)*1000))});
+    timers.push(setTimeout(done,(start+steps.length*bd-A.currentTime)*1000+150))};
+  function done(){busy=false;$("#go").disabled=false;$("#go").textContent="もういちど";show(steps.length);ci.textContent="おしまい!";
+    $("#res").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px;text-align:center"><b>うまく うごかせた?</b><div class="rate">${["できた","もうすこし","むずかしい"].map((l,j)=>`<button data-v="${j}">${l}</button>`).join("")}</div></div>`;
+    $$("#res [data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v,key=dayKey()+"|"+ex.id,n=P().fingerToday[key]||0;P().fingerToday[key]=n+1;
+      const r=dayRec();r.finger=(r.finger||0)+1;const w=weekly();w.finger=(w.finger||0)+1;const sb=markPractice();
+      const coins=n<3?2+(v===0?1:0):0;P().coins+=coins;save();
+      $("#res").innerHTML=`<div class="card" style="text-align:center"><b>${["すごい! よく できたね","いいね! もういちど やってみよう","だいじょうぶ、ゆっくりで やってみよう"][v]}</b>${coins?`<div>コイン +${coins}</div>`:""}</div>`;
+      if(v===0){sfx("win");confetti()}else sfx("ok");if(sb)toast(`${P().streak}日れんぞく! ボーナス +${sb}`)})}
+  wake(true);cleanup=()=>{timers.forEach(clearTimeout);try{speechSynthesis.cancel()}catch(e){}wake(false)}}
 
 /* ================= RHYTHM ================= */
 function rhythmStars(id){return P().rhythmToday[dayKey()+"|"+id]||0}
@@ -725,7 +839,7 @@ function renderTeacherGate(){if(teacherOK)return renderTeacher();let code="",fir
       else if(code===S.pin){teacherOK=true;go("teacherMain")}else{code="";sfx("ng");draw("暗証番号が ちがいます")}},150)}
   draw()}
 function renderTeacher(){setNav("teacher");const a=S.assignment;
-  const tabs=[["notes","音符"],["rhythm","リズム"],["song","曲"],["record","記録"],["settings","課題・設定"]];
+  const tabs=[["notes","音符"],["rhythm","リズム"],["finger","指番号"],["song","曲"],["record","記録"],["settings","課題・設定"]];
   app.innerHTML=`<section class="screen"><div class="row" style="justify-content:space-between"><h2>せんせい用ページ</h2>${C.on?`<span class="stat" id="syncPill" style="font-size:.8rem"></span>`:`<button class="btn ghost small" id="lock">とじる</button>`}</div>
    ${C.on&&C.teacher?targetBar():""}<div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" data-t="${k}" class="${tTab===k?"on":""}">${l}</button>`).join("")}</div><div id="tb" class="screen"></div></section>`;
   const lk=$("#lock");if(lk)lk.onclick=()=>{teacherOK=false;go("home")};syncPill();
@@ -733,7 +847,7 @@ function renderTeacher(){setNav("teacher");const a=S.assignment;
   if(C.on&&C.teacher){bindTargetBar();if(!editable()&&tTab!=="record"){const nm=esc(stuName(C.target));
     $("#tb").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px;text-align:center;align-items:center"><b>${nm}さん 専用の課題は まだ ありません</b><p class="muted" style="margin:0">いまの 共通の課題を コピーして、${nm}さん だけの 音符・リズム・曲・目標に かえられます。</p><button class="btn green" id="mkIndiv">${nm}さん 専用の課題を つくる</button></div>`;
     $("#mkIndiv").onclick=()=>makeIndiv(C.target);return}}
-  ({notes:tNotes,rhythm:tRhythm,song:tSong,record:tRecord,settings:tSettings}[tTab])($("#tb"))}
+  ({notes:tNotes,rhythm:tRhythm,finger:tFinger,song:tSong,record:tRecord,settings:tSettings}[tTab])($("#tb"))}
 const saved=()=>{if(save())toast("保存しました")};
 function tNotes(el){const a=S.assignment;
   const grid=clef=>notesOf(clef).map(n=>{const id=clef+":"+n,on=a.notes.includes(id);return `<button class="chip ${on?"on":""}" data-n="${id}">${staffSVG(clef,n,{s:8,w:84,h:84,y0:22,nx:58})}${SOL[n[0]]}<small>${n}</small></button>`}).join("");
@@ -778,6 +892,37 @@ function tRhythm(el){const a=S.assignment;let build=[],ts=4;
   $("#bsave",el).onclick=()=>{const r={id:"c"+uid(),name:`オリジナル ${S.customRhythms.length+1}`,tokens:build.slice(),custom:true};S.customRhythms.push(r);a.rhythms.push(r.id);build=[];saved();draw()}}
   draw()}
 let tPlayer=null;
+function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
+  const PRE=[["1〜5 のぼり","12345"],["5〜1 くだり","54321"],["のぼって くだる","12345|54321"],["1-3-2-4-3-5","132435"],["となりどうし","1212|2323|3434|4545"],["1と5","1515|5151"]];
+  function draw(){
+  el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between"><b>指番号の れんしゅう</b><div class="seg"><button data-on="1" class="${F.on?"on":""}">課題に 入れる</button><button data-on="0" class="${F.on?"":"on"}">入れない</button></div></div>
+   <div class="steps two">${[[1,"指番号を おぼえる","手の絵の 指を タップする クイズ"],[2,"光る指で うごかす","数字と 指が 光る。机の上で 動かす"]].map(([n,l,d])=>`<button data-fstep="${n}" class="${F.stage===n?"on":""}"><span class="n">${n}</span>${l}<small>${d}</small></button>`).join("")}</div></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>ステップ1の クイズ</b><div class="row">
+    <div class="field grow"><label>どちらの 手?</label><div class="seg">${[["R","右手"],["L","左手"],["B","両手(まぜて)"]].map(([k,l])=>`<button data-qh="${k}" class="${F.quizHand===k?"on":""}">${l}</button>`).join("")}</div></div>
+    <div class="field"><label for="fqc">問題数</label><select id="fqc" style="width:auto">${[5,10,15].map(n=>`<option ${F.quizCount===n?"selected":""}>${n}</option>`).join("")}</select></div></div></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>ステップ2の れんしゅう(${F.ex.length}こ)</b>
+    <div class="rhythm-list">${F.ex.map(e=>`<div class="rcard"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>あたらしい れんしゅうを つくる</b>
+    <div class="seg">${[["R","右手"],["L","左手"],["B","両手(同じ番号)"]].map(([k,l])=>`<button data-hand="${k}" class="${hand===k?"on":""}">${l}</button>`).join("")}</div>
+    <div class="keypad5">${[1,2,3,4,5].map(n=>`<button data-fk="${n}">${n}</button>`).join("")}</div>
+    <div class="row"><button class="btn ghost small" data-fk="|">｜ 区切り</button><button class="btn ghost small" data-fk="back">← 1つ けす</button><button class="btn ghost small" data-fk="clr">ぜんぶ けす</button></div>
+    <div class="notation-wrap" style="padding:10px">${build.length?seqHTML(build.join("")):`<div class="muted" style="text-align:center">1〜5を おして ならべてください(「｜」で 区切ると 1かたまりずつ 表示されます)</div>`}</div>
+    <div class="label">よく つかう ならび</div><div class="row">${PRE.map(([l],i)=>`<button class="btn ghost small" data-fpre="${i}">${l}</button>`).join("")}</div>
+    <button class="btn small" id="fadd" ${build.filter(x=>x!=="|").length>=2?"":"disabled"}>この れんしゅうを 追加</button></div>
+   <div class="card row"><div class="field grow"><label for="fbpm">テンポ: <b id="fbpmv">${F.bpm}</b>(1分間に 光る 数)</label><input id="fbpm" type="range" min="30" max="120" step="5" value="${F.bpm}"></div>
+    <div class="field grow"><label for="fci">はじめの カウント(生徒が 切りかえ できます)</label><select id="fci"><option value="0" ${F.countIn?"":"selected"}>なし</option><option value="1" ${F.countIn?"selected":""}>あり(1・2・3・4)</option></select></div></div>`;
+  $$("[data-on]",el).forEach(b=>b.onclick=()=>{F.on=b.dataset.on==="1";saved();draw()});
+  $$("[data-fstep]",el).forEach(b=>b.onclick=()=>{F.stage=+b.dataset.fstep;saved();draw()});
+  $$("[data-qh]",el).forEach(b=>b.onclick=()=>{F.quizHand=b.dataset.qh;saved();draw()});
+  $("#fqc",el).onchange=e=>{F.quizCount=+e.target.value;saved()};
+  $$("[data-fdel]",el).forEach(b=>b.onclick=()=>{F.ex=F.ex.filter(x=>x.id!==b.dataset.fdel);saved();draw()});
+  $$("[data-hand]",el).forEach(b=>b.onclick=()=>{hand=b.dataset.hand;draw()});
+  $$("[data-fk]",el).forEach(b=>b.onclick=()=>{const k=b.dataset.fk;if(k==="back")build.pop();else if(k==="clr")build=[];else if(k==="|"){if(build.length&&build[build.length-1]!=="|")build.push("|")}else{if(build.filter(x=>x!=="|").length>=40)return;build.push(k);tone(freqOf(fingerNote(hand==="L"?"L":"R",+k)),0,.3,.2)}draw()});
+  $$("[data-fpre]",el).forEach(b=>b.onclick=()=>{build=[...PRE[+b.dataset.fpre][1]];draw()});
+  $("#fadd",el).onclick=()=>{const seq=build.join("").replace(/\|+$/,"").replace(/^\|+/,"");F.ex.push({id:"f"+uid(),hand,seq});build=[];saved();draw()};
+  $("#fbpm",el).oninput=e=>{F.bpm=+e.target.value;$("#fbpmv",el).textContent=F.bpm};$("#fbpm",el).onchange=saved;
+  $("#fci",el).onchange=e=>{F.countIn=e.target.value==="1";saved()}}
+  draw()}
 function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color="#FF6457",drawing=null,rec=[],syncH=150;
   function draw(){if(tPlayer){tPlayer.destroy();tPlayer=null}const song=a.songs.find(s=>s.id===cur);
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>練習する曲</b><div class="row">${a.songs.map(s=>`<button class="btn small ${s.id===cur?"":"ghost"}" data-s="${s.id}">${esc(s.title)}</button>`).join("")}<button class="btn green small" id="addS">+ 曲をふやす</button></div></div>
@@ -855,14 +1000,14 @@ function tRecordCloud(el){watchStudents(()=>{const list=C.students;
   try{tRecordBody($("#stuRec",el))}finally{S.p=o;S.assignment=oa}})}
 function tRecordBody(el){const a=S.assignment,w=weekly(),G=a.goals,days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(dayKey(d))}
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px"><b>今週の課題の進み具合</b><span class="muted" style="font-size:.85rem">課題スタート: ${a.startedAt}</span>
-   ${[["音符の練習",w.notes,G.notes,"回"],["リズムのクリア",w.rhythm,G.rhythm,"回"],["曲の練習",w.songMin,G.songMin,"分"]].map(([l,v,g,u])=>`<div><div class="row" style="justify-content:space-between"><span>${l}</span><b>${v}/${g}${u}</b></div><div class="bar"><i style="width:${Math.min(100,v/g*100)}%"></i></div></div>`).join("")}
+   ${[["音符の練習",w.notes,G.notes,"回"],["リズムのクリア",w.rhythm,G.rhythm,"回"],["曲の練習",w.songMin,G.songMin,"分"],...(a.finger&&a.finger.on?[["指番号",w.finger||0,G.finger||5,"回"]]:[])].map(([l,v,g,u])=>`<div><div class="row" style="justify-content:space-between"><span>${l}</span><b>${v}/${g}${u}</b></div><div class="bar"><i style="width:${Math.min(100,v/g*100)}%"></i></div></div>`).join("")}
    <div class="row" style="gap:16px"><span>れんぞく: <b>${shownStreak()}日</b></span><span>ベスト: <b>${P().best}日</b></span><span>コイン: <b>${P().coins}</b></span></div></div>
-   <div class="card"><b>この2週間の記録</b><div class="table-wrap" style="margin-top:8px"><table><thead><tr><th>日付</th><th>音符 正解</th><th>リズム クリア</th><th>曲(分)</th></tr></thead><tbody>${days.reverse().map(k=>{const r=P().days[k];return `<tr><td>${k.slice(5).replace("-","/")}</td><td>${r&&r.notesT?`${r.notesC}/${r.notesT}`:"-"}</td><td>${r&&r.rhythm?r.rhythm:"-"}</td><td>${r&&r.songMin?r.songMin:"-"}</td></tr>`}).join("")}</tbody></table></div></div>
+   <div class="card"><b>この2週間の記録</b><div class="table-wrap" style="margin-top:8px"><table><thead><tr><th>日付</th><th>音符 正解</th><th>リズム クリア</th><th>曲(分)</th><th>指番号</th></tr></thead><tbody>${days.reverse().map(k=>{const r=P().days[k];return `<tr><td>${k.slice(5).replace("-","/")}</td><td>${r&&r.notesT?`${r.notesC}/${r.notesT}`:"-"}</td><td>${r&&r.rhythm?r.rhythm:"-"}</td><td>${r&&r.songMin?r.songMin:"-"}</td><td>${r&&r.finger?r.finger:"-"}</td></tr>`}).join("")}</tbody></table></div></div>
    <div class="card"><b>曲の ふりかえり(生徒の 自己評価)</b>${a.songs.map(s=>{const r=P().ratings[s.id];return `<div style="margin-top:10px"><b>${esc(s.title)}</b>${r?`<div class="muted" style="font-size:.85rem">${r.date}・${r.min}分・通して${r.throughs}回</div><ul style="margin:4px 0 0;padding-left:1.2em">${r.items.map(it=>`<li>${esc(it.c)}: <b>${it.v==null?"-":["できた","もうすこし","むずかしい"][it.v]}</b></li>`).join("")}</ul>`:`<div class="muted" style="font-size:.85rem">まだ記録がありません</div>`}${(P().memos[s.id]||[]).length?`<div class="muted" style="font-size:.85rem;margin-top:4px">生徒のメモ: ${P().memos[s.id].map(m=>esc(m.text)).join(" / ")}</div>`:""}</div>`}).join("")}</div>`}
 function tSettings(el){const a=S.assignment;
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:12px"><b>今週の課題</b>
    <div class="field"><label for="msg">せんせいからの ひとこと(ホームに表示)</label><textarea id="msg" rows="3" maxlength="140">${esc(a.message)}</textarea></div>
-   <div class="row"><div class="field grow"><label for="g1">音符(回/週)</label><input id="g1" type="number" min="1" max="50" value="${a.goals.notes}"></div><div class="field grow"><label for="g2">リズム(クリア/週)</label><input id="g2" type="number" min="1" max="100" value="${a.goals.rhythm}"></div><div class="field grow"><label for="g3">曲(分/週)</label><input id="g3" type="number" min="5" max="600" value="${a.goals.songMin}"></div></div>
+   <div class="row"><div class="field grow"><label for="g1">音符(回/週)</label><input id="g1" type="number" min="1" max="50" value="${a.goals.notes}"></div><div class="field grow"><label for="g2">リズム(クリア/週)</label><input id="g2" type="number" min="1" max="100" value="${a.goals.rhythm}"></div><div class="field grow"><label for="g3">曲(分/週)</label><input id="g3" type="number" min="5" max="600" value="${a.goals.songMin}"></div><div class="field grow"><label for="g4">指番号(回/週)</label><input id="g4" type="number" min="1" max="50" value="${a.goals.finger||5}"></div></div>
    <div id="nw"><button class="btn berry small" style="background:var(--berry);box-shadow:0 4px 0 #7E3BB0" id="newWeek">あたらしい週の 課題として 出す</button><div class="muted" style="font-size:.8rem;margin-top:6px">今週の目標の カウントが 0から はじまります(コインや れんぞく日数は のこります)。</div></div></div>
    ${C.on?"":`<div class="card" style="display:flex;flex-direction:column;gap:12px"><b>生徒</b><div class="field"><label for="sn">生徒の なまえ(メロが よびます)</label><input id="sn" value="${esc(S.studentName)}" maxlength="12"></div></div>`}
    ${C.on?`<div class="card" style="display:flex;flex-direction:column;gap:6px"><b>生徒への とどけかた</b><p class="muted" style="margin:0;font-size:.9rem">ここで 変えた課題は 自動で 生徒に とどきます。このページを 生徒(保護者)と「共有」してください。生徒の練習記録は「記録」タブに とどきます。</p></div>`:`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>課題を 生徒の 端末に わたす</b><p class="muted" style="margin:0;font-size:.85rem">せんせいの 端末で 作った課題を ファイルに して、生徒の 端末で 読みこみます(記録や コインは そのまま)。</p>
@@ -870,7 +1015,7 @@ function tSettings(el){const a=S.assignment;
    ${C.on?"":`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>暗証番号</b><div class="row"><input id="np" inputmode="numeric" maxlength="4" placeholder="あたらしい 4けた" class="grow" style="flex:1"><button class="btn ghost small" id="npb">かえる</button></div></div>`}
    <div class="card" id="rst"><button class="btn red small" id="reset">${C.on?"この端末の 記録と コインを リセット":"生徒の 記録と コインを リセット"}</button></div>`;
   $("#msg",el).onchange=e=>{a.message=e.target.value.trim();saved()};
-  [["g1","notes"],["g2","rhythm"],["g3","songMin"]].forEach(([i,k])=>$("#"+i,el).onchange=e=>{a.goals[k]=Math.max(1,+e.target.value||1);saved()});
+  [["g1","notes"],["g2","rhythm"],["g3","songMin"],["g4","finger"]].forEach(([i,k])=>$("#"+i,el).onchange=e=>{a.goals[k]=Math.max(1,+e.target.value||1);saved()});
   if($("#sn",el))$("#sn",el).onchange=e=>{S.studentName=e.target.value.trim();saved()};
   $("#newWeek",el).onclick=()=>{a.id=uid();a.startedAt=dayKey();saved();toast("あたらしい週の 課題を 出しました")};
   if($("#exp",el))$("#exp",el).onclick=()=>{const data=JSON.stringify({type:"meloPiano-assignment",assignment:a,customRhythms:S.customRhythms});const blob=new Blob([data],{type:"application/json"});const u=URL.createObjectURL(blob);const l=document.createElement("a");l.href=u;l.download=`piano-kadai-${dayKey()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("ファイルを 保存しました")};
