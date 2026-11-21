@@ -273,6 +273,13 @@ th{font-size:.78rem;color:var(--muted)}
 .eg .gbtn{display:flex;flex-direction:column;gap:3px;margin-left:4px}
 .eg .gbtn button{font-size:.68rem;font-weight:800;border:1.5px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 6px}
 .eg-new{border-style:dashed}
+.exrow{gap:8px;grid-template-columns:auto auto 1fr auto!important;display:grid!important}
+.exgrip{cursor:grab;touch-action:none;font-size:1.4rem;color:var(--muted);padding:6px 4px;user-select:none;-webkit-user-select:none}
+.exmove{display:flex;flex-direction:column;gap:4px}
+.exmove .btn{padding:4px 10px}
+.exrow.dragging{opacity:.45}
+.exrow.over-t{box-shadow:0 -5px 0 var(--primary)}
+.exrow.over-b{box-shadow:0 5px 0 var(--primary)}
 .seg{display:flex;gap:4px;flex-wrap:wrap}
 .seg button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:800;font-size:.9rem}
 .seg button.on{border-color:var(--primary);background:var(--primary);color:#fff}
@@ -945,7 +952,8 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[],editI
     <div class="field grow"><label>どちらの 手?</label><div class="seg">${[["R","右手"],["L","左手"],["B","両手(まぜて)"]].map(([k,l])=>`<button data-qh="${k}" class="${F.quizHand===k?"on":""}">${l}</button>`).join("")}</div></div>
     <div class="field"><label for="fqc">問題数</label><select id="fqc" style="width:auto">${[5,10,15].map(n=>`<option ${F.quizCount===n?"selected":""}>${n}</option>`).join("")}</select></div></div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>ステップ2の れんしゅう(${F.ex.length}こ)</b>
-    <div class="rhythm-list">${F.ex.map(e=>`<div class="rcard"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><span style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost small" data-fedit="${e.id}">なおす</button><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></span></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
+    <div class="muted" style="font-size:.8rem">⠿ を つかんで 上下に ドラッグ、または ↑↓ で じゅんばんを かえられます(生徒には この順で ならびます)。</div>
+    <div class="rhythm-list exlist">${F.ex.map((e,ei)=>`<div class="rcard exrow" data-ei="${ei}"><span class="exgrip" aria-hidden="true">⠿</span><span class="exmove"><button class="btn ghost small" data-eup="${ei}" ${ei===0?"disabled":""} aria-label="上へ">↑</button><button class="btn ghost small" data-edown="${ei}" ${ei===F.ex.length-1?"disabled":""} aria-label="下へ">↓</button></span><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;flex:1;min-width:0"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><span style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost small" data-fedit="${e.id}">なおす</button><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></span></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${editId?"れんしゅうを なおす":"あたらしい れんしゅうを つくる"}</b>
     <div class="seg">${[["R","右手"],["L","左手"],["B","両手(同じ番号)"]].map(([k,l])=>`<button data-hand="${k}" class="${hand===k?"on":""}">${l}</button>`).join("")}</div>
     <div class="keypad5">${[1,2,3,4,5].map(n=>`<button data-fk="${n}">${n}</button>`).join("")}</div>
@@ -961,6 +969,16 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[],editI
   $$("[data-qh]",el).forEach(b=>b.onclick=()=>{F.quizHand=b.dataset.qh;saved();draw()});
   $("#fqc",el).onchange=e=>{F.quizCount=+e.target.value;saved()};
   $$("[data-fdel]",el).forEach(b=>b.onclick=()=>{F.ex=F.ex.filter(x=>x.id!==b.dataset.fdel);saved();draw()});
+  const moveEx=(from,to)=>{if(to<0||to>=F.ex.length||from===to)return;const [it]=F.ex.splice(from,1);F.ex.splice(to,0,it);saved();draw()};
+  $$("[data-eup]",el).forEach(b=>b.onclick=()=>moveEx(+b.dataset.eup,+b.dataset.eup-1));
+  $$("[data-edown]",el).forEach(b=>b.onclick=()=>moveEx(+b.dataset.edown,+b.dataset.edown+1));
+  // drag a row up or down (mouse or finger) by its grip
+  const xl=$(".exlist",el);if(xl){let dr=null;const clr=()=>$$(".exrow",xl).forEach(x=>x.classList.remove("over-t","over-b"));
+    xl.addEventListener("pointerdown",e=>{const g=e.target.closest(".exgrip");if(!g)return;const row=g.closest(".exrow");e.preventDefault();dr={from:+row.dataset.ei,row,to:null};row.classList.add("dragging");try{xl.setPointerCapture(e.pointerId)}catch(x){}});
+    xl.addEventListener("pointermove",e=>{if(!dr)return;clr();const t=document.elementFromPoint(e.clientX,e.clientY),r=t&&t.closest(".exrow");dr.to=null;
+      if(r&&r!==dr.row){const b=r.getBoundingClientRect(),after=e.clientY>b.top+b.height/2;r.classList.add(after?"over-b":"over-t");dr.to=+r.dataset.ei+(after?1:0)}});
+    xl.addEventListener("pointerup",()=>{if(!dr)return;const d=dr;dr=null;d.row.classList.remove("dragging");clr();if(d.to==null)return;let to=d.to;if(d.from<to)to--;moveEx(d.from,to)});
+    xl.addEventListener("pointercancel",()=>{if(dr){dr.row.classList.remove("dragging");clr();dr=null}})}
   $$("[data-hand]",el).forEach(b=>b.onclick=()=>{hand=b.dataset.hand;draw()});
   $$("[data-fk]",el).forEach(b=>b.onclick=()=>press(b.dataset.fk));
   $$("[data-fedit]",el).forEach(b=>b.onclick=()=>{const e=F.ex.find(x=>x.id===b.dataset.fedit);if(!e)return;editId=e.id;hand=e.hand;build=[...e.seq];draw();const t=$("#fadd",el);if(t)t.scrollIntoView({block:"center",behavior:"smooth"})});
