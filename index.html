@@ -609,14 +609,14 @@ function bindBack(to="home"){$("#back").onclick=()=>go(to)}
 /* ================= FINGER NUMBERS ================= */
 /* hand seen from above (back of the hand): right thumb on the left, left thumb on the right */
 /* back of the hand, fingers up, thumbs pointing to the middle (right thumb on the left). Each finger: base centre (bx,by), angle r, length L, base/tip half-widths */
-const FG=[{f:1,bx:72,by:196,r:-42,L:70,wb:15,wt:10.5},{f:2,bx:90,by:130,r:-8,L:94,wb:12,wt:9.5},{f:3,bx:119,by:124,r:-1,L:104,wb:12.5,wt:10},{f:4,bx:147,by:130,r:6,L:96,wb:12,wt:9.5},{f:5,bx:171,by:144,r:15,L:74,wb:10.5,wt:8.5}];
+const FG=[{f:1,bx:78,by:198,r:-40,L:72,wb:12.5,wt:9},{f:2,bx:93,by:130,r:-7,L:96,wb:11,wt:8.5},{f:3,bx:120,by:125,r:-1,L:106,wb:11.5,wt:9},{f:4,bx:146,by:131,r:6,L:98,wb:11,wt:8.5},{f:5,bx:169,by:145,r:14,L:76,wb:9.5,wt:7.5}];
 const HANDNAME={R:"みぎて",L:"ひだりて",B:"りょうて"};
 const FREAD=["","いち","に","さん","よん","ご"];
 const rotP=(px,py,cx,cy,deg)=>{const a=deg*Math.PI/180,dx=px-cx,dy=py-cy;return[cx+dx*Math.cos(a)-dy*Math.sin(a),cy+dx*Math.sin(a)+dy*Math.cos(a)]};
 function handSVG(hand,o={}){const L=hand==="L",col=o.colors||{},nums=o.nums!==false,W=214;
   const skin="#F7DCC7",line="#B98468",paint={hl:["#FFC83A","#E3A10B"],ok:["#8FE3B0","#2A9958"],ng:["#FF9C93","#D8413A"]};
   const fside=(F,e=16)=>`M${-F.wb} ${e} L${-F.wt} ${-F.L+F.wt} A${F.wt} ${F.wt} 0 0 1 ${F.wt} ${-F.L+F.wt} L${F.wb} ${e}`,fpath=(F,e)=>fside(F,e)+" Z",tf=F=>`translate(${F.bx} ${F.by}) rotate(${F.r})`;
-  const palm="M76 128 Q120 110 184 142 C190 170 190 205 178 238 C172 254 166 272 164 330 L84 330 C84 282 80 262 72 246 C62 228 58 210 60 192 C62 165 66 146 76 128 Z";
+  const palm="M80 128 Q122 114 181 145 C183 170 181 196 173 222 C165 248 154 270 150 330 L92 330 C90 290 85 266 78 246 C72 228 69 210 70 194 C71 170 74 148 80 128 Z";
   // outline: every shape stroked thick, then filled on top so only the outer edge of the whole hand keeps a line
   let body=`<path d="${palm}" fill="${line}" stroke="${line}" stroke-width="5"/>`+FG.map(F=>`<path d="${fpath(F)}" transform="${tf(F)}" fill="${line}" stroke="${line}" stroke-width="5" stroke-linejoin="round"/>`).join("")+`<path d="${palm}" fill="${skin}"/>`,tips="";
   FG.forEach(F=>{const st=col[F.f]||(o.hl===F.f?"hl":null),[fc,sc]=paint[st]||[skin,null];
