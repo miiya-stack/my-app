@@ -550,7 +550,7 @@ function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dat
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
 function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
-  ({home:renderHome,finger:startFinger,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,rhythmCorner:renderRhythmCorner,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
+  ({home:renderHome,finger:startFinger,fingerList:renderFingerList,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,rhythmCorner:renderRhythmCorner,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
 function topbar(){return `<div class="topbar"><div class="brand"><span style="width:36px;height:36px;display:block">${mascotSVG(mood())}</span>メロのピアノ</div><div class="stats"><span class="stat flame ${practicedToday()?"":"off"}" title="れんぞく日数">${IC.flame}${shownStreak()}</span><span class="stat" title="コイン">${IC.coin}<span id="coinN">${P().coins}</span></span>${sndBtn()}</div></div>`}
 function removeFeedback(){$$(".feedback,.modal").forEach(e=>e.remove())}
 
@@ -608,11 +608,12 @@ function finishNotes(){const done=Q.hearts>0,perfect=done&&Q.correct===Q.list.le
   const sb=done?markPractice():0;coins+=0;P().coins+=coins;P().xp+=Q.correct*2;save();
   resultScreen({title:done?(perfect?"パーフェクト!":"レッスン クリア!"):"ハートが なくなっちゃった",ok:done,lines:[["せいかい",`${Q.correct}/${Q.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>go("notes")})}
 
-function resultScreen({title,ok,lines,streak,again,extra=""}){
+function resultScreen({title,ok,lines,streak,again,next,extra=""}){
   app.innerHTML=`<section class="screen result narrow"><div class="mascot ${ok?"happy":"worried"}" style="width:180px">${mascotSVG(ok?"happy":"worried")}</div><div class="big">${esc(title)}</div>
   <div class="reward">${lines.map(([k,v])=>`<div class="card"><span class="label">${k}</span><b>${v}</b></div>`).join("")}${streak?`<div class="card"><span class="label">れんぞくボーナス</span><b>+${streak}</b></div>`:""}</div>${extra}
-  <div class="row" style="width:100%"><button class="btn ghost grow" id="again">もういちど</button><button class="btn green grow" id="home">ホームへ</button></div></section>`;
-  if(ok){sfx("win");confetti()}else sfx("ng");$("#again").onclick=again;$("#home").onclick=()=>go("home");if(streak)setTimeout(()=>toast(`${P().streak}日れんぞく! ボーナス コイン+${streak}`),900)}
+  ${next?`<div class="row" style="width:100%"><button class="btn ghost grow" id="again">もういちど</button><button class="btn green grow" id="nextL">${next.label}</button></div><button class="btn ghost small" id="home">ホームへ もどる</button>`
+    :`<div class="row" style="width:100%"><button class="btn ${ok?"ghost":"green"} grow" id="again">もういちど</button><button class="btn ${ok?"green":"ghost"} grow" id="home">ホームへ</button></div>`}</section>`;
+  if(ok){sfx("win");confetti()}else sfx("ng");$("#again").onclick=again;$("#home").onclick=()=>go("home");if(next)$("#nextL").onclick=next.go;if(streak)setTimeout(()=>toast(`${P().streak}日れんぞく! ボーナス コイン+${streak}`),900)}
 
 function backBar(title){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1;min-width:0">${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
 function bindBack(to="home"){$("#back").onclick=()=>go(to)}
@@ -666,14 +667,18 @@ function renderFQ(){const {hand,f}=FQ.list[FQ.i];
     document.body.appendChild(fb);$("#next").onclick=()=>{fb.remove();if(FQ.i>=FQ.list.length-1)finishFQ();else{FQ.i++;renderFQ()}}})}
 function finishFQ(){const r=dayRec(),perfect=FQ.correct===FQ.list.length;let coins=FQ.correct+(perfect?5:0);
   r.finger=(r.finger||0)+1;const w=weekly();w.finger=(w.finger||0)+1;const sb=markPractice();P().coins+=coins;save();
-  resultScreen({title:perfect?"パーフェクト!":"クイズ クリア!",ok:true,lines:[["せいかい",`${FQ.correct}/${FQ.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>startFingerQuiz()})}
+  // pass mark 80%: below it the child repeats the quiz before moving on
+  const need=Math.ceil(FQ.list.length*.8),pass=FQ.correct>=need;
+  resultScreen({title:perfect?"パーフェクト!":pass?"クイズ クリア!":"あと すこし!",ok:pass,lines:[["せいかい",`${FQ.correct}/${FQ.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>startFingerQuiz(),
+    extra:pass?"":`<div class="card" style="text-align:center;font-weight:800">${need}もん いじょう せいかいすると<br>つぎに すすめるよ。もういちど やってみよう!</div>`,
+    next:pass&&S.assignment.finger.ex.length?{label:"つぎに すすむ",go:()=>go("fingerList")}:null})}
 const seqHTML=(seq,sm)=>`<div class="fseq">${seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn ${sm?"sm":""}">${c}</span>`).join("")}</div>`).join("")}</div>`;
 function renderFingerList(){const F=S.assignment.finger;
   app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="muted" style="margin:0">ひかった ゆびを みながら、つくえの うえで ゆびを うごかそう。</p>
    <div class="rhythm-list">${F.ex.map(e=>`<button class="rcard" data-id="${e.id}"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span>${(P().fingerToday[dayKey()+"|"+e.id]||0)?`<span class="check on" style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--grass)">${IC.check}</span>`:""}</button>`).join("")||`<div class="card">せんせいが まだ れんしゅうを つくっていません。</div>`}</div>
    <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("fingerPlay",b.dataset.id));$("#learn").onclick=()=>renderFingerLearn()}
-function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id===id);if(!ex)return go("finger");
+function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id===id);if(!ex)return go("finger");const nextEx=F.ex[F.ex.indexOf(ex)+1];
   const hands=handList(ex.hand),steps=[...ex.seq].filter(c=>c!=="|").map(Number);
   let speed=1,busy=false,timers=[],cur=-1;const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false;
   let k=0;const chips=ex.seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn" data-i="${k++}">${c}</span>`).join("")}</div>`).join("");
@@ -685,7 +690,7 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
    <div class="row" style="justify-content:center"><div class="seg" role="group" aria-label="はやさ"><button data-sp="0.7">ゆっくり</button><button data-sp="1" class="on">ふつう</button></div>
     <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div>
    <div id="res"></div><p class="muted" style="font-size:.85rem;margin:0;text-align:center">テンポ ${F.bpm}・ひかった すうじの ゆびを うごかそう</p></section>`;
-  bindBack("finger");const ci=$("#ci");
+  $("#back").onclick=()=>go("fingerList");const ci=$("#ci");
   const show=i=>{cur=i;$$("#fs .fn").forEach((n,j)=>{n.classList.toggle("on",j===i);n.classList.toggle("done",j<i)});const f=steps[i];
     $("#fh").innerHTML=handsHTML(hands,{hl:f});ci.innerHTML=f?`<span class="fbig">${f}</span>`:"&nbsp;"};
   $$("[data-sp]").forEach(b=>b.onclick=()=>{if(busy)return;speed=+b.dataset.sp;$$("[data-sp]").forEach(x=>x.classList.toggle("on",x===b))});
@@ -705,7 +710,8 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
     $$("#res [data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v,key=dayKey()+"|"+ex.id,n=P().fingerToday[key]||0;P().fingerToday[key]=n+1;
       const r=dayRec();r.finger=(r.finger||0)+1;const w=weekly();w.finger=(w.finger||0)+1;const sb=markPractice();
       const coins=n<3?2+(v===0?1:0):0;P().coins+=coins;save();
-      $("#res").innerHTML=`<div class="card" style="text-align:center"><b>${["すごい! よく できたね","いいね! もういちど やってみよう","だいじょうぶ、ゆっくりで やってみよう"][v]}</b>${coins?`<div>コイン +${coins}</div>`:""}</div>`;
+      $("#res").innerHTML=`<div class="card" style="text-align:center"><b>${["すごい! よく できたね","いいね! もういちど やってみよう","だいじょうぶ、ゆっくりで やってみよう"][v]}</b>${coins?`<div>コイン +${coins}</div>`:""}<div class="row" style="margin-top:10px"><button class="btn ghost grow" id="fAgain">もういちど</button><button class="btn green grow" id="fNext">${nextEx?"つぎの れんしゅうへ":"れんしゅう いちらんへ"}</button></div></div>`;
+      $("#fAgain").onclick=()=>$("#go").click();$("#fNext").onclick=()=>nextEx?go("fingerPlay",nextEx.id):go("fingerList");
       if(v===0){sfx("win");confetti()}else sfx("ok");if(sb)toast(`${P().streak}日れんぞく! ボーナス +${sb}`)})}
   wake(true);cleanup=()=>{timers.forEach(clearTimeout);try{speechSynthesis.cancel()}catch(e){}wake(false)}}
 
