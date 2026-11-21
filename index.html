@@ -667,11 +667,8 @@ function renderFQ(){const {hand,f}=FQ.list[FQ.i];
     document.body.appendChild(fb);$("#next").onclick=()=>{fb.remove();if(FQ.i>=FQ.list.length-1)finishFQ();else{FQ.i++;renderFQ()}}})}
 function finishFQ(){const r=dayRec(),perfect=FQ.correct===FQ.list.length;let coins=FQ.correct+(perfect?5:0);
   r.finger=(r.finger||0)+1;const w=weekly();w.finger=(w.finger||0)+1;const sb=markPractice();P().coins+=coins;save();
-  // pass mark 80%: below it the child repeats the quiz before moving on
-  const need=Math.ceil(FQ.list.length*.8),pass=FQ.correct>=need;
-  resultScreen({title:perfect?"パーフェクト!":pass?"クイズ クリア!":"あと すこし!",ok:pass,lines:[["せいかい",`${FQ.correct}/${FQ.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>startFingerQuiz(),
-    extra:pass?"":`<div class="card" style="text-align:center;font-weight:800">${need}もん いじょう せいかいすると<br>つぎに すすめるよ。もういちど やってみよう!</div>`,
-    next:pass&&S.assignment.finger.ex.length?{label:"つぎに すすむ",go:()=>go("fingerList")}:null})}
+  resultScreen({title:perfect?"パーフェクト!":"クイズ おしまい!",ok:true,lines:[["せいかい",`${FQ.correct}/${FQ.list.length}`],["コイン",`+${coins}`]],streak:sb,again:()=>startFingerQuiz(),
+    next:S.assignment.finger.ex.length?{label:"つぎに すすむ",go:()=>go("fingerList")}:null})}
 const seqHTML=(seq,sm)=>`<div class="fseq">${seq.split("|").filter(Boolean).map(gr=>`<div class="fgroup">${[...gr].map(c=>`<span class="fn ${sm?"sm":""}">${c}</span>`).join("")}</div>`).join("")}</div>`;
 function renderFingerList(){const F=S.assignment.finger;
   app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="muted" style="margin:0">ひかった ゆびを みながら、つくえの うえで ゆびを うごかそう。</p>
