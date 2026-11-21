@@ -668,11 +668,15 @@ const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${ha
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
 /* read-aloud: prefer a female Japanese voice where the device has one, and raise the pitch so it sounds bright and friendly */
-const CUTE_VOICES=/Kyoko|O-?Ren|Haruka|Nanami|Ayumi|Mizuki|Sayaka|Hikari|Google 日本語|ja-jp-x-(htm|jab|jac)|female|女性/i;
+/* voice ranking: natural online voices first (Edge "Nanami Online (Natural)", Chrome "Google 日本語"), then device female voices; male voices last */
+const VOICE_RANK=[/Nanami.*(Natural|Online)/i,/Aoi.*(Natural|Online)|Mayu|Shiori/i,/Google 日本語/i,/Kyoko|O-?Ren|Hattori-F/i,/ja-jp-x-(htm|jab|jac)/i,/Haruka|Ayumi|Sayaka|Mizuki|Hikari|Nanami|female|女性/i];
+const MALE_VOICE=/Ichiro|Otoya|Keita|Daichi|Naoki|Hattori(?!-F)|male|男性/i;
+const voiceScore=v=>{const n=v.name+" "+v.voiceURI;if(MALE_VOICE.test(n)&&!/female/i.test(n))return 99;const r=VOICE_RANK.findIndex(x=>x.test(n));return r<0?50:r};
+const jaVoices=()=>{try{return speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang)).sort((a,b)=>voiceScore(a)-voiceScore(b))}catch(e){return[]}};
 let jaVoice=null;
-function pickJaVoice(){try{const vs=speechSynthesis.getVoices().filter(v=>/^ja/i.test(v.lang));jaVoice=vs.find(v=>CUTE_VOICES.test(v.name+" "+v.voiceURI))||vs.find(v=>!/Otoya|Ichiro|Keita|Hattori|male|男性/i.test(v.name))||vs[0]||null}catch(e){}}
+function pickJaVoice(){const vs=jaVoices();jaVoice=(S.prefs&&S.prefs.voiceName&&vs.find(v=>v.name===S.prefs.voiceName))||vs[0]||null}
 try{if(window.speechSynthesis){pickJaVoice();speechSynthesis.addEventListener?speechSynthesis.addEventListener("voiceschanged",pickJaVoice):(speechSynthesis.onvoiceschanged=pickJaVoice)}}catch(e){}
-function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();if(!jaVoice)pickJaVoice();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.15;u.pitch=1.7;u.volume=1;if(jaVoice)u.voice=jaVoice;speechSynthesis.speak(u)}catch(e){}}
+function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();if(!jaVoice)pickJaVoice();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.1;u.pitch=jaVoice&&/Natural|Online|Google/i.test(jaVoice.name)?1.25:1.6;u.volume=1;if(jaVoice)u.voice=jaVoice;speechSynthesis.speak(u)}catch(e){}}
 let FSO=null;
 function fingerOrder(){const F=S.assignment.finger;if(!F.shuffleEx)return F.ex;
   if(!FSO||FSO.length!==F.ex.length||FSO.some(id=>!F.ex.find(e=>e.id===id)))FSO=shuffle(F.ex.map(e=>e.id));return FSO.map(id=>F.ex.find(e=>e.id===id))}
@@ -714,7 +718,13 @@ function renderFingerList(){const F=S.assignment.finger;
   app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="prompt" style="margin:0;text-align:center;font-size:1.15rem">どの 手で れんしゅうする?</p>
    <div class="handtiles">${HAND_TILES.map(([h,k,r])=>{const n=fingerPool(h).length,done=P().fingerToday[dayKey()+"|"+h]||0;
      return `<button class="htile" data-h="${h}" ${n?"":"disabled"}><span class="hpics">${handList(h).map(x=>handSVG(x,{nums:false})).join("")}</span><ruby class="hname">${k}<rt>${r}</rt></ruby><span class="muted" style="font-size:.8rem">${n?`${F.perSession||5}もん${done?`・きょう ${done}かい`:""}`:"まだ ないよ"}</span></button>`}).join("")}</div>
-   <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button></section>`;
+   <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button>
+   <div class="card row" id="vbox" style="gap:8px"><label class="label" for="vsel">よみあげの こえ</label><select id="vsel" style="flex:1;min-width:0"></select><button class="btn ghost small" id="vtry">ためす</button></div></section>`;
+  {const fill=()=>{const vs=jaVoices(),sel=$("#vsel");if(!sel)return;if(!vs.length){$("#vbox").hidden=true;return}$("#vbox").hidden=false;pickJaVoice();
+      sel.innerHTML=vs.map(v=>`<option value="${esc(v.name)}" ${jaVoice&&v.name===jaVoice.name?"selected":""}>${esc(v.name.replace(/^Microsoft /,"").replace(/ - Japanese \(Japan\)/,""))}</option>`).join("")};
+    fill();try{speechSynthesis.addEventListener("voiceschanged",fill)}catch(e){}
+    $("#vsel").onchange=e=>{S.prefs.voiceName=e.target.value;save();pickJaVoice();sayJa("はじめ! いち、に、さん")};
+    $("#vtry").onclick=()=>sayJa("はじめ! いち、に、さん")}
   bindBack();$$(".htile").forEach(b=>b.onclick=()=>go("fingerPlay",b.dataset.h));$("#learn").onclick=()=>renderFingerLearn()}
 function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(t=>t[0]===hand))return go("fingerList");
   const probs=makeSession(hand);if(!probs.length)return go("fingerList");
