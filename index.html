@@ -640,8 +640,6 @@ const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${ha
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
 function sayJa(t){try{if(S.prefs.mute||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="ja-JP";u.rate=1.3;const v=speechSynthesis.getVoices().find(v=>/^ja/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}}
-/* C position: right 1-5 = ド〜ソ, left 5-1 = ド〜ソ an octave lower */
-const fingerNote=(hand,f)=>hand==="L"?["","G3","F3","E3","D3","C3"][f]:["","C4","D4","E4","F4","G4"][f];
 function startFinger(){const F=S.assignment.finger;if(F.stage===2)return renderFingerList();renderFingerLearn()}
 function renderFingerLearn(){const F=S.assignment.finger;let sel=null;
   function draw(){app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<div class="card"><b>ゆびには ばんごうが あるよ</b><p class="muted" style="margin:4px 0 0">おやゆびが 1、こゆびが 5。ゆびを タップしてみよう。</p></div>
@@ -649,7 +647,7 @@ function renderFingerLearn(){const F=S.assignment.finger;let sel=null;
     <div class="countin" aria-live="polite">${sel?`${HANDNAME[sel.hand]}の <span class="fbig">${sel.f}</span>`:"&nbsp;"}</div>
     <button class="btn green wide" id="quiz">クイズに ちょうせん!(${F.quizCount}もん)</button></section>`;
     bindBack();$("#quiz").onclick=()=>startFingerQuiz();
-    $$("#lh .hand-box").forEach(box=>box.addEventListener("pointerdown",e=>{const g=e.target.closest(".fg");if(!g)return;sel={hand:box.dataset.hand,f:+g.dataset.f};tone(freqOf(fingerNote(sel.hand,sel.f)),0,.5,.25);sayJa(FREAD[sel.f]);draw()}))}
+    $$("#lh .hand-box").forEach(box=>box.addEventListener("pointerdown",e=>{const g=e.target.closest(".fg");if(!g)return;sel={hand:box.dataset.hand,f:+g.dataset.f};sayJa(FREAD[sel.f]);draw()}))}
   draw()}
 let FQ;
 function startFingerQuiz(){const F=S.assignment.finger,list=[];let last="";
@@ -662,7 +660,7 @@ function renderFQ(){const {hand,f}=FQ.list[FQ.i];
   $("#quit").onclick=()=>go("home");
   $("#qh").addEventListener("pointerdown",e=>{const g=e.target.closest(".fg");if(!g||$(".feedback"))return;const t=+g.dataset.f,ok=t===f;
     $("#qh").innerHTML=handsHTML([hand],{colors:ok?{[f]:"ok"}:{[t]:"ng",[f]:"ok"}});
-    if(ok){FQ.correct++;tone(freqOf(fingerNote(hand,f)),0,.6,.25);setTimeout(()=>sfx("ok"),250);sayJa(FREAD[f])}else sfx("ng");
+    if(ok){FQ.correct++;sfx("ok");sayJa(FREAD[f])}else sfx("ng");
     const fb=document.createElement("div");fb.className="feedback "+(ok?"ok":"ng");
     fb.innerHTML=`<div class="in"><h2>${ok?["せいかい!","すごい!","ばっちり!"][FQ.i%3]:"ざんねん…"}</h2>${ok?"":`<div>${HANDNAME[hand]}の ${f}は みどりの ゆびだよ</div>`}<button class="btn ${ok?"green":"red"} wide" id="next">つぎへ</button></div>`;
     document.body.appendChild(fb);$("#next").onclick=()=>{fb.remove();if(FQ.i>=FQ.list.length-1)finishFQ();else{FQ.i++;renderFQ()}}})}
@@ -699,7 +697,7 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
     if(count()){for(let c=0;c<4;c++){click(t0+c*bd,c===0);timers.push(setTimeout(()=>{ci.textContent=String(c+1)},(t0+c*bd-A.currentTime)*1000))}start=t0+4*bd}
     else{ci.textContent="よーい…";start=t0+bd}
     steps.forEach((f,i)=>{const t=start+i*bd;
-      if(voice())click(t,false);else hands.forEach(h=>tone(freqOf(fingerNote(h,f)),t,Math.max(.2,bd*.8),.22));
+      click(t,false); // soft tick only: no pitches, so it works while playing the piano
       timers.push(setTimeout(()=>{show(i);if(voice())sayJa(FREAD[f])},(t-A.currentTime)*1000))});
     timers.push(setTimeout(done,(start+steps.length*bd-A.currentTime)*1000+150))};
   function done(){busy=false;$("#go").disabled=false;$("#go").textContent="もういちど";show(steps.length);ci.textContent="おしまい!";
@@ -946,7 +944,7 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
   $("#fqc",el).onchange=e=>{F.quizCount=+e.target.value;saved()};
   $$("[data-fdel]",el).forEach(b=>b.onclick=()=>{F.ex=F.ex.filter(x=>x.id!==b.dataset.fdel);saved();draw()});
   $$("[data-hand]",el).forEach(b=>b.onclick=()=>{hand=b.dataset.hand;draw()});
-  $$("[data-fk]",el).forEach(b=>b.onclick=()=>{const k=b.dataset.fk;if(k==="back")build.pop();else if(k==="clr")build=[];else if(k==="|"){if(build.length&&build[build.length-1]!=="|")build.push("|")}else{if(build.filter(x=>x!=="|").length>=40)return;build.push(k);tone(freqOf(fingerNote(hand==="L"?"L":"R",+k)),0,.3,.2)}draw()});
+  $$("[data-fk]",el).forEach(b=>b.onclick=()=>{const k=b.dataset.fk;if(k==="back")build.pop();else if(k==="clr")build=[];else if(k==="|"){if(build.length&&build[build.length-1]!=="|")build.push("|")}else{if(build.filter(x=>x!=="|").length>=40)return;build.push(k)}draw()});
   $$("[data-fpre]",el).forEach(b=>b.onclick=()=>{build=[...PRE[+b.dataset.fpre][1]];draw()});
   $("#fadd",el).onclick=()=>{const seq=build.join("").replace(/\|+$/,"").replace(/^\|+/,"");F.ex.push({id:"f"+uid(),hand,seq});build=[];saved();draw()};
   $("#fbpm",el).oninput=e=>{F.bpm=+e.target.value;$("#fbpmv",el).textContent=F.bpm};$("#fbpm",el).onchange=saved;
