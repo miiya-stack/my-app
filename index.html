@@ -272,6 +272,13 @@ th{font-size:.78rem;color:var(--muted)}
 .hpics svg{height:84px;width:auto}
 .hname{font-size:1.7rem;font-weight:800;line-height:1.1}
 .hname rt{font-size:.5em;color:var(--muted);font-weight:700}
+.play-hands .hands{gap:6px}
+.play-hands .hand-box{max-width:none;flex:0 1 auto}
+.play-hands .hand{height:min(30vh,240px);width:auto;max-width:100%;margin:0 auto}
+.play-hands .label{display:none}
+.countin.fci{min-height:0;font-size:1.6rem;margin:-4px 0}
+.countin.fci .fbig{font-size:1em;width:1.9em;height:1.9em}
+.handtiles + .btn{margin-top:4px}
 .fn.sm{width:28px;height:32px;font-size:1rem;border-radius:8px}
 .fbig{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--sun);color:#5A3B00;font-size:1.5em;vertical-align:middle;margin:0 .1em}
 .keypad5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -663,7 +670,7 @@ function handSVG(hand,o={}){const L=hand==="L",col=o.colors||{},nums=o.nums!==fa
     if(nums||st){const a=F.r*Math.PI/180,d=F.L+18;let x=F.bx+Math.sin(a)*d;const y=F.by-Math.cos(a)*d;if(L)x=W-x;
       tips+=`<g data-f="${F.f}" class="fg"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11.5" fill="#fff" stroke="${sc||line}" stroke-width="2.5"/><text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle" font-size="15" font-weight="800" fill="#21304A" font-family="sans-serif">${F.f}</text></g>`}});
   body+=`<g stroke="${line}" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".75"><path d="M104 128 q1.5 5 0 10"/><path d="M133 127 q1.5 5 0 10"/><path d="M160 136 q1.5 5 0 9"/></g>`;
-  return `<svg viewBox="-4 -22 222 322" class="hand" role="img" aria-label="${HANDNAME[hand]}"><g${L?` transform="translate(${W} 0) scale(-1 1)"`:""}>${body}</g>${tips}</svg>`}
+  return `<svg viewBox="-4 -22 222 262" class="hand" role="img" aria-label="${HANDNAME[hand]}"><g${L?` transform="translate(${W} 0) scale(-1 1)"`:""}>${body}</g>${tips}</svg>`}
 const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${hands.map(h=>`<div class="hand-box" data-hand="${h}"><div class="label">${HANDNAME[h]}</div>${handSVG(h,typeof o==="function"?o(h):o)}</div>`).join("")}</div>`;
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
@@ -733,8 +740,8 @@ function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(
   app.innerHTML=`<section class="screen narrow"><div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><div class="bar"><i id="fbar" style="width:0%"></i></div>${sndBtn()}</div>
    <div class="fcount" id="fq" style="text-align:center"></div>
    <div class="fseq" id="fs"></div>
-   <div class="countin" id="ci" aria-live="polite"></div>
-   <div id="fh"></div>
+   <div class="countin fci" id="ci" aria-live="polite"></div>
+   <div id="fh" class="play-hands"></div>
    <div id="fbtns"></div>
    <div class="row" style="justify-content:center"><div class="seg" role="group" aria-label="はやさ"><button data-sp="0.7">ゆっくり</button><button data-sp="1" class="on">ふつう</button></div>
     <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div></section>`;
