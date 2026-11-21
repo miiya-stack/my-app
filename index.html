@@ -243,6 +243,11 @@ th{font-size:.78rem;color:var(--muted)}
 .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:70;pointer-events:none;animation:fall 2.4s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 .chest{display:flex;align-items:center;gap:12px}
+.rcard.corner{padding:14px}
+.cn{flex:none;width:34px;height:34px;border-radius:50%;background:var(--sun-deep);color:#fff;display:grid;place-items:center;font-weight:800}
+.cicon{flex:none;width:96px;background:#fff;border-radius:12px;padding:2px;display:grid;place-items:center}
+.cicon svg{width:auto;max-width:100%;height:40px}
+.cicon.orig{width:46px;height:46px;border-radius:50%;background:var(--berry);color:#fff;font-weight:800;font-size:1.1rem}
 /* finger numbers */
 .hands{display:flex;gap:12px;justify-content:center;align-items:flex-end}
 .hand-box{flex:1;max-width:240px;text-align:center;display:flex;flex-direction:column;gap:2px}
@@ -337,22 +342,13 @@ const IC={
 
 /* ================= storage ================= */
 const KEY="meloPiano.v1";
+/* rhythm corners: 3 built-in sets of 5 problems + the teacher's originals */
+const RHYTHM_CORNERS=[{id:"qh",name:"4分音符と 2分音符",icon:["q","h"]},{id:"eq",name:"8分音符と 4分音符",icon:["ee","q"]},{id:"eqh",name:"8分・4分・2分音符",icon:["ee","q","h"]},{id:"orig",name:"せんせいの オリジナル",icon:null}];
 const RHYTHM_LIB=[
-  {id:"r1",name:"4分音符 ×4",tokens:["q","q","q","q"]},
-  {id:"r2",name:"2分音符 ×2",tokens:["h","h"]},
-  {id:"r3",name:"全音符",tokens:["w"]},
-  {id:"r4",name:"4分・4分・2分",tokens:["q","q","h"]},
-  {id:"r5",name:"2分・4分・4分",tokens:["h","q","q"]},
-  {id:"r6",name:"付点2分・4分",tokens:["hd","q"]},
-  {id:"r7",name:"4分休符まじり",tokens:["q","qr","q","qr"]},
-  {id:"r8",name:"8分音符まじり",tokens:["ee","q","ee","q"]},
-  {id:"r9",name:"8分音符 ×8",tokens:["ee","ee","ee","ee"]},
-  {id:"r10",name:"4分・8分・2分",tokens:["q","ee","h"]},
-  {id:"r11",name:"2分休符",tokens:["q","q","hr"]},
-  {id:"r12",name:"付点4分・8分",tokens:["qde","q","q"]},
-  {id:"r13",name:"3拍子 4分×3",tokens:["q","q","q"]},
-  {id:"r14",name:"3拍子 付点2分",tokens:["hd"]},
-];
+  ["qh",["q","q","q","q"]],["qh",["h","h"]],["qh",["q","q","h"]],["qh",["h","q","q"]],["qh",["q","h","q"]],
+  ["eq",["ee","q","ee","q"]],["eq",["q","ee","q","ee"]],["eq",["ee","ee","q","q"]],["eq",["q","q","ee","ee"]],["eq",["ee","ee","ee","q"]],
+  ["eqh",["ee","q","h"]],["eqh",["h","ee","q"]],["eqh",["q","ee","h"]],["eqh",["ee","ee","h"]],["eqh",["h","q","ee"]]
+].map(([c,tokens],i)=>{const n=i%5+1;return{id:c+n,c,n,name:`${RHYTHM_CORNERS.find(x=>x.id===c).name} ${n}`,tokens}});
 function sampleSong(){return {id:"s-sample",title:"きらきらぼし(サンプル)",image:null,sample:true,w:1000,h:430,
   pins:[{id:uid(),x:120,y:150,text:"さいしょのドは やさしく はじめよう",color:"#FF6457"},{id:uid(),x:455,y:120,text:"ラ→ラ→ソは 指をかえずに",color:"#2F9BF0"},{id:uid(),x:860,y:330,text:"さいごのドは のばして 2つかぞえる",color:"#3FBF73"}],
   strokes:[{color:"#FF6457",w:6,pts:[[520,96],[560,80],[620,78],[680,90]]}],
@@ -361,7 +357,7 @@ function defaultState(){return{
   pin:null,studentName:"",
   assignment:{id:uid(),startedAt:dayKey(),message:"今週は ト音きごうの ド〜ソ と、4分音符・2分音符のリズムを がんばろう!",
     notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",order:["notes","rhythm","finger","songs"],
-    rhythms:["r1","r2","r4","r5"],bpm:80,metronome:true,
+    rhythms:[],rhythmCorners:{qh:true,eq:true,eqh:true,orig:true},bpm:80,metronome:true,
     songs:[sampleSong()],
     finger:{on:true,stage:1,quizHand:"B",quizCount:10,bpm:60,countIn:false,
       ex:[{id:"f1",hand:"R",seq:"12345|54321"},{id:"f2",hand:"L",seq:"12345|54321"},{id:"f3",hand:"B",seq:"12345|54321"}]},
@@ -377,6 +373,9 @@ const P=()=>S.p;
 function dayRec(k=dayKey()){const d=P().days;return d[k]||(d[k]={notesC:0,notesT:0,notesS:0,rhythm:0,songMin:0,finger:0})}
 function weekly(){const w=P().weekly,id=S.assignment.id;return w[id]||(w[id]={notes:0,rhythm:0,songMin:0,finger:0,claimed:false})}
 function allRhythms(){return [...RHYTHM_LIB,...S.customRhythms]}
+function cornerRhythms(c){return c==="orig"?S.customRhythms.map((r,i)=>({...r,c:"orig",n:i+1})):RHYTHM_LIB.filter(r=>r.c===c)}
+function cornerOf(r){return r.c||"orig"}
+function cornersOn(){const o=S.assignment.rhythmCorners||{};return RHYTHM_CORNERS.filter(x=>o[x.id]!==false&&cornerRhythms(x.id).length)}
 function rhythmById(id){return allRhythms().find(r=>r.id===id)}
 
 /* streak + mood */
@@ -550,7 +549,7 @@ function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dat
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
 function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
-  ({home:renderHome,finger:startFinger,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
+  ({home:renderHome,finger:startFinger,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,rhythmCorner:renderRhythmCorner,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
 function topbar(){return `<div class="topbar"><div class="brand"><span style="width:36px;height:36px;display:block">${mascotSVG(mood())}</span>メロのピアノ</div><div class="stats"><span class="stat flame ${practicedToday()?"":"off"}" title="れんぞく日数">${IC.flame}${shownStreak()}</span><span class="stat" title="コイン">${IC.coin}<span id="coinN">${P().coins}</span></span>${sndBtn()}</div></div>`}
 function removeFeedback(){$$(".feedback,.modal").forEach(e=>e.remove())}
 
@@ -569,7 +568,7 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
    <button class="lesson" data-l="notes"><span class="ic" style="background:var(--primary)">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.staffView==="grand"?"大譜表・":""}${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
-   <button class="lesson" data-l="rhythm"><span class="ic" style="background:var(--sun-deep)">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${a.rhythms.length}この リズム・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
+   <button class="lesson" data-l="rhythm"><span class="ic" style="background:var(--sun-deep)">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${cornersOn().length}コーナー・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
    <button class="lesson" data-l="songs"><span class="ic" style="background:var(--berry)">${IC.score}</span><span><h3>きょくの れんしゅう</h3><span class="sub">${a.songs.map(s=>esc(s.title)).join("・")||"きょくが まだ ありません"}</span><div class="bar"><i style="width:${pct(w.songMin,G.songMin)}%"></i></div><span class="sub">こんしゅう ${w.songMin}/${G.songMin}ふん</span></span><span class="check ${today.songMin?"on":""}">${today.songMin?IC.check:""}</span></button>
    ${FGon?`<button class="lesson" data-l="finger"><span class="ic" style="background:var(--grass)">${IC.hand}</span><span><h3>ゆびばんごう</h3><span class="sub">${a.finger.stage===2?`ステップ2・${a.finger.ex.length}この れんしゅう`:"ステップ1・ゆびの ばんごうを おぼえよう"}</span><div class="bar"><i style="width:${pct(w.finger||0,GF)}%"></i></div><span class="sub">こんしゅう ${w.finger||0}/${GF}かい</span></span><span class="check ${today.finger?"on":""}">${today.finger?IC.check:""}</span></button>`:""}
   </div>
@@ -614,7 +613,7 @@ function resultScreen({title,ok,lines,streak,again,extra=""}){
   <div class="row" style="width:100%"><button class="btn ghost grow" id="again">もういちど</button><button class="btn green grow" id="home">ホームへ</button></div></section>`;
   if(ok){sfx("win");confetti()}else sfx("ng");$("#again").onclick=again;$("#home").onclick=()=>go("home");if(streak)setTimeout(()=>toast(`${P().streak}日れんぞく! ボーナス コイン+${streak}`),900)}
 
-function backBar(title){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1">${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
+function backBar(title){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1;min-width:0">${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
 function bindBack(to="home"){$("#back").onclick=()=>go(to)}
 
 /* ================= FINGER NUMBERS ================= */
@@ -714,20 +713,25 @@ function renderFingerPlay(id){const F=S.assignment.finger,ex=F.ex.find(e=>e.id==
 /* ================= RHYTHM ================= */
 function rhythmStars(id){return P().rhythmToday[dayKey()+"|"+id]||0}
 function starsHTML(n){return `<span class="stars">${[1,2,3].map(i=>i<=n?IC.star:IC.starOff).join("")}</span>`}
-function renderRhythmList(){const a=S.assignment;
-  app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<p class="muted" style="margin:0">リズムを えらんで、ドラムを タップしよう。テンポ ${a.bpm}</p>
-  <div class="rhythm-list">${a.rhythms.map(rhythmById).filter(Boolean).map(r=>`<button class="rcard" data-id="${r.id}"><span><span class="label">${esc(r.name)}</span>${rhythmSVG(r.tokens,{unit:52})}</span>${starsHTML(rhythmStars(r.id))}</button>`).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
-  bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("rhythmPlay",b.dataset.id))}
-function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return go("rhythm");
+function renderRhythmList(){const a=S.assignment,cs=cornersOn();
+  app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<p class="muted" style="margin:0">コーナーを えらぼう。テンポ ${a.bpm}</p>
+  <div class="rhythm-list">${cs.map((c,i)=>{const list=cornerRhythms(c.id),done=list.filter(r=>rhythmStars(r.id)>=2).length;
+    return `<button class="rcard corner" data-c="${c.id}"><span style="display:flex;gap:12px;align-items:center;min-width:0"><span class="cn">${i+1}</span><span style="min-width:0"><b>${c.name}</b><div class="muted" style="font-size:.85rem">きょう ${done}/${list.length} クリア</div></span></span>${c.icon?`<span class="cicon">${rhythmSVG(c.icon,{mini:1,unit:40})}</span>`:`<span class="cicon orig">先</span>`}</button>`}).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
+  bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("rhythmCorner",b.dataset.c))}
+function renderRhythmCorner(cid){const c=RHYTHM_CORNERS.find(x=>x.id===cid);if(!c)return go("rhythm");const list=cornerRhythms(cid);
+  app.innerHTML=`<section class="screen narrow">${backBar(c.name)}<p class="muted" style="margin:0">${list.length}もん あるよ。うえから じゅんばんに ちょうせんしよう。</p>
+  <div class="rhythm-list">${list.map(r=>`<button class="rcard" data-id="${r.id}"><span style="min-width:0"><span class="label">もんだい ${r.n}</span>${rhythmSVG(r.tokens,{unit:52})}</span>${starsHTML(rhythmStars(r.id))}</button>`).join("")}</div></section>`;
+  $("#back").onclick=()=>go("rhythm");$$(".rcard").forEach(b=>b.onclick=()=>go("rhythmPlay",b.dataset.id))}
+function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)return go("rhythm");const cid=cornerOf(r0),clist=cornerRhythms(cid),r=clist.find(x=>x.id===id)||r0,nextR=clist[clist.findIndex(x=>x.id===id)+1];
   const beats=beatsOf(r.tokens),ons=onsetsOf(r.tokens);let busy=false,demoing=false,runOut=null,taps=[],measureStart=0,raf=0,timers=[],sounded=new Set();
-  app.innerHTML=`<section class="screen narrow">${backBar(r.name)}
+  app.innerHTML=`<section class="screen narrow">${backBar((cid==="orig"?"オリジナル":"もんだい")+" "+r.n+" / "+clist.length)}
    <div class="notation-wrap" id="nw">${rhythmSVG(r.tokens,{playhead:1})}</div>
    <div class="countin" id="ci" aria-live="polite">${beats}拍子</div>
    <button class="tap-pad" id="pad" disabled>タップ!</button>
    <div class="row"><button class="btn ghost grow" id="demo">おてほんを きく</button><button class="btn green grow" id="go">スタート</button></div>
    <div id="res"></div>
    <p class="muted" style="font-size:.85rem;margin:0">「スタート」を おすと 2小節ぶん「${[...Array(beats)].map((_,i)=>i+1).join("・")}」と カチカチ なってから はじまるよ。キーボードの スペースキーでも うてるよ。</p></section>`;
-  bindBack("rhythm");
+  $("#back").onclick=()=>go("rhythmCorner",cid);
   const pad=$("#pad"),ci=$("#ci");
   const bd=60/a.bpm;
   const setHL=(k,on)=>{const n=$(`#nw .nt[data-k="${k}"]`);if(n)n.classList.toggle("on",on)};
@@ -772,7 +776,8 @@ function renderRhythmPlay(id){const r=rhythmById(id),a=S.assignment;if(!r)return
     if(stars>=2){if(prev<2){coins+=3;dayRec().rhythm++;weekly().rhythm++;sb=markPractice()}if(stars===3&&prev<3)coins+=2;}
     P().rhythmToday[key2]=Math.max(prev,stars);P().coins+=coins;save();
     ci.textContent=stars===3?"パーフェクト!":stars===2?"クリア!":stars===1?"おしい! もういちど":"もういちど やってみよう";
-    $("#res").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between">${starsHTML(stars)}<b>${coins?`コイン +${coins}`:""}</b></div>${tl}${extra>0?`<div class="muted" style="font-size:.85rem">よけいな タップが ${extra}かい あったよ</div>`:""}</div>`;
+    $("#res").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between">${starsHTML(stars)}<b>${coins?`コイン +${coins}`:""}</b></div>${tl}${extra>0?`<div class="muted" style="font-size:.85rem">よけいな タップが ${extra}かい あったよ</div>`:""}${stars>=2?(nextR?`<button class="btn green wide" id="nextR">つぎの もんだいへ(もんだい ${nextR.n})</button>`:`<button class="btn green wide" id="nextR">このコーナー おしまい! コーナーに もどる</button>`):""}</div>`;
+    const nb=$("#nextR");if(nb)nb.onclick=()=>nextR?go("rhythmPlay",nextR.id):go("rhythm");
     if(stars>=2){sfx("win");if(stars===3)confetti()}else sfx("ng");if(sb)toast(`${P().streak}日れんぞく! ボーナス +${sb}`)}}
 
 /* ================= SONGS ================= */
@@ -893,24 +898,26 @@ function tNotes(el){const a=S.assignment;
     3:{v:"grand",n:[...["C3","D3","E3","F3","G3","A3","B3"].map(n=>"bass:"+n),...["C4","D4","E4","F4","G4","A4","B4","C5"].map(n=>"treble:"+n)]}};
   $$("[data-step]",el).forEach(b=>b.onclick=()=>{const st=STEPS[b.dataset.step];a.staffView=st.v;a.notes=st.n.slice();saved();tNotes(el)})}
 function tRhythm(el){const a=S.assignment;let build=[],ts=4;
-  function draw(){const lib=allRhythms();
-  el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><b>生徒が 練習するリズムを えらぶ(${a.rhythms.length}こ 選択中)</b>
-   <div class="rhythm-list">${lib.map(r=>{const on=a.rhythms.includes(r.id);return `<div class="rcard" style="${on?"border-color:var(--primary);background:var(--surface-2)":""}"><span><span class="label">${esc(r.name)}${r.custom?"(オリジナル)":""}</span>${rhythmSVG(r.tokens,{unit:46})}</span><span class="row" style="flex-direction:column;gap:6px"><button class="btn small ${on?"":"ghost"}" data-r="${r.id}">${on?"選択中":"えらぶ"}</button>${r.custom?`<button class="del" style="padding:6px 10px" data-rdel="${r.id}">けす</button>`:""}</span></div>`}).join("")}</div></div>
+  function draw(){
+  const RC=a.rhythmCorners||(a.rhythmCorners={qh:true,eq:true,eqh:true,orig:true});
+  el.innerHTML=RHYTHM_CORNERS.map((c,i)=>{const on=RC[c.id]!==false,list=cornerRhythms(c.id);return `<div class="card" style="display:flex;flex-direction:column;gap:10px;${on?"":"opacity:.75"}">
+   <div class="row" style="justify-content:space-between"><b>${i+1}. ${c.name}(${list.length}もん)</b><div class="seg"><button data-rc="${c.id}" data-v="1" class="${on?"on":""}">出す</button><button data-rc="${c.id}" data-v="0" class="${on?"":"on"}">出さない</button></div></div>
+   ${list.length?`<div class="rhythm-list">${list.map(r=>`<div class="rcard" style="padding:6px 10px"><span style="min-width:0"><span class="label">${c.id==="orig"?"オリジナル":"もんだい"} ${r.n}</span>${rhythmSVG(r.tokens,{unit:44})}</span>${c.id==="orig"?`<button class="del" style="padding:6px 10px" data-rdel="${r.id}">けす</button>`:""}</div>`).join("")}</div>`:`<div class="muted" style="font-size:.9rem">まだ ありません。下の「オリジナルの リズムを つくる」で 作ると ここに 入ります。</div>`}</div>`}).join("")+`
    <div class="card row"><div class="field grow"><label for="bpm">テンポ(BPM): <b id="bpmv">${a.bpm}</b></label><input id="bpm" type="range" min="50" max="130" step="5" value="${a.bpm}"></div>
     <div class="field grow"><label for="met">メトロノーム</label><select id="met"><option value="1" ${a.metronome?"selected":""}>ならす</option><option value="0" ${a.metronome?"":"selected"}>ならさない(上級)</option></select></div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>オリジナルのリズムを つくる</b>
     <div class="row"><label for="ts" class="label">拍子</label><select id="ts" style="width:auto"><option value="4" ${ts===4?"selected":""}>4/4</option><option value="3" ${ts===3?"selected":""}>3/4</option></select><span class="muted" style="font-size:.85rem">のこり ${ts-beatsOf(build)}拍</span></div>
     <div class="builder-tokens">${Object.keys(TOK).map(t=>`<button data-tok="${t}" ${TOK[t].b>ts-beatsOf(build)?"disabled style='opacity:.4'":""}>${rhythmSVG([t],{mini:1,unit:40})}${TOKNAME[t]}</button>`).join("")}</div>
     <div class="notation-wrap">${build.length?rhythmSVG(build,{unit:50}):`<div class="muted" style="padding:16px;text-align:center">上の ボタンで 音符を ならべてください</div>`}</div>
-    <div class="row"><button class="btn ghost small grow" id="bclr">やりなおす</button><button class="btn small grow" id="bsave" ${beatsOf(build)===ts?"":"disabled"}>保存して えらぶ</button></div></div>`;
-  $$("[data-r]",el).forEach(b=>b.onclick=()=>{const id=b.dataset.r,i=a.rhythms.indexOf(id);i>=0?a.rhythms.splice(i,1):a.rhythms.push(id);saved();draw()});
-  $$("[data-rdel]",el).forEach(b=>b.onclick=()=>{S.customRhythms=S.customRhythms.filter(r=>r.id!==b.dataset.rdel);a.rhythms=a.rhythms.filter(x=>x!==b.dataset.rdel);saved();draw()});
+    <div class="row"><button class="btn ghost small grow" id="bclr">やりなおす</button><button class="btn small grow" id="bsave" ${beatsOf(build)===ts?"":"disabled"}>オリジナルに 追加</button></div></div>`;
+  $$("[data-rc]",el).forEach(b=>b.onclick=()=>{RC[b.dataset.rc]=b.dataset.v==="1";saved();draw()});
+  $$("[data-rdel]",el).forEach(b=>b.onclick=()=>{S.customRhythms=S.customRhythms.filter(r=>r.id!==b.dataset.rdel);saved();draw()});
   $("#bpm",el).oninput=e=>{a.bpm=+e.target.value;$("#bpmv").textContent=a.bpm};$("#bpm",el).onchange=saved;
   $("#met",el).onchange=e=>{a.metronome=e.target.value==="1";saved()};
   $("#ts",el).onchange=e=>{ts=+e.target.value;build=[];draw()};
   $$("[data-tok]",el).forEach(b=>b.onclick=()=>{if(TOK[b.dataset.tok].b<=ts-beatsOf(build)){build.push(b.dataset.tok);draw()}});
   $("#bclr",el).onclick=()=>{build=[];draw()};
-  $("#bsave",el).onclick=()=>{const r={id:"c"+uid(),name:`オリジナル ${S.customRhythms.length+1}`,tokens:build.slice(),custom:true};S.customRhythms.push(r);a.rhythms.push(r.id);build=[];saved();draw()}}
+  $("#bsave",el).onclick=()=>{const r={id:"c"+uid(),name:`オリジナル ${S.customRhythms.length+1}`,tokens:build.slice(),custom:true,c:"orig"};S.customRhythms.push(r);build=[];saved();toast("オリジナルに 追加しました");draw()}}
   draw()}
 let tPlayer=null;
 function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
