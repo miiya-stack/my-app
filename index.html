@@ -265,6 +265,14 @@ th{font-size:.78rem;color:var(--muted)}
 .keypad5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 .keypad5 button{padding:14px 0;font-size:1.5rem;font-weight:800;border:2px solid var(--line);border-bottom-width:5px;background:var(--surface);border-radius:14px}
 .steps.two{grid-template-columns:repeat(2,1fr)}
+.eg{cursor:grab;touch-action:none;align-items:center;user-select:none;-webkit-user-select:none}
+.eg.dragging{opacity:.45;cursor:grabbing}
+.eg.over-l{box-shadow:-5px 0 0 var(--primary)}
+.eg.over-r{box-shadow:5px 0 0 var(--primary)}
+.eg .grip{color:var(--muted);font-size:1.1rem;margin-right:2px}
+.eg .gbtn{display:flex;flex-direction:column;gap:3px;margin-left:4px}
+.eg .gbtn button{font-size:.68rem;font-weight:800;border:1.5px solid var(--line);background:var(--surface);border-radius:6px;padding:2px 6px}
+.eg-new{border-style:dashed}
 .seg{display:flex;gap:4px;flex-wrap:wrap}
 .seg button{border:2px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;font-weight:800;font-size:.9rem}
 .seg button.on{border-color:var(--primary);background:var(--primary);color:#fff}
@@ -922,7 +930,13 @@ function tRhythm(el){const a=S.assignment;let build=[],ts=4;
   $("#bsave",el).onclick=()=>{const r={id:"c"+uid(),name:`オリジナル ${S.customRhythms.length+1}`,tokens:build.slice(),custom:true,c:"orig"};S.customRhythms.push(r);build=[];saved();toast("オリジナルに 追加しました");draw()}}
   draw()}
 let tPlayer=null;
-function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
+function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[],editId=null;
+  // build = tokens "1".."5" and "|" (group separator). Groups are the blocks shown one per box.
+  const groups=()=>{const g=[[]];build.forEach(t=>t==="|"?g.push([]):g[g.length-1].push(t));return g};
+  const setGroups=g=>{build=[];g.filter(x=>x.length).forEach((x,i)=>{if(i)build.push("|");build.push(...x)})};
+  const count=()=>build.filter(x=>x!=="|").length;
+  function press(k){if(k==="back")build.pop();else if(k==="clr")build=[];else if(k==="|"){if(build.length&&build[build.length-1]!=="|")build.push("|")}else{if(count()>=60)return;build.push(k)}draw()}
+  function groupsHTML(){const g=groups();return `<div class="fseq egroups">${g.map((x,i)=>x.length?`<div class="fgroup eg" data-gi="${i}" title="ドラッグで いどう / Ctrlキーを おしながら ドラッグで コピー"><span class="grip" aria-hidden="true">⠿</span>${x.map(c=>`<span class="fn sm">${c}</span>`).join("")}<span class="gbtn"><button data-gcopy="${i}">コピー</button><button data-gdel="${i}">けす</button></span></div>`:(i===g.length-1?`<div class="fgroup eg-new" aria-hidden="true"><span class="fn sm" style="opacity:.35">…</span></div>`:"")).join("")}</div>`}
   const PRE=[["1〜5 のぼり","12345"],["5〜1 くだり","54321"],["のぼって くだる","12345|54321"],["1-3-2-4-3-5","132435"],["となりどうし","1212|2323|3434|4545"],["1と5","1515|5151"]];
   function draw(){
   el.innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between"><b>指番号の れんしゅう</b><div class="seg"><button data-on="1" class="${F.on?"on":""}">課題に 入れる</button><button data-on="0" class="${F.on?"":"on"}">入れない</button></div></div>
@@ -931,14 +945,15 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
     <div class="field grow"><label>どちらの 手?</label><div class="seg">${[["R","右手"],["L","左手"],["B","両手(まぜて)"]].map(([k,l])=>`<button data-qh="${k}" class="${F.quizHand===k?"on":""}">${l}</button>`).join("")}</div></div>
     <div class="field"><label for="fqc">問題数</label><select id="fqc" style="width:auto">${[5,10,15].map(n=>`<option ${F.quizCount===n?"selected":""}>${n}</option>`).join("")}</select></div></div></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>ステップ2の れんしゅう(${F.ex.length}こ)</b>
-    <div class="rhythm-list">${F.ex.map(e=>`<div class="rcard"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
-   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>あたらしい れんしゅうを つくる</b>
+    <div class="rhythm-list">${F.ex.map(e=>`<div class="rcard"><span style="display:flex;flex-direction:column;gap:6px;align-items:flex-start"><span class="label">${HANDNAME[e.hand]}</span>${seqHTML(e.seq,1)}</span><span style="display:flex;flex-direction:column;gap:6px"><button class="btn ghost small" data-fedit="${e.id}">なおす</button><button class="del" style="padding:6px 10px" data-fdel="${e.id}">けす</button></span></div>`).join("")||`<div class="muted">まだ ありません。下で つくってください。</div>`}</div></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><b>${editId?"れんしゅうを なおす":"あたらしい れんしゅうを つくる"}</b>
     <div class="seg">${[["R","右手"],["L","左手"],["B","両手(同じ番号)"]].map(([k,l])=>`<button data-hand="${k}" class="${hand===k?"on":""}">${l}</button>`).join("")}</div>
     <div class="keypad5">${[1,2,3,4,5].map(n=>`<button data-fk="${n}">${n}</button>`).join("")}</div>
     <div class="row"><button class="btn ghost small" data-fk="|">｜ 区切り</button><button class="btn ghost small" data-fk="back">← 1つ けす</button><button class="btn ghost small" data-fk="clr">ぜんぶ けす</button></div>
-    <div class="notation-wrap" style="padding:10px">${build.length?seqHTML(build.join("")):`<div class="muted" style="text-align:center">1〜5を おして ならべてください(「｜」で 区切ると 1かたまりずつ 表示されます)</div>`}</div>
+    <div class="notation-wrap" style="padding:10px">${build.length?groupsHTML():`<div class="muted" style="text-align:center">1〜5を おして ならべてください(「｜」で 区切ると 1かたまりずつ 表示されます)</div>`}</div>
+    <div class="muted" style="font-size:.8rem">パソコンの キーボードでも 入力できます: <b>1〜5</b> 数字 / <b>スペース・/</b> 区切り / <b>Backspace</b> 1つ けす / <b>Enter</b> 追加。かたまりは ドラッグで いどう、<b>Ctrl(Macは ⌥)を おしながら ドラッグ</b>で コピー できます。</div>
     <div class="label">よく つかう ならび</div><div class="row">${PRE.map(([l],i)=>`<button class="btn ghost small" data-fpre="${i}">${l}</button>`).join("")}</div>
-    <button class="btn small" id="fadd" ${build.filter(x=>x!=="|").length>=2?"":"disabled"}>この れんしゅうを 追加</button></div>
+    <div class="row"><button class="btn small grow" id="fadd" ${count()>=2?"":"disabled"}>${editId?"なおして 保存":"この れんしゅうを 追加"}</button>${editId?`<button class="btn ghost small" id="fcancel">なおすのを やめる</button>`:""}</div></div>
    <div class="card row"><div class="field grow"><label for="fbpm">テンポ: <b id="fbpmv">${F.bpm}</b>(1分間に 光る 数)</label><input id="fbpm" type="range" min="30" max="120" step="5" value="${F.bpm}"></div>
     <div class="field grow"><label for="fci">はじめの カウント(生徒が 切りかえ できます)</label><select id="fci"><option value="0" ${F.countIn?"":"selected"}>なし</option><option value="1" ${F.countIn?"selected":""}>あり(1・2・3・4)</option></select></div></div>`;
   $$("[data-on]",el).forEach(b=>b.onclick=()=>{F.on=b.dataset.on==="1";saved();draw()});
@@ -947,11 +962,34 @@ function tFinger(el){const a=S.assignment,F=a.finger;let hand="R",build=[];
   $("#fqc",el).onchange=e=>{F.quizCount=+e.target.value;saved()};
   $$("[data-fdel]",el).forEach(b=>b.onclick=()=>{F.ex=F.ex.filter(x=>x.id!==b.dataset.fdel);saved();draw()});
   $$("[data-hand]",el).forEach(b=>b.onclick=()=>{hand=b.dataset.hand;draw()});
-  $$("[data-fk]",el).forEach(b=>b.onclick=()=>{const k=b.dataset.fk;if(k==="back")build.pop();else if(k==="clr")build=[];else if(k==="|"){if(build.length&&build[build.length-1]!=="|")build.push("|")}else{if(build.filter(x=>x!=="|").length>=40)return;build.push(k)}draw()});
+  $$("[data-fk]",el).forEach(b=>b.onclick=()=>press(b.dataset.fk));
+  $$("[data-fedit]",el).forEach(b=>b.onclick=()=>{const e=F.ex.find(x=>x.id===b.dataset.fedit);if(!e)return;editId=e.id;hand=e.hand;build=[...e.seq];draw();const t=$("#fadd",el);if(t)t.scrollIntoView({block:"center",behavior:"smooth"})});
+  const fc=$("#fcancel",el);if(fc)fc.onclick=()=>{editId=null;build=[];draw()};
+  $$("[data-gcopy]",el).forEach(b=>b.onclick=()=>{const g=groups(),i=+b.dataset.gcopy;g.splice(i+1,0,[...g[i]]);setGroups(g);draw()});
+  $$("[data-gdel]",el).forEach(b=>b.onclick=()=>{const g=groups();g.splice(+b.dataset.gdel,1);setGroups(g);draw()});
+  // drag a block to move it; hold Ctrl / Option / Cmd while dropping to copy it instead
+  const gb=$(".egroups",el);if(gb){let drag=null;
+    const clearMarks=()=>$$(".eg",gb).forEach(x=>x.classList.remove("over-l","over-r"));
+    gb.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;const g=e.target.closest(".eg");if(!g)return;e.preventDefault();drag={from:+g.dataset.gi,el:g,moved:false};g.classList.add("dragging");try{gb.setPointerCapture(e.pointerId)}catch(x){}});
+    gb.addEventListener("pointermove",e=>{if(!drag)return;drag.moved=true;clearMarks();const t=document.elementFromPoint(e.clientX,e.clientY),g=t&&t.closest(".eg");drag.to=null;
+      if(g&&g!==drag.el){const r=g.getBoundingClientRect(),after=e.clientX>r.left+r.width/2;g.classList.add(after?"over-r":"over-l");drag.to=+g.dataset.gi+(after?1:0)}});
+    const end=e=>{if(!drag)return;const d=drag;drag=null;d.el.classList.remove("dragging");clearMarks();if(!d.moved||d.to==null)return;
+      const g=groups(),copy=e.ctrlKey||e.altKey||e.metaKey;let ins=d.to;
+      if(copy)g.splice(ins,0,[...g[d.from]]);else{const [it]=g.splice(d.from,1);if(d.from<ins)ins--;g.splice(ins,0,it)}
+      setGroups(g);draw();toast(copy?"コピーしました":"いどうしました")};
+    gb.addEventListener("pointerup",end);gb.addEventListener("pointercancel",()=>{if(drag){drag.el.classList.remove("dragging");clearMarks();drag=null}})}
   $$("[data-fpre]",el).forEach(b=>b.onclick=()=>{build=[...PRE[+b.dataset.fpre][1]];draw()});
-  $("#fadd",el).onclick=()=>{const seq=build.join("").replace(/\|+$/,"").replace(/^\|+/,"");F.ex.push({id:"f"+uid(),hand,seq});build=[];saved();draw()};
+  $("#fadd",el).onclick=()=>{const seq=build.join("").replace(/\|+$/,"").replace(/^\|+/,"");
+    if(editId){const e=F.ex.find(x=>x.id===editId);if(e){e.hand=hand;e.seq=seq}editId=null;toast("なおしました")}else F.ex.push({id:"f"+uid(),hand,seq});build=[];saved();draw()};
   $("#fbpm",el).oninput=e=>{F.bpm=+e.target.value;$("#fbpmv",el).textContent=F.bpm};$("#fbpm",el).onchange=saved;
   $("#fci",el).onchange=e=>{F.countIn=e.target.value==="1";saved()}}
+  if(window._fkeyH)document.removeEventListener("keydown",window._fkeyH);
+  window._fkeyH=e=>{if(!el.isConnected||!$("[data-fk]",el)){document.removeEventListener("keydown",window._fkeyH);window._fkeyH=null;return}
+    const t=e.target;if(e.isComposing||e.ctrlKey||e.metaKey||e.altKey||(t&&/INPUT|TEXTAREA|SELECT/.test(t.tagName)))return;
+    let k=null;if(/^[1-5]$/.test(e.key))k=e.key;else if(e.key===" "||e.key==="/"||e.key==="|")k="|";else if(e.key==="Backspace")k="back";
+    else if(e.key==="Enter"){const b=$("#fadd",el);if(b&&!b.disabled){e.preventDefault();b.click()}return}
+    if(k){e.preventDefault();press(k)}};
+  document.addEventListener("keydown",window._fkeyH);
   draw()}
 function tSong(el){const a=S.assignment;let cur=a.songs[0]?.id,mode="pin",color="#FF6457",drawing=null,rec=[],syncH=150;
   function draw(){if(tPlayer){tPlayer.destroy();tPlayer=null}const song=a.songs.find(s=>s.id===cur);
