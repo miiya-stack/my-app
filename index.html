@@ -246,7 +246,7 @@ th{font-size:.78rem;color:var(--muted)}
 /* finger numbers */
 .hands{display:flex;gap:12px;justify-content:center;align-items:flex-end}
 .hand-box{flex:1;max-width:240px;text-align:center;display:flex;flex-direction:column;gap:2px}
-.hands.one .hand-box{max-width:300px}
+.hands.one .hand-box{max-width:250px}
 .hand{width:100%;height:auto;display:block;touch-action:manipulation}
 .hand .fg{cursor:pointer}
 .hand .fg.glow rect{filter:drop-shadow(0 0 8px rgba(255,200,58,.9))}
@@ -608,18 +608,23 @@ function bindBack(to="home"){$("#back").onclick=()=>go(to)}
 
 /* ================= FINGER NUMBERS ================= */
 /* hand seen from above (back of the hand): right thumb on the left, left thumb on the right */
-const FG=[{f:1,x:22,y:112,w:31,h:74,r:-34},{f:2,x:52,y:40,w:27,h:96,r:-7},{f:3,x:84,y:24,w:28,h:110,r:0},{f:4,x:116,y:34,w:27,h:100,r:6},{f:5,x:147,y:62,w:24,h:80,r:14}];
+/* back of the hand, fingers up, thumbs pointing to the middle (right thumb on the left). Each finger: base centre (bx,by), angle r, length L, base/tip half-widths */
+const FG=[{f:1,bx:72,by:196,r:-42,L:70,wb:15,wt:10.5},{f:2,bx:90,by:130,r:-8,L:94,wb:12,wt:9.5},{f:3,bx:119,by:124,r:-1,L:104,wb:12.5,wt:10},{f:4,bx:147,by:130,r:6,L:96,wb:12,wt:9.5},{f:5,bx:171,by:144,r:15,L:74,wb:10.5,wt:8.5}];
 const HANDNAME={R:"みぎて",L:"ひだりて",B:"りょうて"};
 const FREAD=["","いち","に","さん","よん","ご"];
 const rotP=(px,py,cx,cy,deg)=>{const a=deg*Math.PI/180,dx=px-cx,dy=py-cy;return[cx+dx*Math.cos(a)-dy*Math.sin(a),cy+dx*Math.sin(a)+dy*Math.cos(a)]};
-function handSVG(hand,o={}){const L=hand==="L",mx=x=>L?200-x:x,col=o.colors||{},nums=o.nums!==false;
-  const skin="#FFDCC2",line="#D9A07A",paint={hl:["#FFC83A","#E3A10B"],ok:["#8FE3B0","#2A9958"],ng:["#FF9C93","#D8413A"]};
-  let g=`<svg viewBox="${L?"0":"-24"} 0 224 236" class="hand" role="img" aria-label="${HANDNAME[hand]}">`,tips="";
-  FG.forEach(F=>{const cx=mx(F.x+F.w/2),r=L?-F.r:F.r,by=F.y+F.h,state=col[F.f]||(o.hl===F.f?"hl":null),[fill,st]=paint[state]||[skin,line],[tx,ty]=rotP(cx,F.y+17,cx,by,r);
-    g+=`<g data-f="${F.f}" class="fg ${state==="hl"?"glow":""}"><rect x="${cx-F.w/2}" y="${F.y}" width="${F.w}" height="${F.h+22}" rx="${F.w/2}" transform="rotate(${r} ${cx} ${by})" fill="${fill}" stroke="${st}" stroke-width="3"/></g>`;
-    if(nums||state)tips+=`<g data-f="${F.f}" class="fg"><circle cx="${tx}" cy="${ty}" r="12.5" fill="#fff" stroke="${st}" stroke-width="2.5"/><text x="${tx}" y="${ty+5.5}" text-anchor="middle" font-size="16" font-weight="800" fill="#21304A" font-family="sans-serif">${F.f}</text></g>`});
-  g+=`<rect x="${L?42:62}" y="196" width="96" height="38" rx="12" fill="${skin}" stroke="${line}" stroke-width="3"/><rect x="${L?18:42}" y="118" width="140" height="90" rx="42" fill="${skin}" stroke="${line}" stroke-width="3"/>`;
-  return g+tips+"</svg>"}
+function handSVG(hand,o={}){const L=hand==="L",col=o.colors||{},nums=o.nums!==false,W=214;
+  const skin="#F7DCC7",line="#B98468",paint={hl:["#FFC83A","#E3A10B"],ok:["#8FE3B0","#2A9958"],ng:["#FF9C93","#D8413A"]};
+  const fside=(F,e=16)=>`M${-F.wb} ${e} L${-F.wt} ${-F.L+F.wt} A${F.wt} ${F.wt} 0 0 1 ${F.wt} ${-F.L+F.wt} L${F.wb} ${e}`,fpath=(F,e)=>fside(F,e)+" Z",tf=F=>`translate(${F.bx} ${F.by}) rotate(${F.r})`;
+  const palm="M76 128 Q120 110 184 142 C190 170 190 205 178 238 C172 254 166 272 164 330 L84 330 C84 282 80 262 72 246 C62 228 58 210 60 192 C62 165 66 146 76 128 Z";
+  // outline: every shape stroked thick, then filled on top so only the outer edge of the whole hand keeps a line
+  let body=`<path d="${palm}" fill="${line}" stroke="${line}" stroke-width="5"/>`+FG.map(F=>`<path d="${fpath(F)}" transform="${tf(F)}" fill="${line}" stroke="${line}" stroke-width="5" stroke-linejoin="round"/>`).join("")+`<path d="${palm}" fill="${skin}"/>`,tips="";
+  FG.forEach(F=>{const st=col[F.f]||(o.hl===F.f?"hl":null),[fc,sc]=paint[st]||[skin,null];
+    body+=`<g data-f="${F.f}" class="fg ${st==="hl"?"glow":""}" transform="${tf(F)}"><path d="${fpath(F)}" fill="${skin}"/>${sc?`<path d="${fpath(F,2)}" fill="${fc}"/><path d="${fside(F,2)}" fill="none" stroke="${sc}" stroke-width="3.5" stroke-linejoin="round"/>`:""}<rect x="${-F.wt*.64}" y="${-F.L+F.wt*.35}" width="${F.wt*1.28}" height="${F.wt*1.75}" rx="${F.wt*.62}" fill="#F4CFC4" stroke="#D9A592" stroke-width="1.2"/><rect x="${-F.wt*.3}" y="${-F.L+F.wt*.6}" width="${F.wt*.6}" height="${F.wt*.5}" rx="${F.wt*.25}" fill="#FFF3EF"/></g>`;
+    if(nums||st){const a=F.r*Math.PI/180,d=F.L+18;let x=F.bx+Math.sin(a)*d;const y=F.by-Math.cos(a)*d;if(L)x=W-x;
+      tips+=`<g data-f="${F.f}" class="fg"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="11.5" fill="#fff" stroke="${sc||line}" stroke-width="2.5"/><text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle" font-size="15" font-weight="800" fill="#21304A" font-family="sans-serif">${F.f}</text></g>`}});
+  body+=`<g stroke="${line}" stroke-width="1.6" stroke-linecap="round" fill="none" opacity=".75"><path d="M104 128 q1.5 5 0 10"/><path d="M133 127 q1.5 5 0 10"/><path d="M160 136 q1.5 5 0 9"/></g>`;
+  return `<svg viewBox="-4 -22 222 322" class="hand" role="img" aria-label="${HANDNAME[hand]}"><g${L?` transform="translate(${W} 0) scale(-1 1)"`:""}>${body}</g>${tips}</svg>`}
 const handsHTML=(hands,o)=>`<div class="hands ${hands.length===1?"one":""}">${hands.map(h=>`<div class="hand-box" data-hand="${h}"><div class="label">${HANDNAME[h]}</div>${handSVG(h,typeof o==="function"?o(h):o)}</div>`).join("")}</div>`;
 const handList=h=>h==="B"?["L","R"]:[h];
 /* read the number aloud (browser voice); respects the in-app mute */
