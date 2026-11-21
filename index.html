@@ -817,7 +817,7 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
   const pad=$("#pad"),ci=$("#ci");
   const bd=60/a.bpm;
   const setHL=(k,on)=>{const n=$(`#nw .nt[data-k="${k}"]`);if(n)n.classList.toggle("on",on)};
-  function animate(start,endBeat,follow){const svg=$("#nw svg"),ph=$(".ph",svg);const unit=64,left=56,off=22;ph.style.display="";
+  function animate(start,endBeat,follow){const svg=$("#nw svg");let ph=$(".ph",svg);if(!ph){$("#nw").innerHTML=rhythmSVG(r.tokens,{playhead:1});ph=$("#nw .ph")}const unit=64,left=56,off=22;ph.style.display="";
     const step=()=>{const b=(ac().currentTime-start)/bd;if(b>endBeat+.2){ph.style.display="none";if(follow)ons.forEach((o,k)=>setHL(k,false));return}ph.setAttribute("x",left+off-3+Math.max(0,b)*unit);
       if(follow)ons.forEach((o,k)=>setHL(k,b>=o.beat&&b<o.beat+o.dur*.95));raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
   function schedule(withNotes){const A=ac();if(!A){toast("このブラウザでは おとが でません");return null}
@@ -830,7 +830,7 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
     animate(ms,beats,withNotes);return ms}
   function stopRun(){timers.forEach(clearTimeout);timers=[];cancelAnimationFrame(raf);if(runOut){try{runOut.disconnect()}catch(e){}runOut=null}
     const ph=$("#nw .ph");if(ph)ph.style.display="none";ons.forEach((o,k)=>setHL(k,false));busy=false;demoing=false;pad.disabled=true;setBtns(false)}
-  $("#demo").onclick=()=>{if(demoing){stopRun();ci.textContent="こんどは きみの ばん!";return}if(busy)return;busy=true;demoing=true;$("#res").innerHTML="";setBtns(false);
+  $("#demo").onclick=()=>{if(demoing){stopRun();ci.textContent="こんどは きみの ばん!";return}if(busy)return;busy=true;demoing=true;$("#res").innerHTML="";$("#nw").innerHTML=rhythmSVG(r.tokens,{playhead:1});setBtns(false);
     const ms=schedule(true);if(ms==null){stopRun();return}
     timers.push(setTimeout(()=>{stopRun();ci.textContent="こんどは きみの ばん!"},(ms+beats*bd-ac().currentTime)*1000+300))};
   $("#go").onclick=()=>{if(demoing)stopRun();if(busy)return;busy=true;taps=[];sounded=new Set();$("#res").innerHTML="";$("#nw").innerHTML=rhythmSVG(r.tokens,{playhead:1});setBtns(true);
@@ -852,7 +852,7 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
       if(best>=0&&bdiff<=Math.min(.25,bd*.45)){used.add(best);return bdiff<=.09?"p":bdiff<=.18?"g":"g"}return "m"});
     const extra=taps.length-used.size,n=exp.length||1,p=res.filter(x=>x==="p").length,g=res.filter(x=>x==="g").length;
     const score=clamp((p+.7*g)/n-.15*extra,0,1),stars=score>=.9?3:score>=.7?2:score>=.45?1:0;
-    const cols=res.map(x=>x==="p"?"#2A9958":x==="g"?"#E3A10B":"#D8413A");$("#nw").innerHTML=rhythmSVG(r.tokens,{colors:cols});
+    const cols=res.map(x=>x==="p"?"#2A9958":x==="g"?"#E3A10B":"#D8413A");$("#nw").innerHTML=rhythmSVG(r.tokens,{colors:cols,playhead:1});
     const span=beats*bd;const tl=`<div class="timeline">${exp.map(t=>`<i style="left:${(t-measureStart)/span*94+3}%"></i>`).join("")}${taps.map(t=>`<b style="left:${clamp((t-measureStart)/span*94+3,0,100)}%"></b>`).join("")}</div><div class="legend"><span><i style="background:var(--muted)"></i>おてほん</span><span><i style="background:var(--primary)"></i>きみの タップ</span><span><i style="background:#2A9958"></i>ぴったり</span><span><i style="background:#E3A10B"></i>おしい</span><span><i style="background:#D8413A"></i>ミス</span></div>`;
     const key2=dayKey()+"|"+r.id,prev=P().rhythmToday[key2]||0;let coins=0,sb=0;
     if(stars>=2){if(prev<2){coins+=3;dayRec().rhythm++;weekly().rhythm++;sb=markPractice()}if(stars===3&&prev<3)coins+=2;}
