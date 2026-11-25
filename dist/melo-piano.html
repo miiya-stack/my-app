@@ -636,7 +636,7 @@ function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=e
   return g+"</g></svg>"}
 const callName=()=>(S.studentName||C.myName||"").trim();
 function moodText(){const nm=callName(),n=nm?(/(さん|ちゃん|くん|君|様|さま|せんせい|先生)$/.test(nm)?nm:nm+"さん"):"きみ",m=mood(),g=gapDays();
-  if(m==="happy")return `きょうも れんしゅう できたね! ${n}、すごい! この ちょうしで いこう`;
+  if(m==="happy")return `きょうも れんしゅう できたね! ${n}、すごい! この ちょうしで いこう♪`;
   if(m==="worried")return "きのうは ピアノ おやすみ だったね… きょうは いっしょに やろうよ";
   if(m==="angry")return `もう ${g}日も れんしゅう してないよ! プンプン! メロ まっかに なっちゃった`;
   return P().lastDay?"きょうの れんしゅう まだ だよ! メロと いっしょに がんばろう":"はじめまして! メロだよ。いっしょに ピアノの れんしゅう しよう!"}
