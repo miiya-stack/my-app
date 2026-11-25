@@ -552,36 +552,44 @@ function sampleScoreSVG(){const W=1000,H=430,s=16;let g=`<svg class="sample" vie
   return g+"</svg>"}
 
 /* ================= mascot ================= */
-const MOODCOL={happy:["#FFD23F","#E3A10B"],normal:["#FFD23F","#E3A10B"],worried:["#FFB067","#E07F2A"],angry:["#FF5A4E","#C9302A"]};
-function mascotSVG(m="normal",eq=P().equip){const [c,cd]=MOODCOL[m],ink="#21304A",gl=eq.glasses||ink;let g=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="メロ">`;
-  g+=`<ellipse cx="100" cy="190" rx="52" ry="7" fill="#0002"/>`;
-  g+=`<ellipse cx="80" cy="180" rx="14" ry="8" fill="#FF9A3D"/><ellipse cx="120" cy="180" rx="14" ry="8" fill="#FF9A3D"/>`;
-  g+=`<ellipse cx="34" cy="118" rx="16" ry="24" transform="rotate(25 34 118)" fill="${cd}"/><ellipse cx="166" cy="118" rx="16" ry="24" transform="rotate(-25 166 118)" fill="${cd}"/>`;
-  g+=`<circle cx="100" cy="112" r="68" fill="${c}" stroke="${cd}" stroke-width="4"/>`;
-  g+=`<ellipse cx="100" cy="140" rx="40" ry="28" fill="#fff" opacity=".35"/>`;
-  if(eq.head==="headphones")g+=`<path d="M40 112 C40 40 160 40 160 112" fill="none" stroke="#3A4A66" stroke-width="9"/><rect x="26" y="98" width="20" height="34" rx="8" fill="#2F9BF0"/><rect x="154" y="98" width="20" height="34" rx="8" fill="#2F9BF0"/>`;
-  if(eq.head==="cap")g+=`<path d="M48 72 C56 28 144 28 152 72 Z" fill="#2F9BF0"/><path d="M120 68 q40 0 52 10 q-30 4 -56 0z" fill="#1A76C8"/>`;
-  if(eq.head==="crown")g+=`<path d="M64 62 L70 26 L86 46 L100 20 L114 46 L130 26 L136 62 Z" fill="#FFC83A" stroke="#E3A10B" stroke-width="3" stroke-linejoin="round"/><circle cx="100" cy="48" r="5" fill="#FF6457"/>`;
-  // note antenna
-  g+=`<g transform="translate(${eq.head==="crown"?0:0} ${eq.head==="cap"?-10:eq.head==="crown"?-14:0})"><path d="M106 46 V14 q14 4 16 18" fill="none" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><ellipse cx="98" cy="46" rx="10" ry="7.5" transform="rotate(-20 98 46)" fill="${ink}"/></g>`;
-  if(eq.head==="ribbon")g+=`<path d="M138 56 l-22 -14 v28z M138 56 l22 -14 v28z" fill="#FF7FB0" stroke="#E0558E" stroke-width="2" stroke-linejoin="round"/><circle cx="138" cy="56" r="7" fill="#E0558E"/>`;
-  if(eq.head==="flower")g+=`<g transform="translate(58 58)">${[0,72,144,216,288].map(a=>`<circle cx="${Math.cos(a*Math.PI/180)*9}" cy="${Math.sin(a*Math.PI/180)*9}" r="7" fill="#FFFFFF" stroke="#FF9FC4" stroke-width="2"/>`).join("")}<circle r="6" fill="#FFC83A"/></g>`;
-  // cheeks
-  g+=`<ellipse cx="56" cy="132" rx="12" ry="7" fill="#FF7F9E" opacity="${m==="angry"?0:.55}"/><ellipse cx="144" cy="132" rx="12" ry="7" fill="#FF7F9E" opacity="${m==="angry"?0:.55}"/>`;
+/* メロ — soft "yurukawa" style: round mochi body, thin brown line, tiny dot eyes, pink cheeks with ／／ marks.
+   Melo's own marks stay: the music-note antenna and round glasses. Body colour follows the mood (angry = rosy red). */
+const MOODCOL={happy:"#FFFFFF",normal:"#FFFFFF",worried:"#FFF0E0",angry:"#FFB9B0"};
+function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=eq.glasses&&eq.glasses!=="#21304A"?eq.glasses:ln,w=3.2;
+  let g=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="メロ"><g stroke-linecap="round" stroke-linejoin="round">`;
+  g+=`<ellipse cx="100" cy="188" rx="50" ry="6" fill="#0001" stroke="none"/>`;
+  // little feet and arms
+  g+=`<ellipse cx="80" cy="181" rx="12" ry="7" fill="${c}" stroke="${ln}" stroke-width="${w}"/><ellipse cx="120" cy="181" rx="12" ry="7" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
+  g+=`<path d="M34 138 q-14 4 -12 16 q4 6 16 -2" fill="${c}" stroke="${ln}" stroke-width="${w}"/><path d="M166 138 q14 4 12 16 q-4 6 -16 -2" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
+  // mochi body
+  g+=`<path d="M100 54 C150 54 172 92 172 128 C172 166 142 180 100 180 C58 180 28 166 28 128 C28 92 50 54 100 54 Z" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
+  // hats behind the antenna
+  if(eq.head==="headphones")g+=`<path d="M34 120 C34 40 166 40 166 120" fill="none" stroke="#8C9BB5" stroke-width="7"/><rect x="20" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><rect x="160" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/>`;
+  if(eq.head==="cap")g+=`<path d="M52 82 C58 40 142 40 148 82 Z" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><path d="M122 78 q36 0 48 9 q-28 5 -52 1z" fill="#7DB6E6" stroke="${ln}" stroke-width="2.5"/>`;
+  if(eq.head==="crown")g+=`<path d="M68 74 L73 42 L87 58 L100 36 L113 58 L127 42 L132 74 Z" fill="#FFE08A" stroke="${ln}" stroke-width="2.5"/><circle cx="100" cy="62" r="4" fill="#FF9AA8"/>`;
+  // music-note antenna
+  const ay=eq.head==="cap"?-12:eq.head==="crown"?-18:0;
+  g+=`<g transform="translate(0 ${ay})"><path d="M106 56 V24 q12 3 14 15" fill="none" stroke="${ln}" stroke-width="${w}"/><ellipse cx="99" cy="56" rx="8.5" ry="6.5" transform="rotate(-20 99 56)" fill="${ln}"/></g>`;
+  if(eq.head==="ribbon")g+=`<path d="M140 68 l-18 -11 v22z M140 68 l18 -11 v22z" fill="#FFC2D6" stroke="${ln}" stroke-width="2.5"/><circle cx="140" cy="68" r="5" fill="#FF9DBB" stroke="${ln}" stroke-width="2"/>`;
+  if(eq.head==="flower")g+=`<g transform="translate(62 72)">${[0,72,144,216,288].map(a=>`<circle cx="${(Math.cos(a*Math.PI/180)*8).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*8).toFixed(1)}" r="6" fill="#fff" stroke="#E9A3BB" stroke-width="2"/>`).join("")}<circle r="5" fill="#FFE08A"/></g>`;
+  // cheeks with little ／／ marks
+  const blush=m==="angry"?"#FF8E86":"#FFB8C6";
+  g+=`<ellipse cx="66" cy="134" rx="11" ry="6.5" fill="${blush}" stroke="none" opacity=".85"/><ellipse cx="134" cy="134" rx="11" ry="6.5" fill="${blush}" stroke="none" opacity=".85"/>`;
+  g+=`<g stroke="#F08AA0" stroke-width="1.8"><path d="M60 137 l4 -6 M65 137 l4 -6 M70 137 l4 -6 M128 137 l4 -6 M133 137 l4 -6 M138 137 l4 -6"/></g>`;
   // eyes
-  if(m==="happy")g+=`<path d="M66 108 q10 -12 20 0 M114 108 q10 -12 20 0" fill="none" stroke="${ink}" stroke-width="5" stroke-linecap="round"/>`;
-  else g+=`<circle cx="76" cy="106" r="7" fill="${ink}"/><circle cx="124" cy="106" r="7" fill="${ink}"/><circle cx="78.5" cy="103.5" r="2.4" fill="#fff"/><circle cx="126.5" cy="103.5" r="2.4" fill="#fff"/>`;
-  // glasses (nod to kids eye care)
-  g+=`<circle cx="76" cy="106" r="21" fill="#fff" fill-opacity=".28" stroke="${gl}" stroke-width="5"/><circle cx="124" cy="106" r="21" fill="#fff" fill-opacity=".28" stroke="${gl}" stroke-width="5"/><path d="M97 104 q3 -5 6 0" fill="none" stroke="${gl}" stroke-width="5"/><path d="M55 102 l-14 -6 M145 102 l14 -6" stroke="${gl}" stroke-width="5" stroke-linecap="round"/>`;
-  // brows & mouth
-  if(m==="worried")g+=`<path d="M60 78 L86 72 M114 72 L140 78" stroke="${ink}" stroke-width="5" stroke-linecap="round"/>`;
-  if(m==="angry")g+=`<path d="M58 72 L88 84 M112 84 L142 72" stroke="${ink}" stroke-width="6" stroke-linecap="round"/>`;
-  if(m==="happy")g+=`<path d="M80 138 q20 26 40 0 z" fill="#C9302A" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M90 146 q10 8 20 0" fill="#FF8A8A"/>`;
-  if(m==="normal")g+=`<path d="M86 140 q14 12 28 0" fill="none" stroke="${ink}" stroke-width="5" stroke-linecap="round"/>`;
-  if(m==="worried")g+=`<path d="M82 150 q9 -8 18 0 q9 8 18 0" fill="none" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><path d="M160 74 q8 12 0 16 q-8 -4 0 -16z" fill="#7CC8FF"/>`;
-  if(m==="angry")g+=`<path d="M82 154 q18 -18 36 0" fill="none" stroke="${ink}" stroke-width="6" stroke-linecap="round"/><g stroke="#C9302A" stroke-width="5" stroke-linecap="round" fill="none"><path d="M150 50 q6 6 12 0 M150 50 q-6 6 0 12 M162 62 q6 -6 0 -12 M162 62 q-6 6 -12 0"/></g><g fill="#fff" opacity=".85"><circle cx="28" cy="56" r="9"/><circle cx="18" cy="44" r="7"/><circle cx="12" cy="30" r="5"/><circle cx="174" cy="34" r="8"/><circle cx="186" cy="22" r="5"/></g>`;
-  if(m==="happy")g+=`<g fill="#FFF7B0"><path d="M24 50 l4 10 l10 4 l-10 4 l-4 10 l-4 -10 l-10 -4 l10 -4z"/><path d="M172 150 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/></g>`;
-  return g+"</svg>"}
+  if(m==="happy")g+=`<path d="M78 120 q6 -7 12 0 M110 120 q6 -7 12 0" fill="none" stroke="${ln}" stroke-width="3.4"/>`;
+  else g+=`<circle cx="84" cy="118" r="4.6" fill="${ln}" stroke="none"/><circle cx="116" cy="118" r="4.6" fill="${ln}" stroke="none"/><circle cx="85.6" cy="116.4" r="1.4" fill="#fff" stroke="none"/><circle cx="117.6" cy="116.4" r="1.4" fill="#fff" stroke="none"/>`;
+  // round glasses (thin)
+  g+=`<circle cx="84" cy="118" r="13" fill="#fff" fill-opacity=".25" stroke="${gl}" stroke-width="2.6"/><circle cx="116" cy="118" r="13" fill="#fff" fill-opacity=".25" stroke="${gl}" stroke-width="2.6"/><path d="M97 116 q3 -3 6 0" fill="none" stroke="${gl}" stroke-width="2.6"/>`;
+  // brows and mouth
+  if(m==="worried")g+=`<path d="M74 100 l12 -4 M114 96 l12 4" stroke="${ln}" stroke-width="2.8"/>`;
+  if(m==="angry")g+=`<path d="M73 97 l14 6 M113 103 l14 -6" stroke="${ln}" stroke-width="3.2"/>`;
+  if(m==="happy")g+=`<path d="M93 136 q7 9 14 0 z" fill="#FF8E86" stroke="${ln}" stroke-width="2.6"/>`;
+  if(m==="normal")g+=`<path d="M94 136 q3 3 6 0 q3 3 6 0" fill="none" stroke="${ln}" stroke-width="2.6"/>`;
+  if(m==="worried")g+=`<path d="M92 140 q4 -3 8 0 q4 3 8 0" fill="none" stroke="${ln}" stroke-width="2.6"/><path d="M152 92 q6 9 0 12 q-6 -3 0 -12z" fill="#AEDBFF" stroke="${ln}" stroke-width="2"/>`;
+  if(m==="angry")g+=`<path d="M93 141 q7 -6 14 0" fill="none" stroke="${ln}" stroke-width="2.8"/><g stroke="#E0574D" stroke-width="3.2" fill="none"><path d="M150 66 q5 5 10 0 M150 66 q-5 5 0 10 M160 76 q5 -5 0 -10 M160 76 q-5 5 -10 0"/></g><g fill="#fff" stroke="${ln}" stroke-width="2"><circle cx="34" cy="70" r="7"/><circle cx="24" cy="58" r="5"/><circle cx="170" cy="48" r="6"/></g>`;
+  if(m==="happy")g+=`<g fill="#FFE08A" stroke="${ln}" stroke-width="1.6"><path d="M32 66 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M168 156 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5z"/></g>`;
+  return g+"</g></svg>"}
 function moodText(){const nm=S.studentName||C.myName,n=nm?nm+"さん":"きみ",m=mood(),g=gapDays();
   if(m==="happy")return `きょうも れんしゅう できたね! ${n} すごい! この ちょうしで いこう`;
   if(m==="worried")return "きのうは ピアノ おやすみ だったね… きょうは いっしょに やろうよ";
