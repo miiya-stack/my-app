@@ -112,6 +112,8 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .teacher-note{display:flex;gap:12px;align-items:flex-start}
 .teacher-note .av{flex:none;width:40px;height:40px;border-radius:50%;background:#EFE3FF;color:#4A3B34;border:2px solid #4A3B34;display:grid;place-items:center;font-weight:800}
 
+.kana-sw{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 2px}
+.kana-sw .seg button{font-size:.8rem}
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:2px solid var(--line);display:flex;justify-content:center;gap:4px;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
 .nav button{flex:1;max-width:160px;border:2px solid transparent;background:none;border-radius:14px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;font-size:.78rem;font-weight:800;color:var(--muted)}
@@ -406,12 +408,12 @@ const RHYTHM_LIB=[
   ["rest",["q","q","q","qr"]],["rest",["q","qr","q","qr"]],["rest",["qr","q","qr","q"]],["rest",["h","q","qr"]],["rest",["q","q","hr"]]
 ].map(([c,tokens],i)=>{const n=i%5+1;return{id:c+n,c,n,name:`${RHYTHM_CORNERS.find(x=>x.id===c).name} ${n}`,tokens}});
 function sampleSong(){return {id:"s-sample",title:"きらきらぼし(サンプル)",image:null,sample:true,w:1000,h:430,
-  pins:[{id:uid(),x:120,y:150,text:"さいしょのドは やさしく はじめよう",color:"#FF6457"},{id:uid(),x:455,y:120,text:"ラ→ラ→ソは 指をかえずに",color:"#2F9BF0"},{id:uid(),x:860,y:330,text:"さいごのドは のばして 2つかぞえる",color:"#3FBF73"}],
+  pins:[{id:uid(),x:120,y:150,text:"さいしょのドは やさしく はじめよう",color:"#FF6457"},{id:uid(),x:455,y:120,text:"ラ→ラ→ソは ゆびを かえずに",color:"#2F9BF0"},{id:uid(),x:860,y:330,text:"さいごのドは のばして 2つかぞえる",color:"#3FBF73"}],
   strokes:[{color:"#FF6457",w:6,pts:[[520,96],[560,80],[620,78],[680,90]]}],
-  checklist:["手首を さげない","1小節ずつ ゆっくり かぞえる","2分音符は しっかり のばす"],goalMin:10}}
+  checklist:["てくびを さげない","1しょうせつずつ ゆっくり かぞえる","2ぶおんぷは しっかり のばす"],goalMin:10}}
 function defaultState(){return{
   pin:null,studentName:"",
-  assignment:{id:uid(),startedAt:dayKey(),message:"今週は ト音きごうの ド〜ソ と、4分音符・2分音符のリズムを がんばろう!",
+  assignment:{id:uid(),startedAt:dayKey(),message:"こんしゅうは トおんきごうの ド〜ソ と、4ぶおんぷ・2ぶおんぷの リズムを がんばろう!",
     notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",order:["notes","rhythm","finger","songs"],
     rhythms:[],rhythmCorners:{qh:true,eq:true,eqh:true,rest:true,orig:true},bpm:80,metronome:true,
     songs:[sampleSong()],
@@ -643,10 +645,75 @@ function confetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)re
 function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));$("#nav").hidden=!["home","shop","teacher"].includes(name);$("#nav [data-go=teacher]").hidden=!teacherAllowed()}
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
-function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
+let curArg;function go(name,arg){curScreen=name;curArg=arg;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
   ({home:renderHome,finger:startFinger,fingerList:renderFingerList,fingerPlay:renderFingerPlay,notes:startNotes,rhythm:renderRhythmList,rhythmPlay:renderRhythmPlay,rhythmCorner:renderRhythmCorner,songs:renderSongList,song:renderSong,shop:renderShop,teacher:renderTeacherGate,teacherMain:renderTeacher}[name])(arg)}
 function topbar(){return `<div class="topbar"><div class="brand"><span style="width:36px;height:36px;display:block">${mascotSVG(mood())}</span>メロのピアノ</div><div class="stats"><span class="stat flame ${practicedToday()?"":"off"}" title="れんぞく日数">${IC.flame}${shownStreak()}</span><span class="stat" title="コイン">${IC.coin}<span id="coinN">${P().coins}</span></span>${sndBtn()}</div></div>`}
 function removeFeedback(){$$(".feedback,.modal").forEach(e=>e.remove())}
+
+/* ================= もじ (kana for children / kanji for adults) =================
+   The student screens are written in spaced hiragana. In adult mode a dictionary turns them into
+   ordinary kanji-kana text (and drops the word spaces); in child mode any kanji left in the app's own
+   strings is turned into hiragana. Text the teacher typed (messages, song titles, pins…) sits in
+   [data-raw] and is shown exactly as written. Teacher pages are not touched. */
+const KJ_B="(?<=^|[\\s\\d・「（(/、。!?])";
+const KJ_ADULT=[
+ [KJ_B+"はじめ(?!まして)","始め"],["ピアノれんしゅう","ピアノ練習"],["こどもの","子どもの"],["いちじ ていし","一時停止"],
+ ["もういちど","もう一度"],["もうすこし","もう少し"],["すこし","少し"],["れんしゅう","練習"],["ゆびばんごう","指番号"],["ばんごう","番号"],
+ ["おやゆび","親指"],["こゆび","小指"],["ゆび","指"],["みぎて","右手"],["ひだりて","左手"],["りょうて","両手"],["てくび","手首"],
+ ["(\\d)\\s*ぶおんぷ","$1分音符"],["(\\d)\\s*ぶきゅうふ","$1分休符"],["(\\d)ぶ(?=[・と])","$1分"],["ふてん","付点"],["しょうせつ","小節"],["かえずに","変えずに"],["さげない","下げない"],
+ ["がくふ","楽譜"],["おんぷ","音符"],["きゅうふ","休符"],["きごう","記号"],["トおん","ト音"],["ヘおん","ヘ音"],["だいふひょう","大譜表"],
+ ["もくひょう","目標"],["たっせい","達成"],["せいかい","正解"],["こんしゅう","今週"],["こんど","今度"],["きのう","昨日"],
+ [KJ_B+"きょう(?=[のはも\\s]|$)","今日"],[KJ_B+"きょく(?=[のがをは\\s]|$)","曲"],["せんせい","先生"],["がっき","楽器"],[KJ_B+"おと(?=[をがのは\\s]|$)","音"],
+ ["えんそう","演奏"],[KJ_B+"きかい(?=[のが])","機械"],["おてほん","お手本"],["たんまつ","端末"],["かだい","課題"],
+ ["とどきます","届きます"],["とどいた","届いた"],["とどいて","届いて"],["とどく","届く"],["ひらきなおして","開き直して"],["ひらけます","開けます"],
+ [KJ_B+"あける(?=$|\\s)","開ける"],["うけとりずみ","受け取り済み"],["あたらしい","新しい"],["せつぞく","接続"],["さいしん","最新"],["さいせい","再生"],
+ ["さいご","最後"],["さいしょ","最初"],["やさしく","優しく"],["のばして","伸ばして"],["のばす","伸ばす"],["かぞえる","数える"],
+ ["まどの そとの とおく","窓の外の遠く"],["みてね","見てね"],["みつかりません","見つかりません"],["みどり","緑"],["ぜんぶ","全部"],
+ ["えらぼう","選ぼう"],["えらぶ","選ぶ"],["えらんで","選んで"],["おぼえよう","覚えよう"],["おしてね","押してね"],["おすと","押すと"],
+ ["きいてね","聴いてね"],[KJ_B+"きく(?=$|\\s)","聴く"],["メモをかく","メモを書く"],["メモをけす","メモを消す"],[KJ_B+"かく(?=$|\\s)","書く"],
+ ["けしました","消しました"],["けして","消して"],[KJ_B+"けす(?=$|\\s|[?？])","消す"],["だします","出します"],[KJ_B+"だす(?=$|\\s)","出す"],["でません","出ません"],
+ ["とめる","止める"],["とめた","止めた"],["もどる","戻る"],["もどす","戻す"],["もどりました","戻りました"],["すすみかた","進み方"],["すすむ","進む"],
+ ["つづける","続ける"],["つづけて","続けて"],["はじめよう","始めよう"],["はじまる","始まる"],["やすめよう","休めよう"],["やすめた","休めた"],["おやすみ","お休み"],
+ ["むずかしい","難しい"],["ふつう","普通"],["はやさ","速さ"],["ばしょ","場所"],["もんだい","問題"],["ちょうせん","挑戦"],["じゅんばん","順番"],
+ ["うえから","上から"],["うごかせた","動かせた"],["うごきません","動きません"],["たからばこ","宝箱"],["ごほうび","ご褒美"],["もってる","持ってる"],
+ ["かったよ","買ったよ"],[KJ_B+"かう(?=$|\\s)","買う"],[KJ_B+"つける(?=$|\\s)","付ける"],["はずす","外す"],["ためす","試す"],["いっしょに","一緒に"],
+ ["がんば","頑張"],["ちょうし","調子"],["ざんねん","残念"],["おしい","惜しい"],["よけいな","余計な"],["たたいて","叩いて"],["うてる","打てる"],["リズムうち","リズム打ち"],
+ ["よもう","読もう"],["よみあげ","読み上げ"],["よみこみ","読み込み"],["よみこめません","読み込めません"],[KJ_B+"こえ(?=$|\\s)","声"],
+ ["しゃしん","写真"],["ちゅうい","注意"],["じぶん","自分"],["ふりかえり","振り返り"],["とうろく","登録"],["くりかえせる","繰り返せる"],
+ ["くりかえし","繰り返し"],["くりかえす","繰り返す"],["にがてな","苦手な"],["おつかれさま","お疲れさま"],["だいじょうぶ","大丈夫"],["ほかの","他の"],
+ [KJ_B+"なに(?=[?？])","何"],["おわり","終わり"],["おわる","終わる"],["おわった","終わった"],[KJ_B+"つぎ(?=[!！にへ\\s]|$)","次"],["ひけた","弾けた"],
+ ["ひいて","弾いて"],["とおして","通して"],[KJ_B+"きみ(?=[のは\\s]|$)","君"],["ばん!","番!"],["れんぞく","連続"],["いじょう","以上"],["じかん","時間"],
+ ["まっかに","真っ赤に"],["あおい","青い"],["あかい","赤い"],["きんの","金の"],["おうかん","王冠"],["はいけい","背景"],["ほしぞら","星空"],
+ [KJ_B+"うみ(?=$|\\s)","海"],["おはな","お花"],["ぼうし","帽子"],[KJ_B+"もじ(?=$|\\s)","文字"],["ゆっくり","ゆっくり"],
+ ["(練習|接続|読み込み)\\s*ちゅう","$1中"],["(\\d)\\s*もん","$1問"],["(\\d)\\s*かい","$1回"],["(\\d)\\s*まい","$1枚"],["(\\d)\\s*びょう","$1秒"],
+ ["(\\d)\\s*[ぷふ]ん","$1分"],["^(かい|もん|まい)(?=$|[\\s・!])",m=>({かい:"回",もん:"問",まい:"枚"})[m]],["^[ぷふ]ん(?=$|[\\s・!])","分"],["^こ(?=・|$)","個"],["(\\d)\\s*こ(?=[・の\\s]|$)","$1個"],
+ // drop the word spaces of children's writing (but keep a space before or after numbers and latin text)
+ ["([\\u3040-\\u30ff\\u4e00-\\u9fff々、。〜」）)])[ \\u3000]+(?=[\\u3040-\\u30ff\\u4e00-\\u9fff々「（(])","$1"]
+].map(([a,b])=>[new RegExp(a,"g"),b]);
+const KJ_KIDS=[
+ ["おてほん演奏","おてほん えんそう"],["演奏バー","えんそう バー"],["演奏","えんそう"],["この端末","この たんまつ"],["端末","たんまつ"],["課題","かだい"],
+ ["共通","きょうつう"],["専用","せんよう"],["気をつける","きを つける"],["ト音記号","トおん きごう"],["ヘ音記号","ヘおん きごう"],["ト音","トおん"],["ヘ音","ヘおん"],
+ ["大譜表","だいふひょう"],["楽譜","がくふ"],["全音符","ぜんおんぷ"],["付点","ふてん"],["(\\d)分","$1ぶ"],["分音符","ぶおんぷ"],["分休符","ぶきゅうふ"],
+ ["休符","きゅうふ"],["音符","おんぷ"],["指番号","ゆびばんごう"],["右手","みぎて"],["左手","ひだりて"],["両手","りょうて"],["手首","てくび"],["手","て"],["指","ゆび"],
+ ["小節","しょうせつ"],["拍子","びょうし"],["曲","きょく"],["(\\d)日","$1にち"],["日数","にっすう"],["接続","せつぞく"],["中","ちゅう"],["目を","めを"],
+ ["今週","こんしゅう"],["練習","れんしゅう"],["生徒","せいと"],["保存","ほぞん"],["通信","つうしん"],["確認","かくにん"],["送信","そうしん"],["失敗","しっぱい"],
+ ["画像","がぞう"],["大きすぎ","おおきすぎ"],["直して","なおして"],["名前","なまえ"],["変えずに","かえずに"],["^月$","げつ"],["^火$","か"],["^水$","すい"],
+ ["^木$","もく"],["^金$","きん"],["^土$","ど"],["^日$","にち"],["^先$","せ"]
+].map(([a,b])=>[new RegExp(a,"g"),b]);
+const kanjiMode=()=>!!S.prefs.kanji;
+function kjText(t){if(!t||!/[぀-ヿ一-鿿]/.test(t))return t;for(const [r,b] of (kanjiMode()?KJ_ADULT:KJ_KIDS))t=t.replace(r,b);return t}
+const KJ_ATTR=["aria-label","title","placeholder","alt"];
+function kjSkip(el){if(!el||!el.closest)return true;if(el.closest("[data-raw],script,style,textarea,select,input"))return true;return /^teacher/.test(curScreen||"")&&!!el.closest("#app")}
+function kjNode(n){if(n.nodeType===3){const el=n.parentElement;if(kjSkip(el))return;const v=kjText(n.data);if(v!==n.data)n.data=v;return}
+  if(n.nodeType!==1||kjSkip(n))return;
+  KJ_ATTR.forEach(a=>{const v=n.getAttribute(a);if(v){const w=kjText(v);if(w!==v)n.setAttribute(a,w)}});
+  for(const c of n.childNodes)kjNode(c)}
+new MutationObserver(ms=>{for(const m of ms){if(m.type==="characterData")kjNode(m.target);else if(m.type==="attributes")kjNode(m.target);else m.addedNodes.forEach(kjNode)}})
+  .observe(document.body,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:KJ_ATTR});
+const kanaSwitch=()=>`<div class="kana-sw" data-raw><span class="label">${kanjiMode()?"文字":"もじ"}</span><div class="seg" role="group" aria-label="${kanjiMode()?"文字の表示":"もじの ひょうじ"}"><button data-kj="0" class="${kanjiMode()?"":"on"}">こども(ひらがな)</button><button data-kj="1" class="${kanjiMode()?"on":""}">おとな(漢字)</button></div></div>`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-kj]");if(!b)return;S.prefs.kanji=b.dataset.kj==="1";save();kjNav();go(curScreen||"home",curArg)});
+function kjNav(){$$("#nav button span, #nav button").forEach(el=>{for(const c of el.childNodes)if(c.nodeType===3){const o=c.__kj0||(c.__kj0=c.data);c.data=kjText(o)}})}
+kjNav();
 
 /* ================= HOME ================= */
 const LESSON_NAMES={notes:"がくふを よもう(音符)",rhythm:"リズムうち",finger:"ゆびばんごう(指番号)",songs:"きょくの れんしゅう(曲)"};
@@ -657,15 +724,15 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   const pct=(v,g)=>Math.min(100,Math.round(v/Math.max(1,g)*100));
   const FGon=a.finger&&a.finger.on,GF=G.finger||5;
   const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin&&(!FGon||(w.finger||0)>=GF);
-  app.innerHTML=`<section class="screen">${topbar()}
+  app.innerHTML=`<section class="screen">${topbar()}${kanaSwitch()}
   ${IN_ARTIFACT&&C.checked&&!C.on?`<div class="card" style="background:#FFF6E0;border-color:#F2D9A6"><b>ログインすると、せんせいの かだいが とどくよ</b><div class="muted" style="font-size:.85rem">いまは この たんまつ だけの れんしゅうに なっています。claude.ai に ログインして ひらきなおしてね。</div></div>`:""}
   <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
-  ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
+  ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div data-raw>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
    <button class="lesson" data-l="notes"><span class="ic" style="background:#D6ECFF">${IC.note}</span><span><h3>がくふを よもう</h3><span class="sub">${a.staffView==="grand"?"大譜表・":""}${a.notes.length}この おんぷ・${a.notesCount}もん</span><div class="bar"><i style="width:${pct(w.notes,G.notes)}%"></i></div><span class="sub">こんしゅう ${w.notes}/${G.notes}かい</span></span><span class="check ${today.notesS?"on":""}">${today.notesS?IC.check:""}</span></button>
    <button class="lesson" data-l="rhythm"><span class="ic" style="background:#FFF0CC">${IC.drum}</span><span><h3>リズムうち</h3><span class="sub">${cornersOn().length}コーナー・テンポ ${a.bpm}</span><div class="bar"><i style="width:${pct(w.rhythm,G.rhythm)}%"></i></div><span class="sub">こんしゅう ${w.rhythm}/${G.rhythm}クリア</span></span><span class="check ${today.rhythm?"on":""}">${today.rhythm?IC.check:""}</span></button>
-   <button class="lesson" data-l="songs"><span class="ic" style="background:#EFE3FF">${IC.score}</span><span><h3>きょくの れんしゅう</h3><span class="sub">${a.songs.map(s=>esc(s.title)).join("・")||"きょくが まだ ありません"}</span><div class="bar"><i style="width:${pct(w.songMin,G.songMin)}%"></i></div><span class="sub">こんしゅう ${w.songMin}/${G.songMin}ふん</span></span><span class="check ${today.songMin?"on":""}">${today.songMin?IC.check:""}</span></button>
+   <button class="lesson" data-l="songs"><span class="ic" style="background:#EFE3FF">${IC.score}</span><span><h3>きょくの れんしゅう</h3><span class="sub">${a.songs.length?`<span data-raw>${a.songs.map(s=>esc(s.title)).join("・")}</span>`:"きょくが まだ ありません"}</span><div class="bar"><i style="width:${pct(w.songMin,G.songMin)}%"></i></div><span class="sub">こんしゅう ${w.songMin}/${G.songMin}ふん</span></span><span class="check ${today.songMin?"on":""}">${today.songMin?IC.check:""}</span></button>
    ${FGon?`<button class="lesson" data-l="finger"><span class="ic" style="background:#DAF4E3">${IC.hand}</span><span><h3>ゆびばんごう</h3><span class="sub">${a.finger.stage===2?"ステップ2・みぎて / ひだりて / りょうて":"ステップ1・ゆびの ばんごうを おぼえよう"}</span><div class="bar"><i style="width:${pct(w.finger||0,GF)}%"></i></div><span class="sub">こんしゅう ${w.finger||0}/${GF}かい</span></span><span class="check ${today.finger?"on":""}">${today.finger?IC.check:""}</span></button>`:""}
   </div>
   <div class="card chest">${IC.chest}<div style="flex:1"><b>こんしゅうの たからばこ</b><div class="sub muted" style="font-size:.85rem">${FGon?4:3}つの もくひょうを ぜんぶ たっせいすると コイン30まい!</div></div>${w.claimed?`<span class="label">うけとりずみ</span>`:`<button class="btn sun small" id="claim" ${allDone?"":"disabled"}>あける</button>`}</div>
@@ -710,7 +777,7 @@ function resultScreen({title,ok,lines,streak,again,next,extra=""}){
     :`<div class="row" style="width:100%"><button class="btn ${ok?"ghost":"green"} grow" id="again">もういちど</button><button class="btn ${ok?"green":"ghost"} grow" id="home">ホームへ</button></div>`}</section>`;
   if(ok){sfx("win");confetti()}else sfx("ng");$("#again").onclick=again;$("#home").onclick=()=>go("home");if(next)$("#nextL").onclick=next.go;if(streak)setTimeout(()=>toast(`${P().streak}日れんぞく! ボーナス コイン+${streak}`),900)}
 
-function backBar(title){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1;min-width:0">${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
+function backBar(title,raw){return `<div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><h2 style="font-size:1.2rem;flex:1;min-width:0"${raw?" data-raw":""}>${esc(title)}</h2><span class="stat">${IC.coin}${P().coins}</span>${sndBtn()}</div>`}
 function bindBack(to="home"){$("#back").onclick=()=>go(to)}
 
 /* ================= FINGER NUMBERS ================= */
@@ -791,7 +858,7 @@ const HAND_TILES=[["R","右手","みぎて"],["L","左手","ひだりて"],["B",
 function renderFingerList(){const F=S.assignment.finger;
   app.innerHTML=`<section class="screen narrow">${backBar("ゆびばんごう")}<p class="prompt" style="margin:0;text-align:center;font-size:1.15rem">どの 手で れんしゅうする?</p>
    <div class="handtiles">${HAND_TILES.map(([h,k,r])=>{const n=fingerPool(h).length,done=P().fingerToday[dayKey()+"|"+h]||0;
-     return `<button class="htile" data-h="${h}" ${n?"":"disabled"}><span class="hpics">${handList(h).map(x=>handSVG(x,{nums:false})).join("")}</span><ruby class="hname">${k}<rt>${r}</rt></ruby><span class="muted" style="font-size:.8rem">${n?`${F.perSession||5}もん${done?`・きょう ${done}かい`:""}`:"まだ ないよ"}</span></button>`}).join("")}</div>
+     return `<button class="htile" data-h="${h}" ${n?"":"disabled"}><span class="hpics">${handList(h).map(x=>handSVG(x,{nums:false})).join("")}</span><span class="hname" data-raw>${kanjiMode()?k:r}</span><span class="muted" style="font-size:.8rem">${n?`${F.perSession||5}もん${done?`・きょう ${done}かい`:""}`:"まだ ないよ"}</span></button>`}).join("")}</div>
    <button class="btn ghost" id="learn">ステップ1(ゆびの ばんごう クイズ)も やる</button>
    <div class="card row" id="vbox" style="gap:8px"><label class="label" for="vsel">よみあげの こえ</label><select id="vsel" style="flex:1;min-width:0"></select><button class="btn ghost small" id="vtry">ためす</button></div></section>`;
   {const fill=()=>{const vs=jaVoices(),sel=$("#vsel");if(!sel)return;if(!vs.length){$("#vbox").hidden=true;return}$("#vbox").hidden=false;pickJaVoice();
@@ -920,7 +987,7 @@ function renderRhythmPlay(id){const r0=rhythmById(id),a=S.assignment;if(!r0)retu
 
 /* ================= SONGS ================= */
 function renderSongList(){const songs=S.assignment.songs;if(songs.length===1)return go("song",songs[0].id);
-  app.innerHTML=`<section class="screen">${backBar("きょくの れんしゅう")}<div class="rhythm-list">${songs.map(s=>`<button class="rcard" data-id="${s.id}"><span><b>${esc(s.title)}</b><div class="muted" style="font-size:.85rem">ちゅうい ${s.pins.length+s.checklist.length}こ・もくひょう ${s.goalMin}ふん</div></span></button>`).join("")||`<div class="card">せんせいが まだ きょくを とうろくしていません。</div>`}</div></section>`;
+  app.innerHTML=`<section class="screen">${backBar("きょくの れんしゅう")}<div class="rhythm-list">${songs.map(s=>`<button class="rcard" data-id="${s.id}"><span><b data-raw>${esc(s.title)}</b><div class="muted" style="font-size:.85rem">ちゅうい ${s.pins.length+s.checklist.length}こ・もくひょう ${s.goalMin}ふん</div></span></button>`).join("")||`<div class="card">せんせいが まだ きょくを とうろくしていません。</div>`}</div></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>go("song",b.dataset.id))}
 function scoreBox(song,opts={}){const memos=opts.memos||[];const H=song.h/song.w*1000;
   const pins=[...song.pins.map((p,i)=>({...p,n:i+1,own:false})),...memos.map((p,i)=>({...p,n:"M"+(i+1),own:true}))];
@@ -934,12 +1001,12 @@ function renderSong(id){const song=S.assignment.songs.find(s=>s.id===id);if(!son
   const st={sec:0,run:false,throughs:0,checked:new Set(),since:0,memoMode:false,active:null};let iv=null;
   const mp=modelPlayer(song);
   function draw(){
-  app.innerHTML=`<section class="screen">${backBar(song.title)}<div class="song-grid"><div class="col-a">
+  app.innerHTML=`<section class="screen">${backBar(song.title,1)}<div class="song-grid"><div class="col-a">
    <div class="tools"><button id="memo" class="${st.memoMode?"on":""}">${st.memoMode?"メモをかく: タップして ばしょを えらぶ":"じぶんメモを かく"}</button></div>
    ${scoreBox(song,{memos})}
    <div id="memoForm"></div><div id="mpHost"></div></div><div class="col-b">
-   <div class="card"><div class="label">がくふの ちゅうい</div><ul class="pins-list" style="margin-top:8px">${song.pins.map((p,i)=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:${p.color}">${i+1}</span><span>${esc(p.text)}</span></li>`).join("")}${memos.map(p=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:#B05CE6">M</span><span style="flex:1">${esc(p.text)}</span><button class="del" data-delmemo="${p.id}" aria-label="メモをけす">けす</button></li>`).join("")}</ul></div>
-   <div class="card"><div class="label">れんしゅうの ポイント(できたら タップ)</div><ul class="checklist" style="margin-top:8px">${song.checklist.map((c,i)=>`<li><button data-ci="${i}" class="${st.checked.has(i)?"on":""}"><span class="box">${st.checked.has(i)?IC.check:""}</span>${esc(c)}</button></li>`).join("")}</ul></div>
+   <div class="card"><div class="label">がくふの ちゅうい</div><ul class="pins-list" style="margin-top:8px">${song.pins.map((p,i)=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:${p.color}">${i+1}</span><span ${song.sample?"":"data-raw"}>${esc(p.text)}</span></li>`).join("")}${memos.map(p=>`<li data-pid="${p.id}" class="${st.active===p.id?"active":""}"><span class="num" style="background:#B05CE6">M</span><span style="flex:1">${esc(p.text)}</span><button class="del" data-delmemo="${p.id}" aria-label="メモをけす">けす</button></li>`).join("")}</ul></div>
+   <div class="card"><div class="label">れんしゅうの ポイント(できたら タップ)</div><ul class="checklist" style="margin-top:8px">${song.checklist.map((c,i)=>`<li><button data-ci="${i}" class="${st.checked.has(i)?"on":""}"><span class="box">${st.checked.has(i)?IC.check:""}</span><span ${song.sample?"":"data-raw"}>${esc(c)}</span></button></li>`).join("")}</ul></div>
    <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row" style="justify-content:space-between"><span class="label">れんしゅう タイマー(もくひょう ${song.goalMin}ふん)</span><span class="label">とおして ひけた: <b id="thr">${st.throughs}</b>かい</span></div>
     <div class="timer" id="tm">${fmt(st.sec)}</div><div class="bar sun"><i id="tb" style="width:${Math.min(100,st.sec/(song.goalMin*60)*100)}%"></i></div>
     <div class="row"><button class="btn ${st.run?"ghost":"green"} grow" id="run">${st.run?"いちじ ていし":st.sec?"つづける":"れんしゅう スタート"}</button><button class="btn sun grow" id="thru">とおして ひけた! +1</button></div>
@@ -963,7 +1030,7 @@ function renderSong(id){const song=S.assignment.songs.find(s=>s.id===id);if(!son
     $("#ebok").onclick=()=>{P().coins+=2;save();sfx("coin");m.remove();draw()}}
   function finish(){clearInterval(iv);st.run=false;mp.destroy();const ratings=song.checklist.map(()=>null);
     app.innerHTML=`<section class="screen">${backBar("ふりかえり")}<div class="card"><b>きょうは どうだった?</b><p class="muted" style="margin:4px 0 0">れんしゅう ${fmt(st.sec)}・とおして ${st.throughs}かい</p></div>
-    ${song.checklist.map((c,i)=>`<div class="card"><div>${esc(c)}</div><div class="rate" data-ri="${i}">${["できた","もうすこし","むずかしい"].map((l,j)=>`<button data-v="${j}">${l}</button>`).join("")}</div></div>`).join("")}
+    ${song.checklist.map((c,i)=>`<div class="card"><div ${song.sample?"":"data-raw"}>${esc(c)}</div><div class="rate" data-ri="${i}">${["できた","もうすこし","むずかしい"].map((l,j)=>`<button data-v="${j}">${l}</button>`).join("")}</div></div>`).join("")}
     <button class="btn green wide" id="done">ごほうびを もらう</button></section>`;bindBack("home");
     $$(".rate").forEach(r=>$$("button",r).forEach(b=>b.onclick=()=>{ratings[+r.dataset.ri]=+b.dataset.v;$$("button",r).forEach(x=>x.classList.toggle("on",x===b))}));
     $("#done").onclick=()=>{const min=Math.floor(st.sec/60),r=dayRec();let coins=Math.min(30,min)+st.checked.size*2+Math.min(10,st.throughs)+(st.sec>=song.goalMin*60?5:0);let sb=0;
