@@ -111,12 +111,13 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .bar.sun>i{background:var(--sun)}
 
 .teacher-note{display:flex;gap:12px;align-items:flex-start}
-.teacher-note .av{flex:none;width:40px;height:40px;border-radius:50%;background:var(--berry);color:#fff;display:grid;place-items:center;font-weight:800}
+.teacher-note .av{flex:none;width:40px;height:40px;border-radius:50%;background:#EFE3FF;color:#4A3B34;border:2px solid #4A3B34;display:grid;place-items:center;font-weight:800}
 
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:2px solid var(--line);display:flex;justify-content:center;gap:4px;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
 .nav button{flex:1;max-width:160px;border:2px solid transparent;background:none;border-radius:14px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;font-size:.78rem;font-weight:800;color:var(--muted)}
-.nav button svg{width:28px;height:28px}
+.nav button svg{width:30px;height:30px}
+.nav button:not(.on) svg{opacity:.85}
 .nav button.on{color:var(--primary);border-color:var(--primary);background:var(--surface-2)}
 
 /* lesson screens */
@@ -246,7 +247,7 @@ th{font-size:.78rem;color:var(--muted)}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 .chest{display:flex;align-items:center;gap:12px}
 .rcard.corner{padding:14px}
-.cn{flex:none;width:34px;height:34px;border-radius:50%;background:var(--sun-deep);color:#fff;display:grid;place-items:center;font-weight:800}
+.cn{flex:none;width:34px;height:34px;border-radius:50%;background:#FFF0CC;color:#4A3B34;border:2px solid #4A3B34;display:grid;place-items:center;font-weight:800}
 .cicon{flex:none;width:96px;background:#fff;border-radius:12px;padding:2px;display:grid;place-items:center}
 .cicon svg{width:auto;max-width:100%;height:40px}
 .cicon.orig{width:46px;height:46px;border-radius:50%;background:var(--berry);color:#fff;font-weight:800;font-size:1.1rem}
@@ -341,9 +342,9 @@ th{font-size:.78rem;color:var(--muted)}
 <body>
 <div class="app" id="app"></div>
 <nav class="nav" id="nav">
-  <button data-go="home" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>ホーム</button>
-  <button data-go="shop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>ショップ</button>
-  <button data-go="teacher"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>せんせい</button>
+  <button data-go="home" class="on"><svg viewBox="0 0 24 24"><path d="M5 11v8.4a1.6 1.6 0 0 0 1.6 1.6h10.8a1.6 1.6 0 0 0 1.6-1.6V11" fill="#FFF6E6" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M2.8 11.6 12 3.6l9.2 8" fill="#FFB8C6" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M10 21v-4.4a2 2 0 0 1 4 0V21" fill="#FFD9A8" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="16" cy="13.6" r="1.6" fill="#BFE3FF" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>ホーム</button>
+  <button data-go="shop"><svg viewBox="0 0 24 24"><path d="M9 8.4V7a3 3 0 0 1 6 0v1.4" fill="none" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M4.8 8.4h14.4l-1.1 11.2a1.6 1.6 0 0 1-1.6 1.4H7.5a1.6 1.6 0 0 1-1.6-1.4z" fill="#FFE08A" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M12 13.4c-.9-1.1-2.8 0-1.2 1.6l1.2 1.1 1.2-1.1c1.6-1.6-.3-2.7-1.2-1.6z" fill="#FFAEC0" stroke="#4A3B34" stroke-width="1"/></svg>ショップ</button>
+  <button data-go="teacher"><svg viewBox="0 0 24 24"><path d="M4.4 21c.9-3.8 3.9-5.8 7.6-5.8s6.7 2 7.6 5.8z" fill="#D8C7F5" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="9" r="4.6" fill="#fff" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="10.4" cy="9" r=".75" fill="#4A3B34"/><circle cx="13.6" cy="9" r=".75" fill="#4A3B34"/><ellipse cx="9.4" cy="10.6" rx="1" ry=".6" fill="#FFB8C6"/><ellipse cx="14.6" cy="10.6" rx="1" ry=".6" fill="#FFB8C6"/><path d="M8.6 6.4q3.4-2.8 6.8 0" fill="none" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>せんせい</button>
 </nav>
 <script>
 "use strict";
@@ -360,12 +361,12 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ================= icons ================= */
 const IC={
-  coin:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FFC83A" stroke="#E3A10B" stroke-width="2"/><path d="M10 7.5v9M10 7.5h3a2.3 2.3 0 0 1 0 4.6h-3" fill="none" stroke="#B57A00" stroke-width="2" stroke-linecap="round"/></svg>`,
-  flame:`<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3-1-4 1-7 1-9z" fill="#FF8A3D"/><path d="M12 12c1 2 3 3 3 5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3 .2 1 .8 1.5 1.5 1.5-.5-1.5 0-2.5 0-3.5z" fill="#FFD23F"/></svg>`,
-  heart:`<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#FF6457"/></svg>`,
-  heartOff:`<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="#D5E5F2"/></svg>`,
-  star:`<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" fill="#FFC83A" stroke="#E3A10B" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
-  starOff:`<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" fill="#D5E5F2"/></svg>`,
+  coin:`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.6" fill="#FFE08A" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="12" r="6.8" fill="none" stroke="#F2C35B" stroke-width="1.2"/><path d="M13.2 7.6v6.2" fill="none" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M13.2 7.6q3 .8 3.3 3.2" fill="none" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><ellipse cx="11.3" cy="14.2" rx="2.2" ry="1.7" fill="#4A3B34" transform="rotate(-20 11.3 14.2)"/><path d="M6.6 9.2a6 6 0 0 1 2.6-3" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  flame:`<svg viewBox="0 0 24 24"><path d="M12 2.6c1.2 3.6 6.2 5.6 6.2 11.4a6.2 6.2 0 0 1-12.4 0c0-3.2 2-5.1 3.1-6.1.1 1.9 1 2.9 2 2.9-.9-3.6 1-6.2 1.1-8.2z" fill="#FFB98A" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M12 12.4c1 1.8 2.8 2.7 2.8 4.6a2.8 2.8 0 0 1-5.6 0c0-1.3.9-2.2 1.4-2.7.2.9.7 1.3 1.3 1.3-.4-1.3.1-2.3.1-3.2z" fill="#FFE08A" stroke="none"/></svg>`,
+  heart:`<svg viewBox="0 0 24 24"><path d="M12 20.6s-7.8-5-7.8-10.6a4.4 4.4 0 0 1 7.8-2.8 4.4 4.4 0 0 1 7.8 2.8c0 5.6-7.8 10.6-7.8 10.6z" fill="#FFAEC0" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M7.4 8.6a2.2 2.2 0 0 1 2-1.4" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  heartOff:`<svg viewBox="0 0 24 24"><path d="M12 20.6s-7.8-5-7.8-10.6a4.4 4.4 0 0 1 7.8-2.8 4.4 4.4 0 0 1 7.8 2.8c0 5.6-7.8 10.6-7.8 10.6z" fill="#EEF2F6" stroke="#C9D3DE" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  star:`<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z" fill="#FFE08A" stroke="#4A3B34" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><path d="M9.6 9.4l.9-1.8" stroke="#fff" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+  starOff:`<svg viewBox="0 0 24 24"><path d="M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z" fill="#EEF2F6" stroke="#C9D3DE" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
   check:`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`,
   x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>`,
   back:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>`,
@@ -436,7 +437,7 @@ document.addEventListener("pointerdown",()=>ac(),{once:true,capture:true});
 let MASTER=null;
 function master(){const a=ac();if(!a)return null;if(!MASTER){MASTER=a.createGain();MASTER.gain.value=S.prefs.mute?0:1;MASTER.connect(a.destination)}return MASTER}
 function setMute(m){S.prefs.mute=m;save();if(MASTER)MASTER.gain.value=m?0:1;$$("[data-snd]").forEach(b=>{b.innerHTML=sndIcon();b.setAttribute("aria-label",m?"おとを だす":"おとを けす")})}
-const sndIcon=()=>S.prefs.mute?`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M17 9l5 6M22 9l-5 6"/></svg>`:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>`;
+const sndIcon=()=>S.prefs.mute?`<svg viewBox="0 0 24 24"><path d="M3.6 9.2h4l5-4v13.6l-5-4h-4z" fill="#E6EBF1" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M16.6 9.4l4.6 5.2M21.2 9.4l-4.6 5.2" fill="none" stroke="#E57C88" stroke-width="1.8" stroke-linecap="round"/></svg>`:`<svg viewBox="0 0 24 24"><path d="M3.6 9.2h4l5-4v13.6l-5-4h-4z" fill="#BFE3FF" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/><path d="M16 9a4.4 4.4 0 0 1 0 6M18.6 6.6a8 8 0 0 1 0 10.8" fill="none" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 const sndBtn=()=>`<button class="stat snd" data-snd aria-label="${S.prefs.mute?"おとを だす":"おとを けす"}">${sndIcon()}</button>`;
 document.addEventListener("click",e=>{const b=e.target.closest("[data-snd]");if(!b)return;setMute(!S.prefs.mute);toast(S.prefs.mute?"おとを けしました":"おとを だします")});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&AC&&AC.state!=="running")AC.resume().catch(()=>{});if(!document.hidden&&wakeWanted)wake(true)});
@@ -808,7 +809,7 @@ function starsHTML(n){return `<span class="stars">${[1,2,3].map(i=>i<=n?IC.star:
 function renderRhythmList(){const a=S.assignment,cs=cornersOn();
   app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<p class="muted" style="margin:0">コーナーを えらぼう。テンポ ${a.bpm}</p>
   <div class="rhythm-list">${cs.map((c,i)=>{const list=cornerRhythms(c.id),done=list.filter(r=>rhythmStars(r.id)>=2).length;
-    return `<button class="rcard corner" data-c="${c.id}"><span style="display:flex;gap:12px;align-items:center;min-width:0"><span class="cn">${i+1}</span><span style="min-width:0"><b>${c.name}</b><div class="muted" style="font-size:.85rem">きょう ${done}/${list.length} クリア</div></span></span>${c.icon?`<span class="cicon">${rhythmSVG(c.icon,{mini:1,unit:40})}</span>`:`<span class="cicon orig">先</span>`}</button>`}).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
+    return `<button class="rcard corner" data-c="${c.id}"><span style="display:flex;gap:12px;align-items:center;min-width:0"><span class="cn">${i+1}</span><span style="min-width:0"><b>${c.name}</b><div class="muted" style="font-size:.85rem">きょう ${done}/${list.length} クリア</div></span></span>${c.icon?`<span class="cicon">${rhythmSVG(c.icon,{mini:1,unit:40}).replace("<svg ",`<svg style="height:40px;width:${((12+beatsOf(c.icon)*40)*40/96).toFixed(1)}px" `)}</span>`:`<span class="cicon orig">先</span>`}</button>`}).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
   bindBack();$$(".rcard").forEach(b=>b.onclick=()=>{const l=cornerRhythms(b.dataset.c);if(l.length)go("rhythmPlay",l[0].id)})}
 function renderRhythmCorner(cid){const c=RHYTHM_CORNERS.find(x=>x.id===cid);if(!c)return go("rhythm");const list=cornerRhythms(cid);
   app.innerHTML=`<section class="screen narrow">${backBar(c.name)}<p class="muted" style="margin:0">${list.length}もん あるよ。うえから じゅんばんに ちょうせんしよう。</p>
