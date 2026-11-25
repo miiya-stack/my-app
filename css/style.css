@@ -3,22 +3,22 @@
   --bg: #fbf8fc;            /* 背景：ほんのりラベンダーの白 */
   --paper: #ffffff;
   --head: #f5eefb;          /* 上の帯 */
-  --ink: #3f3a4d;           /* 文字：やわらかい濃い紫グレー */
-  --muted: #857e95;
-  --faint: #b3abbf;
-  --line: #efe8f2;
-  --line-strong: #ddd2e4;
-  --rule: #d5c6ec;          /* 区切りの太線 */
+  --ink: #24202d;           /* 文字：やわらかい濃い紫グレー */
+  --muted: #554d63;
+  --faint: #6f6780;
+  --line: #e4dae9;
+  --line-strong: #c4b5cf;
+  --rule: #b3a0d8;          /* 区切りの太線 */
   --primary: #cdbdf1;       /* ボタン：ラベンダー */
   --primary-ink: #2f2a3d;
-  --primary-strong: #9b86d1;
-  --accent: #9b86d1;
-  --danger: #c9536f;
-  --sun: #d0607a;
-  --sat: #4f8cc4;
+  --primary-strong: #7d66c2;
+  --accent: #7d66c2;
+  --danger: #b3304b;
+  --sun: #b3304b;
+  --sat: #2a62a0;
   --today: #fff3d4;         /* 今日：パステルイエロー */
   --tint: 70%;              /* 予定の枠にパステル色をどれくらい塗るか */
-  --edge: 78%;              /* 縁の線はパステル色を少しだけ濃く */
+  --edge: 62%;              /* 縁の線はパステル色より濃く（見分けやすく） */
   --radius: 12px;
   color-scheme: light;
 }
@@ -28,12 +28,12 @@
     --bg: #1d1b24;
     --paper: #252230;
     --head: #221f2b;
-    --ink: #ece8f4;
-    --muted: #a59fb5;
-    --faint: #6e687c;
-    --line: #2f2b3a;
-    --line-strong: #3d3849;
-    --rule: #4a4260;
+    --ink: #f6f3fa;
+    --muted: #cdc7d9;
+    --faint: #a39cb2;
+    --line: #3b3647;
+    --line-strong: #544d63;
+    --rule: #6b5f8a;
     --primary: #b9a8e8;
     --primary-ink: #1d1b24;
     --primary-strong: #b9a8e8;
@@ -57,9 +57,9 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  letter-spacing: 0.02em;
+  font-size: 17px;
+  line-height: 1.65;
+  letter-spacing: 0.03em;
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -86,7 +86,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 }
 .topbar h1 {
   margin: 0;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
   letter-spacing: 0.12em;
 }
@@ -98,7 +98,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 99px;
   background: var(--primary);
   color: var(--primary-ink);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -116,7 +116,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-bottom: 2px solid transparent;
   background: none;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
 }
 .tabs button[aria-current="page"] {
@@ -131,7 +131,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border: 1px solid var(--line-strong);
   border-radius: 99px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   vertical-align: 2px;
 }
@@ -155,18 +155,18 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 99px;
   background: var(--paper);
   color: var(--ink);
-  font-size: 15px;
+  font-size: 17px;
   text-decoration: none;
   cursor: pointer;
 }
 .btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); font-weight: 600; }
 .btn.danger { color: var(--danger); }
-.btn.small { min-height: 34px; padding: 2px 12px; font-size: 13px; }
+.btn.small { min-height: 34px; padding: 2px 12px; font-size: 15px; }
 .btn:disabled { opacity: .5; }
 .btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
 
-.hint { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
-.none { color: var(--faint); font-size: 14px; margin: 2px 0 6px; }
+.hint { color: var(--muted); font-size: 15px; margin: 0 0 12px; }
+.none { color: var(--faint); font-size: 16px; margin: 2px 0 6px; }
 .mono { word-break: break-all; }
 .grow { flex: 1; min-width: 0; }
 
@@ -186,7 +186,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin: 40px auto;
   text-align: center;
 }
-.notice h2 { font-size: 19px; font-weight: 600; margin: 0 0 12px; }
+.notice h2 { font-size: 21px; font-weight: 600; margin: 0 0 12px; }
 .notice p { color: var(--muted); }
 .notice .btn { margin-top: 8px; }
 
@@ -199,8 +199,8 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin-bottom: 4px;
   border-bottom: 2px solid var(--rule);
 }
-.date-big { font-size: 28px; font-weight: 300; letter-spacing: 0.06em; }
-.date-wd { color: var(--muted); font-size: 15px; }
+.date-big { font-size: 30px; font-weight: 300; letter-spacing: 0.06em; }
+.date-wd { color: var(--muted); font-size: 17px; }
 
 .people {
   display: grid;
@@ -215,13 +215,13 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   display: flex;
   align-items: center;
   margin: 0 0 6px;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 600;
 }
 .person .mark { width: 9px; height: 20px; }
 .sub {
   margin: 12px 0 2px;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   letter-spacing: 0.1em;
 }
@@ -242,18 +242,18 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 }
 .lines li:last-child .line { border-bottom: 0; }
 .line:hover .what { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--faint); }
-.when { display: flex; flex-direction: column; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.45; }
+.when { display: flex; flex-direction: column; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.45; }
 .when .d { color: var(--ink); }
 .what { overflow-wrap: anywhere; }
-.with { display: block; font-size: 12px; color: var(--muted); }
-.ride { display: block; font-size: 12px; color: var(--muted); }
+.with { display: block; font-size: 14px; color: var(--muted); }
+.ride { display: block; font-size: 14px; color: var(--muted); }
 .duty {
   display: inline-block;
   margin-right: 6px;
   padding: 0 5px;
   border: 1px solid var(--ink);
   border-radius: 99px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
   vertical-align: 1px;
@@ -289,7 +289,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .wd {
   padding: 6px 0;
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--muted);
   border-bottom: 1px solid var(--line-strong);
 }
@@ -319,7 +319,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   line-height: 24px;
   border-radius: 50%;
   text-align: center;
-  font-size: 13px;
+  font-size: 15px;
   font-variant-numeric: tabular-nums;
 }
 .cell.dow0 .num { color: var(--sun); }
@@ -333,7 +333,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
   border-radius: 4px;
   background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.4;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -342,11 +342,11 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   -webkit-line-clamp: 2;
 }
 .chip .who { font-weight: 700; margin-right: 3px; }
-.more { font-size: 10px; color: var(--muted); padding-left: 3px; }
+.more { font-size: 13px; font-weight: 700; color: var(--muted); padding-left: 3px; }
 
 @media (min-width: 700px) {
   .cell { min-height: 112px; padding: 4px; }
-  .chip { font-size: 12px; padding: 1px 5px; }
+  .chip { font-size: 14px; padding: 1px 5px; }
 }
 
 /* ---------- 1日のバーチカル表示 ---------- */
@@ -355,7 +355,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   align-items: center;
   gap: 8px;
   margin: 4px 0 10px;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 400;
   letter-spacing: 0.04em;
 }
@@ -381,7 +381,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   display: flex;
   align-items: center;
   padding: 8px 8px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   border-left: 1px solid var(--line);
   white-space: nowrap;
@@ -394,7 +394,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   z-index: 2;
   background: var(--bg);
 }
-.vlabel { padding: 6px 4px; font-size: 11px; color: var(--muted); text-align: center; }
+.vlabel { padding: 6px 4px; font-size: 13px; color: var(--muted); text-align: center; }
 .vall { border-bottom: 1px solid var(--line-strong); }
 .va {
   min-height: 34px;
@@ -412,19 +412,19 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 6px;
   background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   text-align: left;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
   overflow-wrap: anywhere;
   cursor: pointer;
 }
-.vchip .t { display: block; font-size: 10px; color: var(--muted); }
+.vchip .t { display: block; font-size: 12px; color: var(--muted); }
 
 .vtimes { position: sticky; }
 .vtimes span {
   position: absolute;
   right: 6px;
   transform: translateY(-50%);
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -463,18 +463,18 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   z-index: 0;
 }
 .vev > span { position: relative; z-index: 1; display: block; padding-left: 8px; overflow-wrap: anywhere; }
-.vev .t { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
-.vev .ttl { font-size: 13px; line-height: 1.3; font-weight: 600; }
-.vev .w { font-size: 10px; color: var(--muted); }
+.vev .t { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; line-height: 1.3; }
+.vev .ttl { font-size: 15px; line-height: 1.3; font-weight: 600; }
+.vev .w { font-size: 12px; color: var(--muted); }
 .vev.short { padding-top: 1px; }
 .vev.duty::before {
   background: color-mix(in srgb, var(--c) 18%, var(--bg));
   border: 1.5px dashed color-mix(in srgb, var(--c) var(--edge), var(--ink));
   border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
 }
-.vev.duty .ttl { font-weight: 400; font-size: 11px; }
+.vev.duty .ttl { font-weight: 400; font-size: 13px; }
 .vev.duty b { font-weight: 700; }
-.vev.short .ttl { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
+.vev.short .ttl { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
 .now {
   position: absolute;
   left: 0;
@@ -491,7 +491,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin-bottom: 20px;
   border-bottom: 1px solid var(--line);
 }
-.block h2 { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+.block h2 { font-size: 19px; font-weight: 600; margin: 0 0 4px; }
 .rows { list-style: none; margin: 0 0 14px; padding: 0; border-top: 1px solid var(--line); }
 .row {
   display: flex;
@@ -526,7 +526,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .dlg-form { padding: 22px 20px 18px; display: grid; gap: 14px; }
 .dlg-form h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.06em; }
 
-.field { display: grid; gap: 4px; font-size: 13px; color: var(--muted); border: 0; padding: 0; margin: 0; min-width: 0; }
+.field { display: grid; gap: 4px; font-size: 15px; color: var(--muted); border: 0; padding: 0; margin: 0; min-width: 0; }
 .field legend { padding: 0; margin-bottom: 6px; }
 .field input, .field textarea {
   width: 100%;
@@ -537,12 +537,12 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 0;
   background: transparent;
   color: var(--ink);
-  font-size: 16px;
+  font-size: 17px;
 }
 .field textarea { border: 1px solid var(--line-strong); border-radius: 12px; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--primary-strong); }
 .times { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+.check { display: flex; align-items: center; gap: 8px; font-size: 17px; }
 .check input { width: 18px; height: 18px; accent-color: var(--primary-strong); }
 
 .picks { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -557,7 +557,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border: 1px solid var(--line-strong);
   border-radius: 99px;
   color: var(--ink);
-  font-size: 15px;
+  font-size: 17px;
 }
 .pick .mark { opacity: .55; }
 .pick:has(input:checked) { border-color: var(--primary-strong); background: color-mix(in srgb, var(--c) 45%, var(--paper)); font-weight: 600; }
@@ -580,7 +580,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .swatch input:checked + span { outline: 3px solid var(--primary-strong); }
 .swatch input:focus-visible + span { outline: 2px solid var(--accent); }
 
-.form-error { margin: 0; color: var(--danger); font-size: 14px; }
+.form-error { margin: 0; color: var(--danger); font-size: 16px; }
 .dlg-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-top: 4px; }
 
 /* ---------- 送迎・声で入力 ---------- */
@@ -593,7 +593,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 0;
   background: transparent;
   color: var(--ink);
-  font-size: 16px;
+  font-size: 17px;
 }
 .sel select:focus { outline: none; border-color: var(--primary-strong); }
 
@@ -608,7 +608,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border: 1px solid var(--line-strong);
   border-radius: 99px;
   background: var(--bg);
-  font-size: 13px;
+  font-size: 15px;
   cursor: pointer;
 }
 .mic-btn svg, .icon-mic svg { width: 20px; height: 20px; fill: currentColor; }
@@ -624,7 +624,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   padding: 8px 12px;
   border-left: 3px solid var(--line-strong);
   background: var(--bg);
-  font-size: 13px;
+  font-size: 15px;
 }
 .voice-box p { margin: 0; }
 .voice-state { color: var(--muted); }
@@ -654,7 +654,10 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   border-radius: 99px;
   background: var(--primary);
   color: var(--primary-ink);
-  font-size: 14px;
+  font-size: 16px;
   z-index: 20;
   box-shadow: 0 4px 16px rgb(80 60 120 / 18%);
 }
+
+/* 予定の枠の中は、補足の文字も本文と同じ濃さにして読みやすく */
+.vev, .vchip, .chip { --muted: var(--ink); }

@@ -319,19 +319,21 @@ function renderMonth() {
   const days = Number(monthEnd(state.month).slice(8));
   const weeks = Math.ceil((lead + days) / 7);
   const start = addDays(first, -lead);
+  // スマホは1日2件まで、広い画面は3件まで表示（残りは「+1」）
+  const maxChips = window.matchMedia("(min-width: 700px)").matches ? 3 : 2;
 
   let cells = WD.map((w, i) => `<div class="wd dow${i}">${w}</div>`).join("");
   for (let i = 0; i < weeks * 7; i++) {
     const ds = addDays(start, i);
     const evs = eventsOn(ds);
     const chips = evs
-      .slice(0, 3)
+      .slice(0, maxChips)
       .map(
         (e) =>
           `<span class="chip" style="--c:${eventColor(e)}"><span class="who">${esc(eventNames(e))}</span>${esc(e.title)}</span>`,
       )
       .join("");
-    const more = evs.length > 3 ? `<span class="more">ほか${evs.length - 3}件</span>` : "";
+    const more = evs.length > maxChips ? `<span class="more">+${evs.length - maxChips}</span>` : "";
     const out = ds.slice(0, 7) !== state.month;
     cells += `<button type="button" class="cell dow${i % 7}${out ? " out" : ""}${ds === t ? " today" : ""}"
         data-day="${ds}" aria-label="${fmtDate(ds)} 予定${evs.length}件">
@@ -350,7 +352,7 @@ function renderMonth() {
 }
 
 /* ----- 1日のバーチカル表示 ----- */
-const HOUR_PX = 56;
+const HOUR_PX = 64;
 
 // 同じ人の予定が時間で重なったら、横に並べる
 function layoutColumn(list) {
@@ -454,10 +456,10 @@ function renderDay() {
               style="top:${top}px;height:${h}px;left:calc(${lane} / ${lanes} * 100%);width:calc(100% / ${lanes})">
               <span class="ttl"><b>${e.duty.kind}</b> ${esc(e.duty.who)}</span></button>`;
           const others = e.memberIds.filter((id) => id !== m.id).map(memberById).filter(Boolean);
-          return `<button type="button" class="vev${h < 44 ? " short" : ""}" data-ev="${esc(e.id)}"
+          return `<button type="button" class="vev${h < 46 ? " short" : ""}" data-ev="${esc(e.id)}"
               style="top:${top}px;height:${h}px;left:calc(${lane} / ${lanes} * 100%);width:calc(100% / ${lanes})">
               ${
-                h < 44
+                h < 46
                   ? `<span class="ttl" title="${timeLabel(e)}">${esc(e.title)}</span>`
                   : `<span class="t">${timeLabel(e)}</span><span class="ttl">${esc(e.title)}</span>${
                       others.length ? `<span class="w">${others.map((o) => esc(o.name)).join("・")}と</span>` : ""
