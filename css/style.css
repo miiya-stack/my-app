@@ -1,38 +1,47 @@
-/* 落ち着いた、紙のような見た目 */
+/* やさしいパステル調の見た目 */
 :root {
-  --bg: #f6f4ef;
-  --paper: #fbfaf7;
-  --ink: #2c2a26;
-  --muted: #7d786f;
-  --faint: #a8a39a;
-  --line: #e2ded5;
-  --line-strong: #cfcac0;
-  --accent: #3f5a52;
-  --accent-ink: #f6f4ef;
-  --danger: #9c3d34;
-  --sun: #9c3d34;
-  --sat: #3f5f7d;
-  --today: #efeadf;
-  --tint: 70%;      /* 予定の枠にパステル色をどれくらい塗るか */
-  --edge: 78%;      /* 縁の線はパステル色を少しだけ濃く */
+  --bg: #fbf8fc;            /* 背景：ほんのりラベンダーの白 */
+  --paper: #ffffff;
+  --head: #f5eefb;          /* 上の帯 */
+  --ink: #3f3a4d;           /* 文字：やわらかい濃い紫グレー */
+  --muted: #857e95;
+  --faint: #b3abbf;
+  --line: #efe8f2;
+  --line-strong: #ddd2e4;
+  --rule: #d5c6ec;          /* 区切りの太線 */
+  --primary: #cdbdf1;       /* ボタン：ラベンダー */
+  --primary-ink: #2f2a3d;
+  --primary-strong: #9b86d1;
+  --accent: #9b86d1;
+  --danger: #c9536f;
+  --sun: #d0607a;
+  --sat: #4f8cc4;
+  --today: #fff3d4;         /* 今日：パステルイエロー */
+  --tint: 70%;              /* 予定の枠にパステル色をどれくらい塗るか */
+  --edge: 78%;              /* 縁の線はパステル色を少しだけ濃く */
+  --radius: 12px;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1917;
-    --paper: #201f1c;
-    --ink: #e8e4dc;
-    --muted: #9e988d;
-    --faint: #6f6a62;
-    --line: #2f2d29;
-    --line-strong: #3d3a35;
-    --accent: #9cb8ad;
-    --accent-ink: #1a1917;
-    --danger: #d98a80;
-    --sun: #d98a80;
-    --sat: #93acc4;
-    --today: #26241f;
+    --bg: #1d1b24;
+    --paper: #252230;
+    --head: #221f2b;
+    --ink: #ece8f4;
+    --muted: #a59fb5;
+    --faint: #6e687c;
+    --line: #2f2b3a;
+    --line-strong: #3d3849;
+    --rule: #4a4260;
+    --primary: #b9a8e8;
+    --primary-ink: #1d1b24;
+    --primary-strong: #b9a8e8;
+    --accent: #b9a8e8;
+    --danger: #f09aae;
+    --sun: #f09aae;
+    --sat: #9cc6ee;
+    --today: #2e2a22;
     --tint: 28%;
     --edge: 100%;
     color-scheme: dark;
@@ -63,7 +72,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   position: sticky;
   top: 0;
   z-index: 5;
-  background: var(--bg);
+  background: var(--head);
   border-bottom: 1px solid var(--line);
   padding-top: env(safe-area-inset-top);
 }
@@ -85,10 +94,10 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin-left: auto;
   min-height: 38px;
   padding: 4px 16px;
-  border: 1px solid var(--ink);
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--bg);
+  border: 0;
+  border-radius: 99px;
+  background: var(--primary);
+  color: var(--primary-ink);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -113,14 +122,14 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .tabs button[aria-current="page"] {
   color: var(--ink);
   font-weight: 600;
-  border-bottom-color: var(--ink);
+  border-bottom: 3px solid var(--primary-strong);
 }
 
 .tag {
   display: inline-block;
   padding: 0 7px;
   border: 1px solid var(--line-strong);
-  border-radius: 3px;
+  border-radius: 99px;
   color: var(--muted);
   font-size: 11px;
   font-weight: 600;
@@ -143,14 +152,14 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   min-height: 42px;
   padding: 6px 18px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 99px;
   background: var(--paper);
   color: var(--ink);
   font-size: 15px;
   text-decoration: none;
   cursor: pointer;
 }
-.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 600; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-ink); font-weight: 600; }
 .btn.danger { color: var(--danger); }
 .btn.small { min-height: 34px; padding: 2px 12px; font-size: 13px; }
 .btn:disabled { opacity: .5; }
@@ -166,7 +175,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   display: inline-block;
   width: 7px;
   height: 1em;
-  border-radius: 2px;
+  border-radius: 99px;
   background: var(--c);
   vertical-align: -0.12em;
   margin-right: 8px;
@@ -188,7 +197,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   gap: 12px;
   padding-bottom: 14px;
   margin-bottom: 4px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 2px solid var(--rule);
 }
 .date-big { font-size: 28px; font-weight: 300; letter-spacing: 0.06em; }
 .date-wd { color: var(--muted); font-size: 15px; }
@@ -243,7 +252,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin-right: 6px;
   padding: 0 5px;
   border: 1px solid var(--ink);
-  border-radius: 3px;
+  border-radius: 99px;
   font-size: 11px;
   font-weight: 600;
   line-height: 1.5;
@@ -274,8 +283,8 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .month {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
 }
 .wd {
   padding: 6px 0;
@@ -316,12 +325,13 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .cell.dow0 .num { color: var(--sun); }
 .cell.dow6 .num { color: var(--sat); }
 .cell.out .num, .cell.out .chips { opacity: .4; }
-.cell.today .num { background: var(--ink); color: var(--bg); font-weight: 700; }
+.cell.today .num { background: var(--primary); color: var(--primary-ink); font-weight: 700; }
 .chips { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .chip {
   display: block;
   padding: 0 3px;
   border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
+  border-radius: 4px;
   background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   font-size: 10px;
   line-height: 1.4;
@@ -351,8 +361,8 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 }
 .vwrap {
   overflow-x: auto;
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
   -webkit-overflow-scrolling: touch;
 }
 .vert { min-width: calc(46px + var(--cols) * 92px); }
@@ -399,6 +409,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   padding: 2px 6px;
   border: 0;
   border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
+  border-radius: 6px;
   background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   text-align: left;
   font-size: 12px;
@@ -447,7 +458,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   position: absolute;
   inset: 1px 1px 1px 2px;
   border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
-  border-radius: 2px;
+  border-radius: 7px;
   background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   z-index: 0;
 }
@@ -497,7 +508,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   min-height: 42px;
   padding: 6px 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 12px;
   background: var(--paper);
 }
 
@@ -507,7 +518,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   max-height: calc(100dvh - 24px);
   padding: 0;
   border: 1px solid var(--line-strong);
-  border-radius: 6px;
+  border-radius: 20px;
   background: var(--paper);
   color: var(--ink);
 }
@@ -528,11 +539,11 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   color: var(--ink);
   font-size: 16px;
 }
-.field textarea { border: 1px solid var(--line-strong); border-radius: 4px; }
-.field input:focus, .field textarea:focus { outline: none; border-color: var(--ink); }
+.field textarea { border: 1px solid var(--line-strong); border-radius: 12px; }
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--primary-strong); }
 .times { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .check { display: flex; align-items: center; gap: 8px; font-size: 15px; }
-.check input { width: 18px; height: 18px; accent-color: var(--ink); }
+.check input { width: 18px; height: 18px; accent-color: var(--primary-strong); }
 
 .picks { display: flex; flex-wrap: wrap; gap: 8px; }
 .pick { position: relative; cursor: pointer; }
@@ -544,12 +555,12 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   min-height: 38px;
   padding: 4px 14px 4px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 99px;
   color: var(--ink);
   font-size: 15px;
 }
 .pick .mark { opacity: .55; }
-.pick:has(input:checked) { border-color: var(--ink); background: var(--bg); font-weight: 600; }
+.pick:has(input:checked) { border-color: var(--primary-strong); background: color-mix(in srgb, var(--c) 45%, var(--paper)); font-weight: 600; }
 .pick:has(input:checked) .mark { opacity: 1; }
 .pick:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -560,13 +571,13 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   display: block;
   width: 30px;
   height: 30px;
-  border-radius: 3px;
+  border-radius: 50%;
   background: var(--c);
   cursor: pointer;
   outline: 1px solid transparent;
   outline-offset: 3px;
 }
-.swatch input:checked + span { outline: 2px solid var(--ink); }
+.swatch input:checked + span { outline: 3px solid var(--primary-strong); }
 .swatch input:focus-visible + span { outline: 2px solid var(--accent); }
 
 .form-error { margin: 0; color: var(--danger); font-size: 14px; }
@@ -584,7 +595,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   color: var(--ink);
   font-size: 16px;
 }
-.sel select:focus { outline: none; border-color: var(--ink); }
+.sel select:focus { outline: none; border-color: var(--primary-strong); }
 
 .dlg-head { display: flex; align-items: center; gap: 8px; }
 .mic-btn {
@@ -625,7 +636,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   width: 38px;
   height: 38px;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
+  border-radius: 50%;
   background: var(--paper);
   color: var(--ink);
   cursor: pointer;
@@ -640,9 +651,10 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   transform: translateX(-50%);
   max-width: calc(100vw - 32px);
   padding: 9px 18px;
-  border-radius: 4px;
-  background: var(--ink);
-  color: var(--bg);
+  border-radius: 99px;
+  background: var(--primary);
+  color: var(--primary-ink);
   font-size: 14px;
   z-index: 20;
+  box-shadow: 0 4px 16px rgb(80 60 120 / 18%);
 }

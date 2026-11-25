@@ -3,7 +3,7 @@
   "short_name": "家族の予定表",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#f6f4ef",
+  "background_color": "#fbf8fc",
+  "theme_color": "#f5eefb",
   "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
 }
