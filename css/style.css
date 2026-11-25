@@ -13,6 +13,8 @@
   --sun: #9c3d34;
   --sat: #3f5f7d;
   --today: #efeadf;
+  --tint: 70%;      /* 予定の枠にパステル色をどれくらい塗るか */
+  --edge: 78%;      /* 縁の線はパステル色を少しだけ濃く */
   color-scheme: light;
 }
 
@@ -31,6 +33,8 @@
     --sun: #d98a80;
     --sat: #93acc4;
     --today: #26241f;
+    --tint: 28%;
+    --edge: 100%;
     color-scheme: dark;
   }
 }
@@ -160,9 +164,9 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .mark {
   flex: none;
   display: inline-block;
-  width: 4px;
+  width: 7px;
   height: 1em;
-  border-radius: 1px;
+  border-radius: 2px;
   background: var(--c);
   vertical-align: -0.12em;
   margin-right: 8px;
@@ -205,7 +209,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   font-size: 17px;
   font-weight: 600;
 }
-.person .mark { width: 5px; height: 18px; }
+.person .mark { width: 9px; height: 20px; }
 .sub {
   margin: 12px 0 2px;
   font-size: 12px;
@@ -317,8 +321,8 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .chip {
   display: block;
   padding: 0 3px;
-  border-left: 3px solid var(--c);
-  background: color-mix(in srgb, var(--c) 13%, transparent);
+  border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
+  background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   font-size: 10px;
   line-height: 1.4;
   overflow: hidden;
@@ -327,7 +331,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
 }
-.chip .who { color: var(--c); font-weight: 700; margin-right: 3px; }
+.chip .who { font-weight: 700; margin-right: 3px; }
 .more { font-size: 10px; color: var(--muted); padding-left: 3px; }
 
 @media (min-width: 700px) {
@@ -394,8 +398,8 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   margin-bottom: 2px;
   padding: 2px 6px;
   border: 0;
-  border-left: 3px solid var(--c);
-  background: color-mix(in srgb, var(--c) 15%, var(--bg));
+  border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
+  background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   text-align: left;
   font-size: 12px;
   line-height: 1.4;
@@ -442,9 +446,9 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   content: "";
   position: absolute;
   inset: 1px 1px 1px 2px;
-  border-left: 3px solid var(--c);
+  border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
   border-radius: 2px;
-  background: color-mix(in srgb, var(--c) 16%, var(--bg));
+  background: color-mix(in srgb, var(--c) var(--tint), var(--bg));
   z-index: 0;
 }
 .vev > span { position: relative; z-index: 1; display: block; padding-left: 8px; overflow-wrap: anywhere; }
@@ -452,7 +456,11 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
 .vev .ttl { font-size: 13px; line-height: 1.3; font-weight: 600; }
 .vev .w { font-size: 10px; color: var(--muted); }
 .vev.short { padding-top: 1px; }
-.vev.duty::before { background: transparent; border: 1px dashed var(--c); border-left: 3px solid var(--c); }
+.vev.duty::before {
+  background: color-mix(in srgb, var(--c) 18%, var(--bg));
+  border: 1.5px dashed color-mix(in srgb, var(--c) var(--edge), var(--ink));
+  border-left: 3px solid color-mix(in srgb, var(--c) var(--edge), var(--ink));
+}
 .vev.duty .ttl { font-weight: 400; font-size: 11px; }
 .vev.duty b { font-weight: 700; }
 .vev.short .ttl { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; overflow-wrap: normal; }
@@ -540,7 +548,7 @@ button, input, textarea { font: inherit; color: inherit; letter-spacing: inherit
   color: var(--ink);
   font-size: 15px;
 }
-.pick .mark { opacity: .35; }
+.pick .mark { opacity: .55; }
 .pick:has(input:checked) { border-color: var(--ink); background: var(--bg); font-weight: 600; }
 .pick:has(input:checked) .mark { opacity: 1; }
 .pick:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }

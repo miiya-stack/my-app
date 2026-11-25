@@ -3,8 +3,8 @@ import { createLocalStore } from "./store-local.js";
 import { listen, parseSpeech, voiceSupported } from "./voice.js";
 
 /* ---------- 便利な関数 ---------- */
-// 落ち着いた色（家族ごとの目印に使う）
-const COLORS = ["#a3624f", "#4f6d87", "#6f7f4d", "#86668f", "#a8843d", "#4d837b", "#8f5b6c", "#6b6862"];
+// やさしいパステルカラー（家族ごとの目印に使う）
+const COLORS = ["#f4a7b9", "#9fd0ef", "#a8dcb9", "#c7b3e5", "#f6dd8b", "#f8c09a", "#9edbd6", "#d3c8bb"];
 const WD = ["日", "月", "火", "水", "木", "金", "土"];
 const UPCOMING_DAYS = 7;
 
@@ -303,7 +303,7 @@ function renderHome() {
     <div class="people">${people}</div>`);
 }
 
-const eventColor = (e) => (e.memberIds.map(memberById).find(Boolean) || { color: "#8a857c" }).color;
+const eventColor = (e) => (e.memberIds.map(memberById).find(Boolean) || { color: "#d3c8bb" }).color;
 const eventNames = (e) => {
   const names = e.memberIds.map(memberById).filter(Boolean).map((m) => m.name);
   return names.length > 2 ? `${names[0]}ほか` : names.join("・");
