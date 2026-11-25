@@ -1,0 +1,149 @@
+<title>メロのピアノ 先生向けガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<style>
+/* Layout: one readable column; numbered steps only where the order matters. Same palette as the app. */
+:root{
+  --bg:#EEF8FF; --surface:#FFFFFF; --ink:#21304A; --muted:#5E6E86; --line:#D5E5F2; --brown:#4A3B34;
+  --primary:#2F9BF0; --primary-deep:#1A76C8; --green:#3FBF73; --green-deep:#2A9958; --soft:#F5FAFE; --warn:#FFF6E0; --warn-line:#F2D9A6;
+  --f:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0F1A2A;--surface:#182739;--ink:#EAF2FB;--muted:#9DB0C7;--line:#2C4260;--soft:#1E3045;--warn:#3A3220;--warn-line:#6B5A30;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1A2A;--surface:#182739;--ink:#EAF2FB;--muted:#9DB0C7;--line:#2C4260;--soft:#1E3045;--warn:#3A3220;--warn-line:#6B5A30;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-weight:500;line-height:1.75;font-size:16px}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 56px;display:flex;flex-direction:column;gap:22px}
+h1,h2,h3{margin:0;line-height:1.35;text-wrap:balance;font-weight:800}
+h1{font-size:1.7rem}
+h2{font-size:1.25rem;display:flex;align-items:center;gap:10px}
+h3{font-size:1.02rem}
+p{margin:0}
+.hero{border-radius:24px;overflow:hidden;border:2px solid var(--line);background:#fff}
+.hero img{display:block;width:100%;height:auto}
+.lead{color:var(--muted)}
+section{background:var(--surface);border:2px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.tag{font-size:.78rem;letter-spacing:.08em;color:var(--primary);font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.feat{background:var(--soft);border-radius:14px;padding:12px 14px}
+.feat b{display:block}
+.feat span{font-size:.9rem;color:var(--muted)}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;counter-reset:s}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+ol.steps>li::before{content:counter(s);width:34px;height:34px;border-radius:50%;background:#FFF0CC;border:2px solid var(--brown);color:var(--brown);display:grid;place-items:center;font-weight:800}
+ol.steps>li>div{min-width:0;display:flex;flex-direction:column;gap:8px}
+.btn{font:inherit;border:0;border-radius:14px;padding:12px 18px;font-weight:800;color:#fff;background:var(--primary);box-shadow:0 4px 0 var(--primary-deep);cursor:pointer;align-self:flex-start}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--primary-deep)}
+.btn.green{background:var(--green);box-shadow:0 4px 0 var(--green-deep)}
+.btn:disabled{background:var(--line);color:var(--muted);box-shadow:none;cursor:default}
+.btn:focus-visible{outline:3px solid var(--primary);outline-offset:3px}
+textarea{width:100%;min-height:150px;font:inherit;font-size:.82rem;line-height:1.6;color:var(--ink);background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px;resize:vertical}
+.note{background:var(--warn);border:2px solid var(--warn-line);border-radius:14px;padding:12px 14px;font-size:.92rem}
+.small{font-size:.88rem;color:var(--muted)}
+.status{font-size:.88rem;font-weight:700;min-height:1.4em}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-size:.8rem;white-space:nowrap}
+.tw{overflow-x:auto}
+details{background:var(--soft);border-radius:12px;padding:10px 14px}
+details summary{font-weight:800;cursor:pointer}
+details p{margin-top:6px;font-size:.93rem}
+code{font-size:.88em;background:var(--soft);padding:1px 5px;border-radius:6px}
+@media (prefers-reduced-motion: reduce){.btn{transition:none}}
+</style>
+
+<div class="wrap">
+  <div class="hero"><img src="thumb.png" alt="メロのピアノ。めがねをかけた白いマスコットと、4つの練習の名前" width="1200" height="630"></div>
+  <div>
+    <h1>メロのピアノ 先生向けガイド</h1>
+    <p class="lead">先生が課題を出し、子どもが毎日の練習を楽しく続けるためのアプリです。このページの手順で、<b>先生ご自身専用のアプリ</b>を作って使えます。</p>
+  </div>
+
+  <section aria-labelledby="h-what">
+    <div class="tag">できること</div>
+    <h2 id="h-what">4つの練習と、続けたくなるしかけ</h2>
+    <div class="grid">
+      <div class="feat"><b>がくふを よもう</b><span>先生が選んだ音符をドレミで答える。ト音記号 → ヘ音記号 → 大譜表とステップアップ。</span></div>
+      <div class="feat"><b>リズムうち</b><span>「4分と2分」「8分と4分」「8分・4分・2分」「休符」の各5問と、先生オリジナル。</span></div>
+      <div class="feat"><b>ゆびばんごう</b><span>手の絵で指番号を覚えるクイズと、光る指を見て机の上で動かす練習。</span></div>
+      <div class="feat"><b>きょくの れんしゅう</b><span>楽譜の写真に注意を書きこみ、先生のおてほん演奏をゆっくり・区間くり返しで聞ける。</span></div>
+    </div>
+    <p>コイン・連続日数・週の宝箱、練習しないと赤くなって怒るマスコット「メロ」で、子どものやる気を支えます。先生が変えた課題は<b>生徒の端末に自動で届き</b>、生徒の練習記録は先生の画面に届きます。生徒ごとに違う課題も出せます。</p>
+  </section>
+
+  <section aria-labelledby="h-make">
+    <div class="tag">はじめに 1回だけ</div>
+    <h2 id="h-make">自分専用のアプリを作る</h2>
+    <p class="small">必要なもの: claude.ai のアカウント(Claude Code が使えるもの)。所要時間は5分ほどです。</p>
+    <ol class="steps">
+      <li><div><h3>アプリのファイルを保存する</h3>
+        <button class="btn" id="dl" type="button">アプリのファイル(melo-piano.html)を保存</button>
+        <div class="status" id="dlStatus" aria-live="polite"></div></div></li>
+      <li><div><h3>Claude Code を開いて、ファイルと文を送る</h3>
+        <p><b>claude.ai/code</b> で新しいセッションを開き、保存したファイルを添付して、下の文を貼りつけて送信します。</p>
+        <textarea id="prompt" readonly aria-label="Claude に送る文">添付した「melo-piano.html」は、子ども向けピアノ練習アプリです。中身は変えずに、私専用のアプリとしてアーティファクトで公開してください。
+公開するときの capabilities は、次のとおりにしてください。
+{"db":{"rules":[{"path":"","read":"view","write":"admin"},{"path":"class","read":"view","write":"admin"},{"path":"progress","read":"admin","write":"admin"},{"path":"progress/{self}","read":"interact","write":"interact"}]},"user":{"scopes":["profile"]},"assets":{}}
+icon は music にしてください。公開できたら、リンクを教えてください。</textarea>
+        <button class="btn green" id="copy" type="button">この文をコピー</button>
+        <div class="status" id="cpStatus" aria-live="polite"></div></div></li>
+      <li><div><h3>できたリンクを開いて、課題を作る</h3>
+        <p>Claude から届いたリンクを開き、下の「せんせい」から、音符・リズム・指番号・曲・先生のひとことを設定します。楽譜の写真やおてほんの録音もここで登録します。</p></div></li>
+    </ol>
+    <div class="note">このアプリは、作った先生だけのものになります。ほかの先生の生徒や記録とはまざりません。直したいところや足したい機能は、同じように Claude に頼めば変えられます。</div>
+  </section>
+
+  <section aria-labelledby="h-share">
+    <div class="tag">生徒に渡す</div>
+    <h2 id="h-share">生徒・保護者を招待する</h2>
+    <ol class="steps">
+      <li><div><p>アプリのページ右上の<b>「共有」</b>から、生徒(保護者)のメールアドレスで招待します。権限は<b>「コントリビューター」</b>(選べない場合は閲覧者)にします。<b>「編集者」にはしない</b>でください(課題を変えられてしまいます)。</p></div></li>
+      <li><div><p>「リンクをコピー」でリンクをコピーし、LINE やメールで送ります。</p></div></li>
+      <li><div><p>生徒は、招待されたアカウントで <b>claude.ai にログイン</b>してから開きます。ログインしていないと課題が届かず、「せんせい」ボタンも出ません。</p></div></li>
+    </ol>
+    <h3>生徒の保存のしかた(ホーム画面に置く)</h3>
+    <div class="tw"><table>
+      <tr><th>端末</th><th>やり方</th></tr>
+      <tr><td>Android(Chrome)</td><td>右上の「︙」→「ホーム画面に追加」</td></tr>
+      <tr><td>iPhone・iPad(Safari)</td><td>共有ボタン(□に↑)→「ホーム画面に追加」</td></tr>
+      <tr><td>パソコン</td><td>ブックマークに保存(Edge なら「︙」→「アプリ」→「このサイトをアプリとしてインストール」)</td></tr>
+    </table></div>
+    <div class="note">最初は<b>1家族だけ招待して試す</b>と安心です。生徒が1回練習したあと、先生の「せんせい」→「記録」にその子の名前が出れば、記録も届いています。</div>
+  </section>
+
+  <section aria-labelledby="h-faq">
+    <div class="tag">よくある質問</div>
+    <h2 id="h-faq">気をつけること</h2>
+    <details><summary>生徒にも claude.ai のアカウントが必要ですか?</summary><p>はい。課題を受け取り、記録を先生に届けるにはログインが必要です。ログインしないで開いた場合は、その端末だけで練習する形になります。</p></details>
+    <details><summary>生徒ごとに違う課題を出せますか?</summary><p>できます。生徒が一度アプリを開いて練習すると、「せんせい」の上に名前が出ます。名前を選んで「専用の課題を つくる」を押してください。</p></details>
+    <details><summary>記録が先生に届きません。</summary><p>アカウントの種類によっては、外部の人を「閲覧者」でしか招待できないことがあります。その場合でも課題は届きますが、記録は生徒の端末にだけ残ります。</p></details>
+    <details><summary>マナーモードのときは音が出ませんか?</summary><p>iPhone・iPad は消音スイッチで音が止まります。Android やパソコンは、アプリ右上のスピーカーのボタンで音を消せます。</p></details>
+    <details><summary>Claude Code を使わずに試すだけはできますか?</summary><p>できます。保存した melo-piano.html をパソコンやタブレットのブラウザで直接開くと、その端末だけで動きます(自動の受け渡しはなし)。課題は「せんせい」→「課題・設定」のファイル保存・読みこみで生徒の端末に渡せます。</p></details>
+  </section>
+</div>
+
+<script>
+(function(){
+  // save the app file (viewer asks for confirmation)
+  const dlBtn=document.getElementById("dl"),dlSt=document.getElementById("dlStatus");
+  let dl=null;
+  if(window.claude&&typeof window.claude.use==="function"){
+    window.claude.use("downloads").then(d=>{dl=d;if(!d){dlBtn.disabled=true;dlSt.textContent="この画面ではファイルを保存できません。このガイドを送ってくれた先生に、ファイルをもらってください。"}}).catch(()=>{});
+  }
+  dlBtn.addEventListener("click",async()=>{
+    if(!dl){dlSt.textContent="保存の準備中です。少し待ってから、もう一度押してください。";return}
+    dlSt.textContent="ファイルを準備しています…";
+    try{const r=await fetch("melo-piano.html");if(!r.ok)throw new Error("fetch");const t=await r.text();
+      const res=await dl.save({filename:"melo-piano.html",data:t});dlSt.textContent=res&&res.status==="delivered"?"送り先に届けました。":"保存しました。";}
+    catch(e){dlSt.textContent=e&&e.code==="unavailable"?"この画面ではファイルを保存できません。":"保存をやめたか、うまくいきませんでした。もう一度押してください。"}
+  });
+  // copy the message for Claude
+  const cp=document.getElementById("copy"),cpSt=document.getElementById("cpStatus"),ta=document.getElementById("prompt");
+  cp.addEventListener("click",()=>{
+    const done=()=>{cpSt.textContent="コピーしました。Claude のチャット欄に貼りつけてください。"};
+    try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.focus();ta.select();cpSt.textContent="文を選んだので、長押しまたは Ctrl+C でコピーしてください。"})}
+    catch(e){ta.focus();ta.select();cpSt.textContent="文を選んだので、長押しまたは Ctrl+C でコピーしてください。"}
+  });
+})();
+</script>
