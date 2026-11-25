@@ -588,9 +588,10 @@ function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=e
   if(eq.head==="headphones")g+=`<path d="M34 120 C34 40 166 40 166 120" fill="none" stroke="#8C9BB5" stroke-width="7"/><rect x="20" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><rect x="160" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/>`;
   if(eq.head==="cap")g+=`<path d="M52 82 C58 40 142 40 148 82 Z" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><path d="M122 78 q36 0 48 9 q-28 5 -52 1z" fill="#7DB6E6" stroke="${ln}" stroke-width="2.5"/>`;
   if(eq.head==="crown")g+=`<path d="M68 74 L73 42 L87 58 L100 36 L113 58 L127 42 L132 74 Z" fill="#FFE08A" stroke="${ln}" stroke-width="2.5"/><circle cx="100" cy="62" r="4" fill="#FF9AA8"/>`;
-  // eighth note held in front of the tummy; the right arm reaches across to hold the stem
-  g+=`<path d="M109.5 168 V141" fill="none" stroke="${ln}" stroke-width="3"/><path d="M109.5 141 c1.5 6 11 9 12 19 c-.6 1.6 -1.6 1.6 -2 0 c-.6 -6 -5.5 -9 -10 -11 z" fill="${ln}" stroke="${ln}" stroke-width="1.6"/><ellipse cx="100" cy="170" rx="10.5" ry="7.8" transform="rotate(-20 100 170)" fill="${ln}"/>`;
-  g+=`<ellipse cx="113" cy="166" rx="8" ry="7" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
+  // eighth note held in the right hand, in front of the body
+  g+=`<path d="M185 164 V118" fill="none" stroke="${ln}" stroke-width="3"/><path d="M185 118 c1.4 5.5 10 8 11 17.5 c-.6 1.5 -1.5 1.5 -1.9 0 c-.6 -5.5 -5 -8 -9.1 -10 z" fill="${ln}" stroke="${ln}" stroke-width="1.6"/><ellipse cx="176.5" cy="165" rx="9.5" ry="7.2" transform="rotate(-20 176.5 165)" fill="${ln}"/>`;
+  // right hand at its usual place, reaching a little out to grip the stem
+  g+=`<path d="M167 134 q19 -1 23 12 q-1 9 -21 4" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
   if(eq.head==="ribbon")g+=`<path d="M140 68 l-18 -11 v22z M140 68 l18 -11 v22z" fill="#FFC2D6" stroke="${ln}" stroke-width="2.5"/><circle cx="140" cy="68" r="5" fill="#FF9DBB" stroke="${ln}" stroke-width="2"/>`;
   if(eq.head==="flower")g+=`<g transform="translate(62 72)">${[0,72,144,216,288].map(a=>`<circle cx="${(Math.cos(a*Math.PI/180)*8).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*8).toFixed(1)}" r="6" fill="#fff" stroke="#E9A3BB" stroke-width="2"/>`).join("")}<circle r="5" fill="#FFE08A"/></g>`;
   // cheeks with little ／／ marks
