@@ -8,7 +8,7 @@
   const onScroll = () => {
     const y = window.scrollY;
     header.classList.toggle('is-scrolled', y > 40);
-    totop.classList.toggle('is-show', y > 600);
+    if (totop) totop.classList.toggle('is-show', y > 600);
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();

@@ -7,4 +7,6 @@ Redesigned static homepage for 「ぴあの、りとみっく dolce cantabile」
 - `js/main.js` — header, mobile menu, scroll-reveal
 - `assets/img/` — photos taken from the current site, resized
 
+Also: `takebayashi/` — redesign of たけばやし音楽教室 (https://takebayashipiano.com/).
+
 Open `index.html` in a browser to preview. No build step.
