@@ -496,9 +496,11 @@ function noiseSrc(a,type,freq,q){const n=a.createBufferSource();n.buffer=noiseBu
   return{connect:x=>f.connect(x),start:t=>n.start(t,Math.random()*.5),stop:t=>n.stop(t)}}
 function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime,out=dest||master(),k=drumKind(),long=len>.3;
   if(k==="woodblock"){skin(a,t,1050,880,.02,.75,.07,out);noiseHit(a,t,{type:"bandpass",freq:950,q:8,vol:3.3,decay:.06,dest:out});noiseHit(a,t,{type:"bandpass",freq:2400,q:6,vol:1.2,decay:.02,dest:out})}
-  else if(k==="triangle"){const ring=.7;[[1210,.32],[2950,.2],[4520,.14],[6230,.1]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=f;
-      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.003);g.gain.exponentialRampToValueAtTime(0.0001,t+ring);o.connect(g);g.connect(out);o.start(t);o.stop(t+ring+.05)});
-    noiseHit(a,t,{type:"highpass",freq:6000,q:.7,vol:.25,decay:.015,dest:out})}
+  else if(k==="triangle"){
+    // high, clear, shimmering: only high partials (no low "cowbell" body), close pairs beat slowly, long natural ring
+    [[3150,.17,2.2],[3156,.12,2.2],[4710,.13,1.9],[4718,.09,1.9],[6430,.1,1.6],[8260,.075,1.3],[10150,.05,1.0]].forEach(([f,v,d])=>{const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g);g.connect(out);o.start(t);o.stop(t+d+.05)});
+    noiseHit(a,t,{type:"highpass",freq:9000,q:.7,vol:.18,decay:.012,dest:out})}
   else{skin(a,t,200,150,.05,.8,.75,out);skin(a,t,300,225,.05,.25,.4,out);noiseHit(a,t,{type:"bandpass",freq:900,q:1,vol:.22,decay:.03,dest:out})}}
 /* soft chime: one sine, gentle attack and decay */
 function chime(freq,when,dur=.35,vol=.16){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=freq;
