@@ -765,7 +765,7 @@ function renderFingerList(){const F=S.assignment.finger;
 function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(t=>t[0]===hand))return go("fingerList");
   const probs=makeSession(hand);if(!probs.length)return go("fingerList");
   const hands=handList(hand);let qi=0,steps=[],speed=1,busy=false,timers=[];
-  const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false;
+  const count=()=>S.prefs.fCount!=null?S.prefs.fCount:F.countIn,voice=()=>S.prefs.fVoice!==false,cont=()=>!!S.prefs.fCont;
   app.innerHTML=`<section class="screen narrow"><div class="lesson-top"><button class="x" id="back" aria-label="もどる">${IC.back}</button><div class="bar"><i id="fbar" style="width:0%"></i></div>${sndBtn()}</div>
    <div class="fcount" id="fq" style="text-align:center"></div>
    <div class="fseq" id="fs"></div>
@@ -773,24 +773,29 @@ function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(
    <div id="fh" class="play-hands"></div>
    <div id="fbtns"></div>
    <div class="row" style="justify-content:center"><div class="seg" role="group" aria-label="はやさ"><button data-sp="0.7">ゆっくり</button><button data-sp="1" class="on">ふつう</button></div>
-    <button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div></section>`;
+    <div class="seg" role="group" aria-label="すすみかた"><button data-cont="0" class="${cont()?"":"on"}">1もんずつ</button><button data-cont="1" class="${cont()?"on":""}">つづけてやる</button></div><button class="bt ${count()?"on":""}" id="cnt">カウント ${count()?"あり":"なし"}</button><button class="bt ${voice()?"on":""}" id="voi">よみあげ ${voice()?"オン":"オフ"}</button></div></section>`;
   $("#back").onclick=()=>go("fingerList");const ci=$("#ci");
   const drawCard=i=>{$("#fs").innerHTML=`<div class="fgroup big">${[...probs[qi]].map((c,j)=>`<span class="fn ${j===i?"on":""} ${i>=0&&j<i?"done":""}">${c}</span>`).join("")}</div>`};
   const show=i=>{drawCard(i);const f=steps[i];$("#fh").innerHTML=handsHTML(hands,{hl:f});ci.innerHTML=f?`<span class="fbig">${f}</span>`:"&nbsp;"};
   function btns(mode){const h=$("#fbtns");
     if(mode==="start")h.innerHTML=`<button class="btn green wide" id="go">スタート</button>`;
-    else if(mode==="busy")h.innerHTML=`<button class="btn wide" disabled>れんしゅう ちゅう…</button>`;
+    else if(mode==="busy")h.innerHTML=cont()?`<button class="btn ghost wide" id="stop">とめる</button>`:`<button class="btn wide" disabled>れんしゅう ちゅう…</button>`;
     else h.innerHTML=`<div class="row"><button class="btn ghost grow" id="again">もういちど</button><button class="btn green grow" id="next">${qi<probs.length-1?"つぎへ":"おわる"}</button></div>`;
-    const g=$("#go");if(g)g.onclick=play;const a=$("#again");if(a)a.onclick=play;const n=$("#next");if(n)n.onclick=()=>{if(qi<probs.length-1){qi++;setQ()}else finish()}}
-  function setQ(){steps=[...probs[qi]].map(Number);$("#fq").textContent=`もんだい ${qi+1} / ${probs.length}`;$("#fbar").style.width=(qi/probs.length*100)+"%";
-    drawCard(-1);$("#fh").innerHTML=handsHTML(hands,{});ci.textContent="スタートを おしてね";btns("start")}
-  function play(){if(busy)return;const A=ac();if(!A)return toast("このブラウザでは うごきません");busy=true;btns("busy");drawCard(-1);
+    const g=$("#go");if(g)g.onclick=()=>play(true);const a=$("#again");if(a)a.onclick=()=>play(true);const st=$("#stop");if(st)st.onclick=stopRun;const n=$("#next");if(n)n.onclick=()=>{if(qi<probs.length-1){qi++;setQ()}else finish()}}
+  function setQ(quiet){steps=[...probs[qi]].map(Number);$("#fq").textContent=`もんだい ${qi+1} / ${probs.length}`;$("#fbar").style.width=(qi/probs.length*100)+"%";
+    drawCard(-1);$("#fh").innerHTML=handsHTML(hands,{});if(quiet)return;ci.textContent="スタートを おしてね";btns("start")}
+  // first=true: the run starts here (count-in or "はじめ!"); in continuous mode later cards follow after a one-beat gap
+  function play(first){if(busy)return;const A=ac();if(!A)return toast("このブラウザでは うごきません");busy=true;btns("busy");drawCard(-1);
     const bd=60/(F.bpm*speed),t0=A.currentTime+.4;let start;
-    if(count()){for(let c=0;c<4;c++){click(t0+c*bd,c===0);timers.push(setTimeout(()=>{ci.textContent=String(c+1)},(t0+c*bd-A.currentTime)*1000))}start=t0+4*bd}
+    if(!first){ci.textContent="つぎ!";start=t0+bd*.6}
+    else if(count()){for(let c=0;c<4;c++){click(t0+c*bd,c===0);timers.push(setTimeout(()=>{ci.textContent=String(c+1)},(t0+c*bd-A.currentTime)*1000))}start=t0+4*bd}
     else{ci.textContent="はじめ!";if(voice())sayJa("はじめ!");start=t0+bd*1.3}
     steps.forEach((f,i)=>{const t=start+i*bd;click(t,false); // soft tick only, no pitches
       timers.push(setTimeout(()=>show(i),(t-A.currentTime)*1000));if(voice())sayOnBeat(FREAD[f],t,timers)});
-    timers.push(setTimeout(()=>{busy=false;show(steps.length);ci.textContent="できたかな?";$("#fh").innerHTML=handsHTML(hands,{});btns("after")},(start+steps.length*bd-A.currentTime)*1000+250))}
+    timers.push(setTimeout(()=>{busy=false;show(steps.length);$("#fh").innerHTML=handsHTML(hands,{});
+      if(cont()){if(qi<probs.length-1){qi++;setQ(true);play(false)}else finish();return}
+      ci.textContent="できたかな?";btns("after")},(start+steps.length*bd-A.currentTime)*1000+250))}
+  function stopRun(){timers.forEach(clearTimeout);timers=[];try{speechSynthesis.cancel()}catch(e){}busy=false;drawCard(-1);$("#fh").innerHTML=handsHTML(hands,{});ci.textContent="とめたよ";btns("after")}
   function finish(){$("#fbar").style.width="100%";["#fs","#fh"].forEach(x=>$(x).innerHTML="");ci.textContent="";$("#fq").textContent="";
     $("#fbtns").innerHTML=`<div class="card" style="display:flex;flex-direction:column;gap:8px;text-align:center"><b>${probs.length}もん おわったよ! うまく うごかせた?</b><div class="rate">${["できた","もうすこし","むずかしい"].map((l,j)=>`<button data-v="${j}">${l}</button>`).join("")}</div></div>`;
     $$("#fbtns [data-v]").forEach(b=>b.onclick=()=>{const v=+b.dataset.v,key=dayKey()+"|"+hand,n=P().fingerToday[key]||0;P().fingerToday[key]=n+1;
@@ -799,6 +804,7 @@ function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(
       resultScreen({title:["すごい! よく できたね","いいね! その ちょうし","ゆっくりで だいじょうぶ"][v],ok:true,lines:[["もんだい",`${probs.length}もん`],["コイン",`+${coins}`]],streak:sb,
         again:()=>go("fingerPlay",hand),next:{label:"ほかの 手を えらぶ",go:()=>go("fingerList")}})})}
   $$("[data-sp]").forEach(b=>b.onclick=()=>{if(busy)return;speed=+b.dataset.sp;$$("[data-sp]").forEach(x=>x.classList.toggle("on",x===b))});
+  $$("[data-cont]").forEach(b=>b.onclick=()=>{if(busy)return;S.prefs.fCont=b.dataset.cont==="1";save();$$("[data-cont]").forEach(x=>x.classList.toggle("on",x===b))});
   $("#cnt").onclick=e=>{S.prefs.fCount=!count();save();e.target.classList.toggle("on",count());e.target.textContent=`カウント ${count()?"あり":"なし"}`};
   $("#voi").onclick=e=>{S.prefs.fVoice=!voice();save();e.target.classList.toggle("on",voice());e.target.textContent=`よみあげ ${voice()?"オン":"オフ"}`;if(!voice())try{speechSynthesis.cancel()}catch(x){}};
   setQ();wake(true);cleanup=()=>{timers.forEach(clearTimeout);try{speechSynthesis.cancel()}catch(e){}wake(false)}}
