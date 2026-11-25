@@ -242,6 +242,25 @@ th{font-size:.78rem;color:var(--muted)}
 .reward{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .reward .card{min-width:120px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px}
 .reward b{font-size:1.6rem;font-variant-numeric:tabular-nums}
+/* opening banner (same picture as the share preview) */
+.splash{position:fixed;inset:0;z-index:90;display:grid;place-items:center;background:linear-gradient(160deg,#CFEBFF 0%,#EEF8FF 55%,#FFF6E0 100%);transition:opacity .5s ease;cursor:pointer;
+  padding:calc(16px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.splash.out{opacity:0;pointer-events:none}
+.splash .sp-in{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);align-items:center;gap:28px;max-width:980px;width:100%}
+.splash .sp-mel{width:100%;max-width:400px;justify-self:end;animation:sp-pop .6s ease-out both}
+.splash .sp-mel svg{width:100%;height:auto;display:block}
+.splash .sp-txt{display:flex;flex-direction:column;gap:16px;color:#21304A}
+.splash .sp-sub{font-weight:800;color:#2F9BF0;letter-spacing:.08em;font-size:clamp(.95rem,2.6vw,1.6rem)}
+.splash .sp-title{font-weight:800;line-height:1.1;font-size:clamp(2.6rem,8vw,4.8rem)}
+.splash .sp-tags{display:flex;gap:10px;flex-wrap:wrap}
+.splash .sp-tags span{color:#fff;font-weight:800;padding:8px 16px;border-radius:999px;font-size:clamp(.9rem,2.2vw,1.35rem)}
+@media (max-width:640px),(orientation:portrait) and (max-width:900px){
+  .splash .sp-in{grid-template-columns:1fr;justify-items:center;text-align:center;gap:14px}
+  .splash .sp-mel{justify-self:center;max-width:min(64vw,320px)}
+  .splash .sp-txt{align-items:center}
+  .splash .sp-tags{justify-content:center}}
+@keyframes sp-pop{from{transform:scale(.85) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion: reduce){.splash,.splash .sp-mel{animation:none;transition:none}}
 .confetti{position:fixed;top:-20px;width:10px;height:14px;z-index:70;pointer-events:none;animation:fall 2.4s linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 .chest{display:flex;align-items:center;gap:12px}
@@ -1377,6 +1396,12 @@ function targetBar(){const ids=[...new Set([...(C.students||[]).map(x=>x.id),...
    ${ids.length?"":`<div class="muted" style="font-size:.8rem">生徒が このページを ひらいて 練習すると、ここに 名前が でます。名前を えらぶと その生徒 専用の課題を つくれます。</div>`}</div>`}
 function bindTargetBar(){$$("[data-tg]").forEach(b=>b.onclick=()=>switchTarget(b.dataset.tg));const d=$("#drop");if(d)d.onclick=()=>{C.confirmDel=true;renderTeacher()};
   const n=$("#dropNo");if(n)n.onclick=()=>{C.confirmDel=false;renderTeacher()};const y=$("#dropYes");if(y)y.onclick=()=>dropIndiv(C.target)}
+/* opening banner: shown once each time the app is opened; tap to skip */
+function showSplash(){let seen=false;try{seen=sessionStorage.getItem("meloSplash")==="1";sessionStorage.setItem("meloSplash","1")}catch(e){}if(seen)return;
+  const el=document.createElement("div");el.className="splash";el.setAttribute("role","img");el.setAttribute("aria-label","メロのピアノ");
+  el.innerHTML=`<div class="sp-in"><div class="sp-mel">${mascotSVG("happy",{head:null,glasses:"#21304A",bg:"bg-sky"})}</div><div class="sp-txt"><div class="sp-sub">こどもの ピアノれんしゅう</div><div class="sp-title">メロの<br>ピアノ</div><div class="sp-tags">${[["がくふを よもう","#2F9BF0"],["リズムうち","#E3A10B"],["ゆびばんごう","#3FBF73"],["きょくの れんしゅう","#B05CE6"]].map(([t,c])=>`<span style="background:${c}">${t}</span>`).join("")}</div></div></div>`;
+  document.body.appendChild(el);const close=()=>{el.classList.add("out");setTimeout(()=>el.remove(),550)};el.addEventListener("click",close);setTimeout(close,2000)}
+showSplash();
 go("home");
 initCloud();
 </script>
