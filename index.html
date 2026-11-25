@@ -478,17 +478,29 @@ function noiseHit(a,when,{type="bandpass",freq=1000,q=1,vol=.4,attack=.002,decay
   src.connect(f);f.connect(g);g.connect(dest||master());src.start(when,Math.random()*.5);src.stop(when+attack+decay+.05)}
 /* metronome: a dry wood-block "tock" */
 function click(when,accent,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
-  noiseHit(a,t,{type:"bandpass",freq:accent?2600:2100,q:4,vol:accent?.9:.55,decay:.035,dest})}
+  noiseHit(a,t,{type:"bandpass",freq:accent?2600:2100,q:4,vol:accent?.5:.3,decay:.035,dest})}
 /* rhythm note: a soft drum hit; long notes keep a quiet brush sound for their length */
-/* rhythm note: a drum — skin "don" (fast pitch drop, no musical note) + soft stick contact;
-   long notes keep a low timpani-like roll for their length */
-function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime,out=dest||master();
-  const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(62,t+.14);
-  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(.55,t+.004);g.gain.exponentialRampToValueAtTime(0.0001,t+.32);o.connect(g);g.connect(out);o.start(t);o.stop(t+.36);
-  noiseHit(a,t,{type:"lowpass",freq:900,q:.7,vol:.14,decay:.035,dest:out});
-  if(len>.3){const r=a.createOscillator(),rg=a.createGain();r.type="sine";r.frequency.setValueAtTime(72,t);r.frequency.linearRampToValueAtTime(64,t+len);
-    rg.gain.setValueAtTime(0.0001,t);rg.gain.setValueAtTime(0.0001,t+.05);rg.gain.exponentialRampToValueAtTime(.12,t+.12);rg.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(.3,len));r.connect(rg);rg.connect(out);r.start(t);r.stop(t+Math.max(.3,len)+.05);
-    noiseHit(a,t+.05,{type:"lowpass",freq:220,q:.6,vol:.11,attack:.06,decay:Math.max(.25,len-.1),dest:out})}}
+/* rhythm note: three drum voices the child can choose (no musical pitch to play along with)
+   castanets = カスタネット (crisp double click, higher than the metronome), timpani = ティンパニ (taut "bon"), tambourine = タンバリン (jingles).
+   Long notes keep sounding for their length: a castanet trill, a timpani roll, or a tambourine shake. */
+const DRUMS=[["castanets","カスタネット"],["timpani","ティンパニ"],["tambourine","タンバリン"]];
+const drumKind=()=>DRUMS.some(d=>d[0]===S.prefs.drum)?S.prefs.drum:"timpani";
+function skin(a,t,f0,f1,drop,vol,decay,out){const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+drop);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.004);g.gain.exponentialRampToValueAtTime(0.0001,t+decay);o.connect(g);g.connect(out);o.start(t);o.stop(t+decay+.05)}
+/* a roll: source -> envelope -> tremolo (fast pulses) -> out */
+function roll(a,t,len,src,vol,rate,out){const env=a.createGain(),tr=a.createGain(),lfo=a.createOscillator(),depth=a.createGain();
+  env.gain.setValueAtTime(0.0001,t);env.gain.exponentialRampToValueAtTime(vol,t+.06);env.gain.setValueAtTime(vol,t+Math.max(.08,len-.12));env.gain.exponentialRampToValueAtTime(0.0001,t+len);
+  tr.gain.value=.55;depth.gain.value=.45;lfo.type="sine";lfo.frequency.value=rate;lfo.connect(depth);depth.connect(tr.gain);
+  src.connect(env);env.connect(tr);tr.connect(out);lfo.start(t);lfo.stop(t+len+.05);src.start(t);src.stop(t+len+.05)}
+function noiseSrc(a,type,freq,q){const n=a.createBufferSource();n.buffer=noiseBuf(a);n.loop=true;const f=a.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;n.connect(f);
+  return{connect:x=>f.connect(x),start:t=>n.start(t,Math.random()*.5),stop:t=>n.stop(t)}}
+function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime,out=dest||master(),k=drumKind(),long=len>.3;
+  if(k==="castanets"){[0,.014].forEach((d,n)=>{noiseHit(a,t+d,{type:"bandpass",freq:4300,q:6,vol:n?1.9:2.9,decay:.03,dest:out});noiseHit(a,t+d,{type:"bandpass",freq:1700,q:5,vol:n?.8:1.2,decay:.025,dest:out})});
+    if(long)roll(a,t+.08,len-.06,noiseSrc(a,"bandpass",4300,5),1.5,16,out)}
+  else if(k==="tambourine"){skin(a,t,320,230,.04,.22,.08,out);noiseHit(a,t,{type:"bandpass",freq:7200,q:2,vol:.8,decay:.2,dest:out});noiseHit(a,t,{type:"bandpass",freq:10000,q:2.5,vol:.6,decay:.16,dest:out});
+    if(long)roll(a,t+.1,len-.08,noiseSrc(a,"bandpass",8000,1.6),.45,12,out)}
+  else{skin(a,t,200,150,.05,.8,.75,out);skin(a,t,300,225,.05,.25,.4,out);noiseHit(a,t,{type:"bandpass",freq:900,q:1,vol:.22,decay:.03,dest:out});
+    if(long){const o=a.createOscillator();o.type="sine";o.frequency.value=150;roll(a,t+.12,len-.1,o,.32,14,out)}}}
 /* soft chime: one sine, gentle attack and decay */
 function chime(freq,when,dur=.35,vol=.16){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=freq;
   g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.025);g.gain.exponentialRampToValueAtTime(0.0001,when+dur);o.connect(g);g.connect(master());o.start(when);o.stop(when+dur+.05)}
@@ -840,10 +852,11 @@ function renderFingerPlay(hand){const F=S.assignment.finger;if(!HAND_TILES.some(
 function rhythmStars(id){return P().rhythmToday[dayKey()+"|"+id]||0}
 function starsHTML(n){return `<span class="stars">${[1,2,3].map(i=>i<=n?IC.star:IC.starOff).join("")}</span>`}
 function renderRhythmList(){const a=S.assignment,cs=cornersOn();
-  app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<p class="muted" style="margin:0">コーナーを えらぼう。テンポ ${a.bpm}</p>
+  app.innerHTML=`<section class="screen narrow">${backBar("リズムうち")}<div class="row" style="justify-content:space-between"><p class="muted" style="margin:0">コーナーを えらぼう。テンポ ${a.bpm}</p><div class="row" style="gap:6px"><span class="label">がっきの おと</span><div class="seg" role="group" aria-label="がっきの おと">${DRUMS.map(([k,l])=>`<button data-drum="${k}" class="${drumKind()===k?"on":""}">${l}</button>`).join("")}</div></div></div>
   <div class="rhythm-list">${cs.map((c,i)=>{const list=cornerRhythms(c.id),done=list.filter(r=>rhythmStars(r.id)>=2).length;
     return `<button class="rcard corner" data-c="${c.id}"><span style="display:flex;gap:12px;align-items:center;min-width:0"><span class="cn">${i+1}</span><span style="min-width:0"><b>${c.name}</b><div class="muted" style="font-size:.85rem">きょう ${done}/${list.length} クリア</div></span></span>${c.icon?`<span class="cicon">${rhythmSVG(c.icon,{mini:1,unit:40}).replace("<svg ",`<svg style="height:40px;width:${((12+beatsOf(c.icon)*40)*40/96).toFixed(1)}px" `)}</span>`:`<span class="cicon orig">先</span>`}</button>`}).join("")||`<div class="card">せんせいが まだ リズムを えらんでいません。</div>`}</div></section>`;
-  bindBack();$$(".rcard").forEach(b=>b.onclick=()=>{const l=cornerRhythms(b.dataset.c);if(l.length)go("rhythmPlay",l[0].id)})}
+  bindBack();$$(".rcard").forEach(b=>b.onclick=()=>{const l=cornerRhythms(b.dataset.c);if(l.length)go("rhythmPlay",l[0].id)});
+  $$("[data-drum]").forEach(b=>b.onclick=()=>{S.prefs.drum=b.dataset.drum;save();$$("[data-drum]").forEach(x=>x.classList.toggle("on",x===b));const A=ac();if(A){const t=A.currentTime+.05;drum(t,.2);drum(t+.45,.2);drum(t+.9,1.1)}})}
 function renderRhythmCorner(cid){const c=RHYTHM_CORNERS.find(x=>x.id===cid);if(!c)return go("rhythm");const list=cornerRhythms(cid);
   app.innerHTML=`<section class="screen narrow">${backBar(c.name)}<p class="muted" style="margin:0">${list.length}もん あるよ。うえから じゅんばんに ちょうせんしよう。</p>
   <div class="rhythm-list">${list.map(r=>`<button class="rcard" data-id="${r.id}"><span style="min-width:0"><span class="label">もんだい ${r.n}</span>${rhythmSVG(r.tokens,{unit:52})}</span>${starsHTML(rhythmStars(r.id))}</button>`).join("")}</div></section>`;
