@@ -477,12 +477,12 @@ function noiseHit(a,when,{type="bandpass",freq=1000,q=1,vol=.4,attack=.002,decay
   src.connect(f);f.connect(g);g.connect(dest||master());src.start(when,Math.random()*.5);src.stop(when+attack+decay+.05)}
 /* metronome: a dry wood-block "tock" */
 function click(when,accent,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
-  noiseHit(a,t,{type:"bandpass",freq:accent?2600:2100,q:4,vol:accent?.5:.3,decay:.035,dest})}
+  noiseHit(a,t,{type:"highpass",freq:7000,q:.7,vol:accent?.2:.11,decay:.022,dest})}
 /* rhythm note: a soft drum hit; long notes keep a quiet brush sound for their length */
 /* rhythm note: three drum voices the child can choose (no musical pitch to play along with)
-   castanets = カスタネット (crisp double click, higher than the metronome), timpani = ティンパニ (taut "bon"), tambourine = タンバリン (jingles).
-   Long notes keep sounding for their length: a castanet trill, a timpani roll, or a tambourine shake. */
-const DRUMS=[["castanets","カスタネット"],["timpani","ティンパニ"],["tambourine","タンバリン"]];
+   woodblock = ウッドブロック (hollow "kon"), timpani = ティンパニ (taut "bon"), triangle = トライアングル (bright metal "chiin").
+   Every note is a single hit; long notes get no extra sound. */
+const DRUMS=[["woodblock","ウッドブロック"],["timpani","ティンパニ"],["triangle","トライアングル"]];
 const drumKind=()=>DRUMS.some(d=>d[0]===S.prefs.drum)?S.prefs.drum:"timpani";
 function skin(a,t,f0,f1,drop,vol,decay,out){const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+drop);
   g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.004);g.gain.exponentialRampToValueAtTime(0.0001,t+decay);o.connect(g);g.connect(out);o.start(t);o.stop(t+decay+.05)}
@@ -494,12 +494,11 @@ function roll(a,t,len,src,vol,rate,out){const env=a.createGain(),tr=a.createGain
 function noiseSrc(a,type,freq,q){const n=a.createBufferSource();n.buffer=noiseBuf(a);n.loop=true;const f=a.createBiquadFilter();f.type=type;f.frequency.value=freq;f.Q.value=q;n.connect(f);
   return{connect:x=>f.connect(x),start:t=>n.start(t,Math.random()*.5),stop:t=>n.stop(t)}}
 function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime,out=dest||master(),k=drumKind(),long=len>.3;
-  if(k==="castanets"){[0,.014].forEach((d,n)=>{noiseHit(a,t+d,{type:"bandpass",freq:4300,q:6,vol:n?1.9:2.9,decay:.03,dest:out});noiseHit(a,t+d,{type:"bandpass",freq:1700,q:5,vol:n?.8:1.2,decay:.025,dest:out})});
-    if(long)roll(a,t+.08,len-.06,noiseSrc(a,"bandpass",4300,5),1.5,16,out)}
-  else if(k==="tambourine"){skin(a,t,320,230,.04,.22,.08,out);noiseHit(a,t,{type:"bandpass",freq:7200,q:2,vol:.8,decay:.2,dest:out});noiseHit(a,t,{type:"bandpass",freq:10000,q:2.5,vol:.6,decay:.16,dest:out});
-    if(long)roll(a,t+.1,len-.08,noiseSrc(a,"bandpass",8000,1.6),.45,12,out)}
-  else{skin(a,t,200,150,.05,.8,.75,out);skin(a,t,300,225,.05,.25,.4,out);noiseHit(a,t,{type:"bandpass",freq:900,q:1,vol:.22,decay:.03,dest:out});
-    if(long){const o=a.createOscillator();o.type="sine";o.frequency.value=150;roll(a,t+.12,len-.1,o,.32,14,out)}}}
+  if(k==="woodblock"){skin(a,t,1050,880,.02,.75,.07,out);noiseHit(a,t,{type:"bandpass",freq:950,q:8,vol:3.3,decay:.06,dest:out});noiseHit(a,t,{type:"bandpass",freq:2400,q:6,vol:1.2,decay:.02,dest:out})}
+  else if(k==="triangle"){const ring=.7;[[1210,.32],[2950,.2],[4520,.14],[6230,.1]].forEach(([f,v])=>{const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.003);g.gain.exponentialRampToValueAtTime(0.0001,t+ring);o.connect(g);g.connect(out);o.start(t);o.stop(t+ring+.05)});
+    noiseHit(a,t,{type:"highpass",freq:6000,q:.7,vol:.25,decay:.015,dest:out})}
+  else{skin(a,t,200,150,.05,.8,.75,out);skin(a,t,300,225,.05,.25,.4,out);noiseHit(a,t,{type:"bandpass",freq:900,q:1,vol:.22,decay:.03,dest:out})}}
 /* soft chime: one sine, gentle attack and decay */
 function chime(freq,when,dur=.35,vol=.16){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=freq;
   g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.025);g.gain.exponentialRampToValueAtTime(0.0001,when+dur);o.connect(g);g.connect(master());o.start(when);o.stop(when+dur+.05)}
