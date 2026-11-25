@@ -604,7 +604,7 @@ const app=$("#app");
 let toastT;function toast(msg){let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
 function confetti(){if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;const cols=["#FFC83A","#2F9BF0","#3FBF73","#FF6457","#B05CE6"];
   for(let i=0;i<40;i++){const d=document.createElement("i");d.className="confetti";d.style.left=Math.random()*100+"vw";d.style.background=cols[i%5];d.style.animationDelay=Math.random()*.6+"s";d.style.animationDuration=(1.8+Math.random())+"s";document.body.appendChild(d);setTimeout(()=>d.remove(),3500)}}
-function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));$("#nav").hidden=!["home","shop","teacher"].includes(name);$("#nav [data-go=teacher]").hidden=C.on&&!C.teacher}
+function setNav(name){$$("#nav button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));$("#nav").hidden=!["home","shop","teacher"].includes(name);$("#nav [data-go=teacher]").hidden=!teacherAllowed()}
 $$("#nav button").forEach(b=>b.onclick=()=>go(b.dataset.go));
 let cleanup=null;
 function go(name,arg){curScreen=name;if(cleanup){cleanup();cleanup=null}removeFeedback();window.scrollTo(0,0);setNav(name);
@@ -622,6 +622,7 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   const FGon=a.finger&&a.finger.on,GF=G.finger||5;
   const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin&&(!FGon||(w.finger||0)>=GF);
   app.innerHTML=`<section class="screen">${topbar()}
+  ${IN_ARTIFACT&&C.checked&&!C.on?`<div class="card" style="background:#FFF6E0;border-color:#F2D9A6"><b>ログインすると、せんせいの かだいが とどくよ</b><div class="muted" style="font-size:.85rem">いまは この たんまつ だけの れんしゅうに なっています。claude.ai に ログインして ひらきなおしてね。</div></div>`:""}
   <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
   ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div>${esc(a.message)}</div></div></div>`:""}
@@ -954,7 +955,7 @@ function renderShop(){const p=P(),eq=p.equip;
 
 /* ================= TEACHER ================= */
 let teacherOK=false,tTab="notes";
-function renderTeacherGate(){if(teacherOK)return renderTeacher();let code="",first=!S.pin,confirmCode=null;
+function renderTeacherGate(){if(!teacherAllowed()){toast("せんせい用ページは せんせいだけが ひらけます");return go("home")}if(teacherOK)return renderTeacher();let code="",first=!S.pin,confirmCode=null;
   function draw(msg){app.innerHTML=`<section class="screen" style="text-align:center"><h2>せんせい用ページ</h2><p class="muted" style="margin:0">${msg||(first?(confirmCode?"もういちど 入力してください":"はじめに 4けたの 暗証番号を きめてください"):"暗証番号を 入力してください")}</p>
     <div class="pin-dots">${[0,1,2,3].map(i=>`<i class="${i<code.length?"f":""}"></i>`).join("")}</div>
     <div class="keypad">${[1,2,3,4,5,6,7,8,9,"",0,"←"].map(k=>k===""?"<span></span>":`<button data-k="${k}">${k}</button>`).join("")}</div>
@@ -1305,7 +1306,10 @@ function modelPlayer(song,opt={}){const el=document.createElement("div");el.clas
    assign/<studentId> : one student's own assignment (optional)
    progress/<studentId>: that student's practice record, read by the teacher */
 function imgSrc(song){return song.assetId?"/_blob/"+song.assetId:song.image}
-const C={on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",
+/* opened inside the claude.ai viewer (shared link) vs. index.html opened directly */
+const IN_ARTIFACT=!!(window.claude&&typeof window.claude.use==="function");
+const teacherAllowed=()=>IN_ARTIFACT?(C.on&&C.teacher):true;
+const C={checked:false,on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",
   target:"common",common:null,indiv:{},mine:null,lastA:{},lastEff:"",lastP:"",pushT:0,pushing:false,again:false,progT:0,
   students:null,stuUnsub:null,stuSel:null,names:{},sig:"",confirmDel:false,initAt:0};
 const pickA=d=>d?JSON.stringify({assignment:d.assignment,customRhythms:d.customRhythms||[]}):"";
@@ -1340,9 +1344,9 @@ function studentApply(){const eff=C.mine||C.common;if(!eff)return;const j=pickA(
 async function switchTarget(t){await flushPush();C.target=t;C.confirmDel=false;const src=t==="common"?C.common:C.indiv[t];if(src)applyA(pickA(src));if(t!=="common")C.stuSel=t;renderTeacher()}
 async function makeIndiv(id){await flushPush();const base=C.common?pickA(C.common):assignJSON();C.target=id;applyA(base);C.indiv[id]=JSON.parse(base);C.lastA[id]="";await pushAssignment();toast(`${stuName(id)}さん 専用の課題を つくりました`);renderTeacher()}
 async function dropIndiv(id){await flushPush();try{await C.db.doc("assign/"+id).delete();delete C.indiv[id];delete C.lastA[id];C.confirmDel=false;toast(`${stuName(id)}さんは 共通の課題に もどりました`)}catch(e){toast("もどせませんでした。通信を確認してください")}renderTeacher()}
-async function initCloud(){const cl=window.claude;if(!cl||typeof cl.use!=="function")return;
-  const db=await cl.use("db");if(!db)return;const user=await cl.use("user");
-  C.db=db;C.user=user;C.on=true;C.status="wait";C.initAt=Date.now();
+async function initCloud(){const cl=window.claude;if(!cl||typeof cl.use!=="function"){C.checked=true;return}
+  const db=await cl.use("db");if(!db){C.checked=true;refreshScreen();return}const user=await cl.use("user");
+  C.db=db;C.user=user;C.on=true;C.checked=true;C.status="wait";C.initAt=Date.now();
   try{C.teacher=user?await user.canEdit():false;C.uid=user?await user.id():null;const me=user?await user.me():null;C.myName=(me&&me.name||"").split(/\s+/)[0]||""}catch(e){}
   if(C.teacher){C.assets=await cl.use("assets");teacherOK=true}
   const timer=setTimeout(()=>{if(!C.loaded){C.status="err";syncPill();toast("せんせいの課題に まだ つながりません(オフラインかも)")}},10000);
