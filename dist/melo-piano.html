@@ -112,7 +112,10 @@ h1,h2,h3{margin:0;font-weight:800;text-wrap:balance;line-height:1.3}
 .teacher-note{display:flex;gap:12px;align-items:flex-start}
 .teacher-note .av{flex:none;width:40px;height:40px;border-radius:50%;background:#EFE3FF;color:#4A3B34;border:2px solid #4A3B34;display:grid;place-items:center;font-weight:800}
 
-.kana-sw{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;margin:-4px 0 2px}
+.home-sw{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 2px}
+.name-chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-weight:800;font-size:.85rem;color:var(--ink);display:inline-flex;gap:4px;align-items:center;max-width:100%}
+.name-chip b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:9em}
+.kana-sw{display:flex;justify-content:flex-end;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
 .kana-sw .seg button{font-size:.8rem}
 /* bottom nav */
 .nav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:2px solid var(--line);display:flex;justify-content:center;gap:4px;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
@@ -412,7 +415,7 @@ function sampleSong(){return {id:"s-sample",title:"きらきらぼし(サンプ�
   strokes:[{color:"#FF6457",w:6,pts:[[520,96],[560,80],[620,78],[680,90]]}],
   checklist:["てくびを さげない","1しょうせつずつ ゆっくり かぞえる","2ぶおんぷは しっかり のばす"],goalMin:10}}
 function defaultState(){return{
-  pin:null,studentName:"",
+  pin:null,studentName:"",nameAt:0,
   assignment:{id:uid(),startedAt:dayKey(),message:"こんしゅうは トおんきごうの ド〜ソ と、4ぶおんぷ・2ぶおんぷの リズムを がんばろう!",
     notes:["treble:C4","treble:D4","treble:E4","treble:F4","treble:G4"],notesCount:10,answerMode:"selected",staffView:"single",order:["notes","rhythm","finger","songs"],
     rhythms:[],rhythmCorners:{qh:true,eq:true,eqh:true,rest:true,orig:true},bpm:80,metronome:true,
@@ -631,8 +634,9 @@ function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=e
   if(m==="angry")g+=`<path d="M93 141 q7 -6 14 0" fill="none" stroke="${ln}" stroke-width="2.8"/><g stroke="#E0574D" stroke-width="3.2" fill="none"><path d="M150 66 q5 5 10 0 M150 66 q-5 5 0 10 M160 76 q5 -5 0 -10 M160 76 q-5 5 -10 0"/></g><g fill="#fff" stroke="${ln}" stroke-width="2"><circle cx="34" cy="70" r="7"/><circle cx="24" cy="58" r="5"/><circle cx="170" cy="48" r="6"/></g>`;
   if(m==="happy")g+=`<g fill="#FFE08A" stroke="${ln}" stroke-width="1.6"><path d="M32 66 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M164 52 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5z"/></g>`;
   return g+"</g></svg>"}
-function moodText(){const nm=S.studentName||C.myName,n=nm?nm+"さん":"きみ",m=mood(),g=gapDays();
-  if(m==="happy")return `きょうも れんしゅう できたね! ${n} すごい! この ちょうしで いこう`;
+const callName=()=>(S.studentName||C.myName||"").trim();
+function moodText(){const nm=callName(),n=nm?(/(さん|ちゃん|くん|君|様|さま|せんせい|先生)$/.test(nm)?nm:nm+"さん"):"きみ",m=mood(),g=gapDays();
+  if(m==="happy")return `きょうも れんしゅう できたね! ${n}、すごい! この ちょうしで いこう`;
   if(m==="worried")return "きのうは ピアノ おやすみ だったね… きょうは いっしょに やろうよ";
   if(m==="angry")return `もう ${g}日も れんしゅう してないよ! プンプン! メロ まっかに なっちゃった`;
   return P().lastDay?"きょうの れんしゅう まだ だよ! メロと いっしょに がんばろう":"はじめまして! メロだよ。いっしょに ピアノの れんしゅう しよう!"}
@@ -724,9 +728,9 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   const pct=(v,g)=>Math.min(100,Math.round(v/Math.max(1,g)*100));
   const FGon=a.finger&&a.finger.on,GF=G.finger||5;
   const allDone=w.notes>=G.notes&&w.rhythm>=G.rhythm&&w.songMin>=G.songMin&&(!FGon||(w.finger||0)>=GF);
-  app.innerHTML=`<section class="screen">${topbar()}${kanaSwitch()}
+  app.innerHTML=`<section class="screen">${topbar()}<div class="home-sw"><button class="name-chip" id="nmEdit" aria-label="なまえを かえる"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20l1-4.4L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.4 19z" fill="#FFE08A" stroke="#4A3B34" stroke-width="1.5" stroke-linejoin="round"/><path d="M13.6 7l3.4 3.4" stroke="#4A3B34" stroke-width="1.5"/></svg> <span>なまえ:</span> <b data-raw>${esc(callName()||"-")}</b></button>${kanaSwitch()}</div><div id="nmHost"></div>
   ${IN_ARTIFACT&&C.checked&&!C.on?`<div class="card" style="background:#FFF6E0;border-color:#F2D9A6"><b>ログインすると、せんせいの かだいが とどくよ</b><div class="muted" style="font-size:.85rem">いまは この たんまつ だけの れんしゅうに なっています。claude.ai に ログインして ひらきなおしてね。</div></div>`:""}
-  <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${esc(moodText())}</div></div>
+  <div class="home-top"><div class="mascot-card ${m==="angry"?"bg-angry":eq.bg}"><div class="mascot ${m}">${mascotSVG(m)}</div><div class="bubble">${callName()?esc(moodText()).split(esc(callName())).join(`<span data-raw>${esc(callName())}</span>`):esc(moodText())}</div></div>
   <div class="card"><div class="row" style="justify-content:space-between"><h2 style="font-size:1rem">こんしゅうの れんしゅう</h2><span class="label">ベスト ${P().best}日れんぞく</span></div><div class="week" style="margin-top:10px">${days}</div></div></div>
   ${a.message?`<div class="card teacher-note"><div class="av">先</div><div><div class="label">せんせいから${C.on&&!C.teacher?(C.loaded?"・さいしんの課題":"・せつぞく中…"):""}</div><div data-raw>${esc(a.message)}</div></div></div>`:""}
   <div class="lessons">
@@ -738,6 +742,7 @@ function renderHome(){const m=mood(),eq=P().equip,a=S.assignment,w=weekly(),toda
   <div class="card chest">${IC.chest}<div style="flex:1"><b>こんしゅうの たからばこ</b><div class="sub muted" style="font-size:.85rem">${FGon?4:3}つの もくひょうを ぜんぶ たっせいすると コイン30まい!</div></div>${w.claimed?`<span class="label">うけとりずみ</span>`:`<button class="btn sun small" id="claim" ${allDone?"":"disabled"}>あける</button>`}</div>
   </section>`;
   $$(".lesson").forEach(b=>b.onclick=()=>{ac();go(b.dataset.l)});
+  $("#nmEdit").onclick=()=>{const h=$("#nmHost");if(h.innerHTML){h.innerHTML="";return}inlineForm(h,"メロに よんで ほしい なまえ",callName(),v=>{setMyName(v);renderHome()},()=>{});const i=$("#iff",h);i.maxLength=12;i.setAttribute("data-raw","")};
   {const box=$(".lessons");lessonOrder().forEach(k=>{const el=box.querySelector(`[data-l="${k}"]`);if(el)box.appendChild(el)})}
   const c=$("#claim");if(c)c.onclick=()=>{w.claimed=true;P().coins+=30;save();sfx("win");confetti();toast("たからばこから コイン30まい!");renderHome()}}
 
@@ -1274,7 +1279,9 @@ function tRecordCloud(el){watchStudents(()=>{const list=C.students;
   if(!list.length){el.innerHTML=`<div class="card"><b>まだ 生徒の記録が ありません</b><p class="muted" style="margin:6px 0 0">このページを 生徒と共有して、生徒が 練習すると ここに 記録が とどきます。</p></div>`;return}
   if(C.target!=="common")C.stuSel=C.target;if(!list.some(s=>s.id===C.stuSel))C.stuSel=list[0].id;
   const st=list.find(s=>s.id===C.stuSel);
-  el.innerHTML=`<div class="card"><div class="label">生徒を えらぶ</div><div class="row" style="margin-top:8px">${list.map(s=>`<button class="btn small ${s.id===C.stuSel?"":"ghost"}" data-stu="${s.id}">${esc(C.names[s.id]||"生徒")}</button>`).join("")}</div><div class="muted" style="font-size:.8rem;margin-top:6px">さいごの 更新: ${st.updatedAt?new Date(st.updatedAt).toLocaleString("ja-JP"):"-"}</div></div><div id="stuRec" class="screen"></div>`;
+  el.innerHTML=`<div class="card"><div class="label">生徒を えらぶ</div><div class="row" style="margin-top:8px">${list.map(s=>`<button class="btn small ${s.id===C.stuSel?"":"ghost"}" data-stu="${s.id}">${esc(C.names[s.id]||"生徒")}</button>`).join("")}</div><div class="row" style="margin-top:10px;gap:6px;align-items:center"><span class="label">メロが よぶ なまえ</span><input id="stuNick" value="${esc(st.nick||C.acct[st.id]||"")}" maxlength="12" style="flex:1;min-width:7em"><button class="btn small" id="stuNickOk">変更</button></div><div class="muted" style="font-size:.8rem;margin-top:4px">${C.acct[st.id]?`アカウント名: ${esc(C.acct[st.id])}・`:""}生徒が 自分で 変えることも できます(あとから 変えた ほうが 使われます)</div><div class="muted" style="font-size:.8rem;margin-top:6px">さいごの 更新: ${st.updatedAt?new Date(st.updatedAt).toLocaleString("ja-JP"):"-"}</div></div><div id="stuRec" class="screen"></div>`;
+  $("#stuNickOk",el).onclick=async()=>{const v=$("#stuNick",el).value.trim().slice(0,12);if(!v)return $("#stuNick",el).focus();
+    try{const ref=C.db.doc("progress/"+st.id),cur=await ref.get(),d=cur.exists?cur.data():{};await ref.set({...d,nick:v,nickAt:Date.now()});st.nick=v;C.names[st.id]=v;toast(`なまえを「${v}」に 変更しました`);tRecordCloud(el)}catch(e){toast("変更できませんでした。通信を確認してください")}};
   $$("[data-stu]",el).forEach(b=>b.onclick=()=>{C.stuSel=b.dataset.stu;if(C.target!=="common")switchTarget(b.dataset.stu);else tRecordCloud(el)});
   const eff=C.indiv[st.id]||C.common;const o=S.p,oa=S.assignment;S.p={...defaultState().p,...JSON.parse(JSON.stringify(st.p||{}))};if(eff)S.assignment={...defaultState().assignment,...JSON.parse(JSON.stringify(eff.assignment))};
   try{tRecordBody($("#stuRec",el))}finally{S.p=o;S.assignment=oa}})}
@@ -1297,7 +1304,7 @@ function tSettings(el){const a=S.assignment;
    <div class="card" id="rst"><button class="btn red small" id="reset">${C.on?"この端末の 記録と コインを リセット":"生徒の 記録と コインを リセット"}</button></div>`;
   $("#msg",el).onchange=e=>{a.message=e.target.value.trim();saved()};
   [["g1","notes"],["g2","rhythm"],["g3","songMin"],["g4","finger"]].forEach(([i,k])=>$("#"+i,el).onchange=e=>{a.goals[k]=Math.max(1,+e.target.value||1);saved()});
-  if($("#sn",el))$("#sn",el).onchange=e=>{S.studentName=e.target.value.trim();saved()};
+  if($("#sn",el))$("#sn",el).onchange=e=>{S.studentName=e.target.value.trim().slice(0,12);S.nameAt=Date.now();saved()};
   $$("[data-up],[data-down]",el).forEach(b=>b.onclick=()=>{const o=lessonOrder(),k=b.dataset.up||b.dataset.down,i=o.indexOf(k),j=b.dataset.up?i-1:i+1;if(j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];a.order=o;saved();tSettings(el)});
   $("#newWeek",el).onclick=()=>{a.id=uid();a.startedAt=dayKey();saved();toast("あたらしい週の 課題を 出しました")};
   if($("#exp",el))$("#exp",el).onclick=()=>{const data=JSON.stringify({type:"meloPiano-assignment",assignment:a,customRhythms:S.customRhythms});const blob=new Blob([data],{type:"application/json"});const u=URL.createObjectURL(blob);const l=document.createElement("a");l.href=u;l.download=`piano-kadai-${dayKey()}.json`;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast("ファイルを 保存しました")};
@@ -1413,7 +1420,7 @@ function imgSrc(song){return song.assetId?"/_blob/"+song.assetId:song.image}
 /* opened inside the claude.ai viewer (shared link) vs. index.html opened directly */
 const IN_ARTIFACT=!!(window.claude&&typeof window.claude.use==="function");
 const teacherAllowed=()=>IN_ARTIFACT?(C.on&&C.teacher):true;
-const C={checked:false,on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",loaded:false,status:"local",
+const C={checked:false,on:false,db:null,user:null,assets:null,teacher:false,uid:null,myName:"",acct:{},loaded:false,status:"local",
   target:"common",common:null,indiv:{},mine:null,lastA:{},lastEff:"",lastP:"",pushT:0,pushing:false,again:false,progT:0,
   students:null,stuUnsub:null,stuSel:null,names:{},sig:"",confirmDel:false,initAt:0};
 const pickA=d=>d?JSON.stringify({assignment:d.assignment,customRhythms:d.customRhythms||[]}):"";
@@ -1431,8 +1438,11 @@ async function pushAssignment(){clearTimeout(C.pushT);C.pushT=0;if(C.pushing){C.
   catch(e){C.status="err";toast(e&&e.code==="too_big"?"課題が大きすぎて送れません(楽譜画像を とりこみ直してください)":"生徒への送信に失敗しました。通信を確認してください")}
   C.pushing=false;syncPill();if(C.again){C.again=false;pushAssignment()}}
 async function flushPush(){if(C.pushT)await pushAssignment();while(C.pushing)await new Promise(r=>setTimeout(r,80))}
+function setMyName(v){S.studentName=String(v||"").trim().slice(0,12);S.nameAt=Date.now();save();if(C.on&&C.uid&&!C.teacher){clearTimeout(C.progT);pushProgress()}}
+function takeNick(d){if(d&&d.nick!=null&&(d.nickAt||0)>(S.nameAt||0)){S.studentName=d.nick;S.nameAt=d.nickAt;saveLocal();return true}return false}
 async function pushProgress(){if(C.pushing)return(C.progT=setTimeout(pushProgress,1500));C.pushing=true;const j=JSON.stringify(S.p);
-  try{await C.db.doc("progress/"+C.uid).set({p:JSON.parse(j),updatedAt:Date.now()});C.lastP=j;S.pAt=Date.now();saveLocal()}catch(e){}
+  try{try{const cur=await C.db.doc("progress/"+C.uid).get();if(cur.exists&&takeNick(cur.data()))refreshScreen()}catch(e){}
+    await C.db.doc("progress/"+C.uid).set({p:JSON.parse(j),updatedAt:Date.now(),nick:S.studentName||"",nickAt:S.nameAt||0});C.lastP=j;S.pAt=Date.now();saveLocal()}catch(e){}
   C.pushing=false}
 function syncPill(){const el=$("#syncPill");if(!el)return;const t={ok:["var(--grass)","生徒に とどいています"],sending:["var(--sun-deep)","生徒に おくっています…"],err:["var(--coral)","送信エラー"],wait:["var(--muted)","接続中…"],local:["var(--muted)","この端末だけ"]}[C.status]||["var(--muted)",""];
   el.innerHTML=`<i style="width:10px;height:10px;border-radius:50%;background:${t[0]};display:inline-block"></i>${t[1]}`}
@@ -1467,11 +1477,12 @@ async function initCloud(){const cl=window.claude;if(!cl||typeof cl.use!=="funct
     watchStudents(()=>{})}
   else if(C.uid){
     db.doc("assign/"+C.uid).onSnapshot(snap=>{if(snap.metadata.fromCache&&!snap.exists)return;C.mine=snap.exists?snap.data():null;studentApply()},()=>{});
-    try{const ps=await db.doc("progress/"+C.uid).get();if(ps.exists){const d=ps.data();if((d.updatedAt||0)>(S.pAt||0)){S.p={...defaultState().p,...d.p};S.pAt=d.updatedAt;C.lastP=JSON.stringify(S.p);saveLocal();refreshScreen()}}else cloudAfterSave()}catch(e){}}
+    db.doc("progress/"+C.uid).onSnapshot(snap=>{if(snap.exists&&takeNick(snap.data())){refreshScreen();toast(`なまえが「${S.studentName}」に なったよ`)}},()=>{});
+    try{const ps=await db.doc("progress/"+C.uid).get();if(ps.exists){const d=ps.data();takeNick(d);if((d.updatedAt||0)>(S.pAt||0)){S.p={...defaultState().p,...d.p};S.pAt=d.updatedAt;C.lastP=JSON.stringify(S.p);saveLocal();refreshScreen()}}else cloudAfterSave()}catch(e){}}
   refreshScreen()}
 function watchStudents(cb){if(C.stuUnsub){cb();return}C.students=null;
   C.stuUnsub=C.db.collection("progress").onSnapshot(async snap=>{C.students=snap.docs.map(d=>({id:d.id,...d.data()}));
-    try{const ps=C.user?await C.user.profiles(C.students.map(x=>x.id)):{};C.students.forEach(x=>C.names[x.id]=(ps[x.id]&&ps[x.id].name)||"生徒")}catch(e){}
+    try{const ps=C.user?await C.user.profiles(C.students.map(x=>x.id)):{};C.students.forEach(x=>{C.acct[x.id]=(ps[x.id]&&ps[x.id].name)||"";C.names[x.id]=x.nick||C.acct[x.id]||"生徒"})}catch(e){}
     teacherSoft()},()=>{C.students=[];C.stuUnsub=null});
   cb()}
 function targetBar(){const ids=[...new Set([...(C.students||[]).map(x=>x.id),...Object.keys(C.indiv)])],t=C.target,nm=stuName(t);
