@@ -610,7 +610,7 @@ function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=e
   if(m==="normal")g+=`<path d="M94 136 q3 3 6 0 q3 3 6 0" fill="none" stroke="${ln}" stroke-width="2.6"/>`;
   if(m==="worried")g+=`<path d="M92 140 q4 -3 8 0 q4 3 8 0" fill="none" stroke="${ln}" stroke-width="2.6"/><path d="M152 92 q6 9 0 12 q-6 -3 0 -12z" fill="#AEDBFF" stroke="${ln}" stroke-width="2"/>`;
   if(m==="angry")g+=`<path d="M93 141 q7 -6 14 0" fill="none" stroke="${ln}" stroke-width="2.8"/><g stroke="#E0574D" stroke-width="3.2" fill="none"><path d="M150 66 q5 5 10 0 M150 66 q-5 5 0 10 M160 76 q5 -5 0 -10 M160 76 q-5 5 -10 0"/></g><g fill="#fff" stroke="${ln}" stroke-width="2"><circle cx="34" cy="70" r="7"/><circle cx="24" cy="58" r="5"/><circle cx="170" cy="48" r="6"/></g>`;
-  if(m==="happy")g+=`<g fill="#FFE08A" stroke="${ln}" stroke-width="1.6"><path d="M32 66 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M168 156 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5z"/></g>`;
+  if(m==="happy")g+=`<g fill="#FFE08A" stroke="${ln}" stroke-width="1.6"><path d="M32 66 l3 7 l7 3 l-7 3 l-3 7 l-3 -7 l-7 -3 l7 -3z"/><path d="M164 52 l2.5 5.5 l5.5 2.5 l-5.5 2.5 l-2.5 5.5 l-2.5 -5.5 l-5.5 -2.5 l5.5 -2.5z"/></g>`;
   return g+"</g></svg>"}
 function moodText(){const nm=S.studentName||C.myName,n=nm?nm+"さん":"きみ",m=mood(),g=gapDays();
   if(m==="happy")return `きょうも れんしゅう できたね! ${n} すごい! この ちょうしで いこう`;
