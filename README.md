@@ -9,4 +9,6 @@ Redesigned static homepage for 「ぴあの、りとみっく dolce cantabile」
 
 Also: `takebayashi/` — redesign of たけばやし音楽教室 (https://takebayashipiano.com/).
 
+Also: `kitamura/` — redesign of キタムラ音楽教室 (https://www.mskitamura.com/).
+
 Open `index.html` in a browser to preview. No build step.
