@@ -480,10 +480,15 @@ function noiseHit(a,when,{type="bandpass",freq=1000,q=1,vol=.4,attack=.002,decay
 function click(when,accent,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
   noiseHit(a,t,{type:"bandpass",freq:accent?2600:2100,q:4,vol:accent?.9:.55,decay:.035,dest})}
 /* rhythm note: a soft drum hit; long notes keep a quiet brush sound for their length */
-function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime;
-  noiseHit(a,t,{type:"lowpass",freq:240,q:.8,vol:1,decay:.14,dest});
-  noiseHit(a,t,{type:"bandpass",freq:1500,q:.8,vol:.3,decay:.07,dest});
-  if(len>.3)noiseHit(a,t+.03,{type:"bandpass",freq:4200,q:.5,vol:.09,attack:.05,decay:Math.max(.2,len-.08),dest})}
+/* rhythm note: a drum — skin "don" (fast pitch drop, no musical note) + soft stick contact;
+   long notes keep a low timpani-like roll for their length */
+function drum(when,len=.15,dest){const a=ac();if(!a)return;const t=when||a.currentTime,out=dest||master();
+  const o=a.createOscillator(),g=a.createGain();o.type="sine";o.frequency.setValueAtTime(160,t);o.frequency.exponentialRampToValueAtTime(62,t+.14);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(.55,t+.004);g.gain.exponentialRampToValueAtTime(0.0001,t+.32);o.connect(g);g.connect(out);o.start(t);o.stop(t+.36);
+  noiseHit(a,t,{type:"lowpass",freq:900,q:.7,vol:.14,decay:.035,dest:out});
+  if(len>.3){const r=a.createOscillator(),rg=a.createGain();r.type="sine";r.frequency.setValueAtTime(72,t);r.frequency.linearRampToValueAtTime(64,t+len);
+    rg.gain.setValueAtTime(0.0001,t);rg.gain.setValueAtTime(0.0001,t+.05);rg.gain.exponentialRampToValueAtTime(.12,t+.12);rg.gain.exponentialRampToValueAtTime(0.0001,t+Math.max(.3,len));r.connect(rg);rg.connect(out);r.start(t);r.stop(t+Math.max(.3,len)+.05);
+    noiseHit(a,t+.05,{type:"lowpass",freq:220,q:.6,vol:.11,attack:.06,decay:Math.max(.25,len-.1),dest:out})}}
 /* soft chime: one sine, gentle attack and decay */
 function chime(freq,when,dur=.35,vol=.16){const a=ac();if(!a)return;const g=a.createGain(),o=a.createOscillator();o.type="sine";o.frequency.value=freq;
   g.gain.setValueAtTime(0.0001,when);g.gain.exponentialRampToValueAtTime(vol,when+.025);g.gain.exponentialRampToValueAtTime(0.0001,when+dur);o.connect(g);g.connect(master());o.start(when);o.stop(when+dur+.05)}
