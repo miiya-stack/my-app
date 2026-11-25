@@ -580,18 +580,22 @@ const MOODCOL={happy:"#FFFFFF",normal:"#FFFFFF",worried:"#FFF0E0",angry:"#FFB9B0
 function mascotSVG(m="normal",eq=P().equip){const c=MOODCOL[m],ln="#4A3B34",gl=eq.glasses&&eq.glasses!=="#21304A"?eq.glasses:ln,w=3.2;
   let g=`<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="メロ"><g stroke-linecap="round" stroke-linejoin="round">`;
   g+=`<ellipse cx="100" cy="188" rx="50" ry="6" fill="#0001" stroke="none"/>`;
+  // eighth note held in the right hand
+  g+=`<path d="M186 141 V97 q9 3 10 14 q-4 -6 -10 -7" fill="${ln}" stroke="${ln}" stroke-width="2.4"/><ellipse cx="179" cy="142" rx="7.6" ry="5.8" transform="rotate(-20 181 142)" fill="${ln}"/>`;
   // little feet and arms
   g+=`<ellipse cx="80" cy="181" rx="12" ry="7" fill="${c}" stroke="${ln}" stroke-width="${w}"/><ellipse cx="120" cy="181" rx="12" ry="7" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
   g+=`<path d="M34 138 q-14 4 -12 16 q4 6 16 -2" fill="${c}" stroke="${ln}" stroke-width="${w}"/><path d="M166 138 q14 4 12 16 q-4 6 -16 -2" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
   // mochi body
   g+=`<path d="M100 54 C150 54 172 92 172 128 C172 166 142 180 100 180 C58 180 28 166 28 128 C28 92 50 54 100 54 Z" fill="${c}" stroke="${ln}" stroke-width="${w}"/>`;
-  // hats behind the antenna
+  // keyboard hair: white keys, black keys in groups of 2 and 3, scalloped fringe
+  {const hair="M33 103 C37 74 60 55 100 55 C140 55 163 74 167 103 Q158 113 147 99 Q136 110 124 97 Q112 108 100 96 Q88 108 76 97 Q64 110 53 99 Q42 113 33 103 Z";
+   const cid="mh"+Math.random().toString(36).slice(2,8);let keys="";
+   for(let k=1;k<=10;k++){const x=30+k*13;keys+=`<line x1="${x}" x2="${x}" y1="50" y2="118" stroke="${ln}" stroke-width="1.3"/>`;if([1,1,0,1,1,1,0][(k-1)%7])keys+=`<rect x="${x-4}" y="50" width="8" height="${30}" rx="1.5" fill="${ln}" stroke="none"/>`}
+   g+=`<defs><clipPath id="${cid}"><path d="${hair}"/></clipPath></defs><g clip-path="url(#${cid})"><path d="${hair}" fill="#fff" stroke="none"/>${keys}</g><path d="${hair}" fill="none" stroke="${ln}" stroke-width="${w}"/>`}
+  // hats
   if(eq.head==="headphones")g+=`<path d="M34 120 C34 40 166 40 166 120" fill="none" stroke="#8C9BB5" stroke-width="7"/><rect x="20" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><rect x="160" y="102" width="20" height="32" rx="9" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/>`;
   if(eq.head==="cap")g+=`<path d="M52 82 C58 40 142 40 148 82 Z" fill="#9CCBF2" stroke="${ln}" stroke-width="2.5"/><path d="M122 78 q36 0 48 9 q-28 5 -52 1z" fill="#7DB6E6" stroke="${ln}" stroke-width="2.5"/>`;
   if(eq.head==="crown")g+=`<path d="M68 74 L73 42 L87 58 L100 36 L113 58 L127 42 L132 74 Z" fill="#FFE08A" stroke="${ln}" stroke-width="2.5"/><circle cx="100" cy="62" r="4" fill="#FF9AA8"/>`;
-  // music-note antenna
-  const ay=eq.head==="cap"?-12:eq.head==="crown"?-18:0;
-  g+=`<g transform="translate(0 ${ay})"><path d="M106 56 V24 q12 3 14 15" fill="none" stroke="${ln}" stroke-width="${w}"/><ellipse cx="99" cy="56" rx="8.5" ry="6.5" transform="rotate(-20 99 56)" fill="${ln}"/></g>`;
   if(eq.head==="ribbon")g+=`<path d="M140 68 l-18 -11 v22z M140 68 l18 -11 v22z" fill="#FFC2D6" stroke="${ln}" stroke-width="2.5"/><circle cx="140" cy="68" r="5" fill="#FF9DBB" stroke="${ln}" stroke-width="2"/>`;
   if(eq.head==="flower")g+=`<g transform="translate(62 72)">${[0,72,144,216,288].map(a=>`<circle cx="${(Math.cos(a*Math.PI/180)*8).toFixed(1)}" cy="${(Math.sin(a*Math.PI/180)*8).toFixed(1)}" r="6" fill="#fff" stroke="#E9A3BB" stroke-width="2"/>`).join("")}<circle r="5" fill="#FFE08A"/></g>`;
   // cheeks with little ／／ marks
